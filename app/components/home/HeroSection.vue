@@ -36,7 +36,7 @@ const infoStrip = [
   >
     <div class="container mx-auto px-4 pt-12 pb-16 md:pt-16 md:pb-8 relative z-10">
 
-        <div class="grid lg:grid-cols-[58%_42%] gap-6 lg:gap-10 items-center">
+        <div class="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-10 items-center">
 
         <!-- Left: copy — full column width, no max-w here -->
         <div>
@@ -68,23 +68,25 @@ const infoStrip = [
             <span class="text-[#1a1a2e] font-semibold">playful</span> life.
             </p>
 
-            <div class="flex flex-nowrap items-center gap-2 md:gap-4 mb-3 overflow-x-auto md:overflow-visible">
-            <div
-                v-for="badge in trustBadges"
-                :key="badge.label"
-                class="flex items-center gap-1.5 shrink-0"
-            >
-                <div class="w-11 h-11 md:w-14 md:h-14 rounded-full bg-[#f3eef9] flex items-center justify-center shrink-0 p-2">
-                <img
-                    :src="badge.icon"
-                    :alt="`${badge.label} ${badge.label2}`"
-                    class="w-full h-full object-contain"
-                />
+            <div class="flex flex-nowrap items-center gap-3 md:gap-4 mb-5 max-w-[540px] overflow-hidden">
+                <div
+                    v-for="badge in trustBadges"
+                    :key="badge.label"
+                    class="flex items-center gap-2.5 shrink-0"
+                >
+                    <!-- Bigger circle + less padding so icon looks large -->
+                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#f3eef9] flex items-center justify-center shrink-0 p-4.5">
+                    <img
+                        :src="badge.icon"
+                        :alt="`${badge.label} ${badge.label2}`"
+                        class="w-full h-full object-contain scale-110"
+                    />
+                    </div>
+
+                    <div class="font-['Paytone_One'] text-[16px] md:text-[10px] font-normal text-[#1a1a2e] leading-tight whitespace-nowrap tracking-wide">
+                    {{ badge.label }}<br />{{ badge.label2 }}
+                    </div>
                 </div>
-                <div class="font-['Poppins'] text-[10px] md:text-xs font-medium text-[#1a1a2e] leading-tight whitespace-nowrap">
-                {{ badge.label }}<br />{{ badge.label2 }}
-                </div>
-            </div>
             </div>
 
             <!-- CTA -->
@@ -122,10 +124,10 @@ const infoStrip = [
                 <img :src="item.icon" :alt="item.title" class="w-full h-full object-contain" />
                 </div>
                 <div>
-                <h4 class="font-['Poppins'] text-sm font-semibold text-[#1a1a2e]">
+                <h4 class="font-['Paytone_One'] text-sm font-normal text-[#1a1a2e] tracking-wide">
                     {{ item.title }}
                 </h4>
-                <p class="font-['Poppins'] text-xs text-[#1a1a2e]/60 mt-0.5">
+                <p class="font-['Paytone_One'] text-xs text-[#1a1a2e]/60 mt-0.5 tracking-wide">
                     {{ item.desc }}
                 </p>
                 </div>

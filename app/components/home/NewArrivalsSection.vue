@@ -1,5 +1,5 @@
 <template>
-  <section class="new-arrivals">
+  <section class="new-arrivals container mx-auto px-4">
     <!-- Header -->
     <div class="section-header">
       <div class="paw-icon">🐾</div>
@@ -220,9 +220,10 @@ function goToShopAll() {
 ================================================= */
 
 .new-arrivals {
-  padding: 4rem 1.5rem;
-  max-width: 1280px;
+  /* max-width: 1280px;  ← hata do */
   margin: 0 auto;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
   background: #ffffff;
 }
 
@@ -360,7 +361,7 @@ function goToShopAll() {
 }
 
 .stars {
-  color: #c3b5df; /* Brand light purple for stars */
+  color: #c3b5df;
   letter-spacing: -1px;
 }
 
@@ -371,7 +372,7 @@ function goToShopAll() {
 .price {
   font-size: 1.05rem;
   font-weight: 700;
-  color: #44476f; /* Brand dark navy */
+  color: #44476f;
   margin: 0.15rem 0 0.5rem;
 }
 
@@ -390,7 +391,7 @@ function goToShopAll() {
   gap: 0.5rem;
   width: 100%;
   padding: 0.65rem 1rem;
-  background: #44476f; /* Brand dark navy */
+  background: #44476f;
   color: #ffffff;
   border: none;
   border-radius: 8px;
