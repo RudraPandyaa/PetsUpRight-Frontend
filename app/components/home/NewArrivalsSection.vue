@@ -9,11 +9,23 @@
       </p>
     </div>
 
+    <!-- Loading State -->
+    <div v-if="loading" class="products-grid">
+      <div v-for="i in 8" :key="i" class="product-card animate-pulse">
+        <div class="image-wrapper bg-gray-200"></div>
+        <div class="product-info">
+          <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+          <div class="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div class="h-4 bg-gray-200 rounded w-1/3"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- Product Grid -->
-    <div class="products-grid">
+    <div v-else class="products-grid">
       <div
         v-for="product in products"
-        :key="product.id"
+        :key="product.productId"
         class="product-card"
       >
         <!-- Wishlist heart -->
@@ -41,22 +53,28 @@
         <!-- Product Image -->
         <div class="image-wrapper">
           <img
-            :src="product.image"
-            :alt="product.name"
+            v-if="product.productAsset?.preview"
+            :src="product.productAsset.preview + '?preset=medium'"
+            :alt="product.productName"
             loading="lazy"
           />
+          <div v-else class="w-full h-full flex items-center justify-center text-sm text-gray-400">
+            No Image
+          </div>
         </div>
 
         <!-- Product Info -->
         <div class="product-info">
-          <h3 class="product-name">{{ product.name }}</h3>
+          <h3 class="product-name">{{ product.productName }}</h3>
 
           <div class="rating">
             <span class="stars">★★★★★</span>
-            <span class="rating-value">({{ product.rating }})</span>
+            <span class="rating-value">(4.9)</span>
           </div>
 
-          <p class="price">₹{{ product.price.toFixed(2) }}</p>
+          <p class="price">
+            {{ formatPrice(getPrice(product)) }}
+          </p>
 
           <!-- Actions -->
           <div class="actions">
@@ -114,99 +132,48 @@
 </template>
 
 <script setup lang="ts">
-interface Product {
-  id: number
-  name: string
-  price: number
-  rating: number
-  image: string
-  isWishlisted: boolean
+const { getProducts, formatPrice } = useProducts()
+
+const products = ref<any[]>([])
+const loading = ref(true)
+
+onMounted(async () => {
+  try {
+    const result = await getProducts({ take: 8 })
+    // Add isWishlisted flag for UI
+    products.value = result.items.map((item: any) => ({
+      ...item,
+      isWishlisted: false,
+    }))
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+  } finally {
+    loading.value = false
+  }
+})
+
+function getPrice(product: any) {
+  if (product.priceWithTax?.__typename === 'PriceRange') {
+    return product.priceWithTax.min
+  }
+  return product.priceWithTax?.value || 0
 }
 
-const products = ref<Product[]>([
-  {
-    id: 1,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 2,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 3,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 4,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 5,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 6,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 7,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-  {
-    id: 8,
-    name: 'Grain-Free Kibble',
-    price: 80.0,
-    rating: 4.9,
-    image: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400&h=400&fit=crop',
-    isWishlisted: false,
-  },
-])
-
-function toggleWishlist(product: Product) {
+function toggleWishlist(product: any) {
   product.isWishlisted = !product.isWishlisted
 }
 
-function addToCart(product: Product) {
-  console.log('Added to cart:', product.name)
-  // Integrate with your cart logic / useVendure composable here
+function addToCart(product: any) {
+  console.log('Added to cart:', product.productName)
+  // Baad mein real cart logic
 }
 
-function buyNow(product: Product) {
-  console.log('Buy now:', product.name)
-  // Navigate to checkout or product page
+function buyNow(product: any) {
+  navigateTo(`/product/${product.slug}`)
 }
 
 function goToShopAll() {
-  // navigateTo('/shop') or your shop route
-  console.log('Go to shop all')
+  navigateTo('/shop')
 }
 </script>
 
@@ -220,7 +187,6 @@ function goToShopAll() {
 ================================================= */
 
 .new-arrivals {
-  /* max-width: 1280px;  ← hata do */
   margin: 0 auto;
   padding-top: 4rem;
   padding-bottom: 4rem;
@@ -236,14 +202,14 @@ function goToShopAll() {
 .paw-icon {
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
-  color: #c3b5df; /* Brand light purple */
+  color: #c3b5df;
 }
 
 .title {
   font-size: 1.75rem;
   font-weight: 800;
   letter-spacing: 0.05em;
-  color: #44476f; /* Brand dark navy */
+  color: #44476f;
   margin: 0 0 0.5rem;
   text-transform: uppercase;
 }
@@ -297,7 +263,7 @@ function goToShopAll() {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #c3b5df; /* Brand light purple */
+  color: #c3b5df;
   transition: all 0.2s ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
@@ -321,7 +287,7 @@ function goToShopAll() {
 /* Image */
 .image-wrapper {
   aspect-ratio: 1 / 1;
-  background: #ede7e7; /* Soft gray */
+  background: #ede7e7;
   overflow: hidden;
 }
 

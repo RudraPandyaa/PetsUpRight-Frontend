@@ -3,7 +3,33 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    scroll-behavior: auto !important; /* Lenis handle karega */
+  }
+
   body {
     @apply bg-white text-gray-900 antialiased;
   }
+}
+
+/* Lenis required styles */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
 }
