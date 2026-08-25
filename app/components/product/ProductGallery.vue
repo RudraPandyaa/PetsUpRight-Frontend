@@ -1,0 +1,144 @@
+<template>
+  <div class="product-gallery">
+    <!-- Main image -->
+    <div class="main-image relative">
+      <!-- Discount badge (optional – parent se pass kar sakte ho) -->
+      <span v-if="discount" class="discount-badge">
+        {{ discount }}% OFF
+      </span>
+
+      <div class="main-frame">
+        <img
+          v-if="activeImage"
+          :src="activeImage + '?preset=large'"
+          :alt="name"
+          class="main-img"
+        />
+        <div v-else class="no-image">
+          <img src="/images/shop/Rectangle-5.png" :alt="name" class="main-img" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Thumbnails -->
+    <div v-if="images.length > 1" class="thumbs">
+      <button
+        v-for="(img, i) in images"
+        :key="i"
+        type="button"
+        class="thumb"
+        :class="{ active: activeImage === img }"
+        @click="activeImage = img"
+      >
+        <img :src="img + '?preset=thumb'" :alt="`${name} ${i + 1}`" />
+      </button>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+const props = defineProps<{
+  images: string[]
+  name: string
+  discount?: number
+}>()
+
+const activeImage = ref('')
+
+watch(
+  () => props.images,
+  (imgs) => {
+    activeImage.value = imgs?.[0] || ''
+  },
+  { immediate: true }
+)
+</script>
+
+<style scoped>
+.product-gallery {
+  width: 100%;
+}
+
+.main-image {
+  position: relative;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+  background: #e11d48;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.55rem;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+
+.main-frame {
+  aspect-ratio: 1 / 1;
+  background: #f5f3f0;
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.no-image {
+  color: #9ca3af;
+  font-size: 0.9rem;
+}
+
+.thumbs {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.85rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.thumb {
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  background: #f5f3f0;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.thumb.active {
+  border-color: #44476f;
+}
+
+.thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .thumb {
+    width: 60px;
+    height: 60px;
+  }
+}
+</style>

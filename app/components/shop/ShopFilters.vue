@@ -241,24 +241,24 @@ const openSections = reactive({
 })
 
 const selected = reactive({
-  petType: ['dogs'] as string[],
+  petType: [] as string[],
   category: [] as string[],
   brand: [] as string[],
   ratings: [] as number[],
 })
 
 const petTypes = [
-  { label: 'Dogs', value: 'dogs' },
-  { label: 'Cats', value: 'cats' },
+  { label: 'Dogs', value: '42' },
+  { label: 'Cats', value: '43' },
 ]
 
 const categories = [
-  { label: 'Food', value: 'food' },
-  { label: 'Toys', value: 'toys' },
-  { label: 'Grooming', value: 'grooming' },
-  { label: 'Beds & Furniture', value: 'beds' },
-  { label: 'Collars & Leashes', value: 'collars' },
-  { label: 'Health & Wellness', value: 'health' },
+  { label: 'Food', value: '44' },
+  // { label: 'Toys', value: 'toys' },
+  // { label: 'Grooming', value: 'grooming' },
+  // { label: 'Beds & Furniture', value: 'beds' },
+  // { label: 'Collars & Leashes', value: 'collars' },
+  // { label: 'Health & Wellness', value: 'health' },
 ]
 
 const brands = [

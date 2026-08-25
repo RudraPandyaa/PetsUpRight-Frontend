@@ -52,15 +52,7 @@
 
         <!-- Product Image -->
         <div class="image-wrapper">
-          <img
-            v-if="product.productAsset?.preview"
-            :src="product.productAsset.preview + '?preset=medium'"
-            :alt="product.productName"
-            loading="lazy"
-          />
-          <div v-else class="w-full h-full flex items-center justify-center text-sm text-gray-400">
-            No Image
-          </div>
+          <img :src="product.image" :alt="product.productName" loading="lazy" />
         </div>
 
         <!-- Product Info -->
@@ -72,9 +64,7 @@
             <span class="rating-value">(4.9)</span>
           </div>
 
-          <p class="price">
-            {{ formatPrice(getPrice(product)) }}
-          </p>
+          <p class="price">{{ formatPriceDisplay(product.price) }}</p>
 
           <!-- Actions -->
           <div class="actions">
@@ -132,32 +122,22 @@
 </template>
 
 <script setup lang="ts">
-const { getProducts, formatPrice } = useProducts()
+const products = ref([
+  { productId: 1, productName: 'Grain-Free Kibble', slug: 'grain-free-kibble', image: '/images/shop/Rectangle-5.png', price: 80, isWishlisted: false },
+  { productId: 2, productName: 'Chicken & Rice Food', slug: 'chicken-rice-food', image: '/images/shop/Rectangle-5.png', price: 120, isWishlisted: false },
+  { productId: 3, productName: 'Salmon Dog Treats', slug: 'salmon-dog-treats', image: '/images/shop/Rectangle-5.png', price: 45, isWishlisted: false },
+  { productId: 4, productName: 'Soft Pet Bed', slug: 'soft-pet-bed', image: '/images/shop/Rectangle-5.png', price: 999, isWishlisted: false },
+  { productId: 5, productName: 'Rope Chew Toy', slug: 'rope-chew-toy', image: '/images/shop/Rectangle-5.png', price: 35, isWishlisted: false },
+  { productId: 6, productName: 'Catnip Mouse Toy', slug: 'catnip-mouse-toy', image: '/images/shop/Rectangle-5.png', price: 25, isWishlisted: false },
+  { productId: 7, productName: 'Grooming Brush', slug: 'grooming-brush', image: '/images/shop/Rectangle-5.png', price: 60, isWishlisted: false },
+  { productId: 8, productName: 'Leather Collar', slug: 'leather-collar', image: '/images/shop/Rectangle-5.png', price: 150, isWishlisted: false },
+  { productId: 9, productName: 'Nylon Leash', slug: 'nylon-leash', image: '/images/shop/Rectangle-5.png', price: 90, isWishlisted: false },
+  { productId: 10, productName: 'Stainless Bowl Set', slug: 'stainless-bowl-set', image: '/images/shop/Rectangle-5.png', price: 75, isWishlisted: false },
+  { productId: 11, productName: 'Dental Chew Sticks', slug: 'dental-chew-sticks', image: '/images/shop/Rectangle-5.png', price: 40, isWishlisted: false },
+  { productId: 12, productName: 'Pet Carrier Bag', slug: 'pet-carrier-bag', image: '/images/shop/Rectangle-5.png', price: 1299, isWishlisted: false },
+])
 
-const products = ref<any[]>([])
-const loading = ref(true)
-
-onMounted(async () => {
-  try {
-    const result = await getProducts({ take: 8 })
-    // Add isWishlisted flag for UI
-    products.value = result.items.map((item: any) => ({
-      ...item,
-      isWishlisted: false,
-    }))
-  } catch (error) {
-    console.error('Failed to fetch products:', error)
-  } finally {
-    loading.value = false
-  }
-})
-
-function getPrice(product: any) {
-  if (product.priceWithTax?.__typename === 'PriceRange') {
-    return product.priceWithTax.min
-  }
-  return product.priceWithTax?.value || 0
-}
+const loading = ref(false)
 
 function toggleWishlist(product: any) {
   product.isWishlisted = !product.isWishlisted
@@ -165,7 +145,6 @@ function toggleWishlist(product: any) {
 
 function addToCart(product: any) {
   console.log('Added to cart:', product.productName)
-  // Baad mein real cart logic
 }
 
 function buyNow(product: any) {
@@ -175,8 +154,16 @@ function buyNow(product: any) {
 function goToShopAll() {
   navigateTo('/shop')
 }
-</script>
 
+// price already rupees me hai
+function formatPriceDisplay(price: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+  }).format(price)
+}
+</script>
 <style scoped>
 /* ========== Pets Upright Brand Colors ==========
    Light Purple : #c3b5df

@@ -1,7 +1,7 @@
 <template>
-  <section class="bg-[#f7f7f8] pb-0">
-    <div class="container mx-auto px-4">
-      <div class="relative bg-[#c3b5df]/40 rounded-2xl overflow-hidden px-6 py-8 md:px-10 md:py-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+  <section class="w-full bg-[#c3b5df]/40">
+    <div class="container mx-auto px-4 py-8 md:py-10">
+      <div class="flex flex-col md:flex-row items-center gap-6 md:gap-10">
         
         <!-- Left: Pets image -->
         <div class="shrink-0 w-full md:w-auto flex justify-center">
@@ -17,7 +17,7 @@
           <h2 class="text-2xl md:text-3xl font-bold text-[#1a1a2e] mb-2">
             Stay Pawsome!
           </h2>
-          <p class="text-sm md:text-base text-[#1a1a2e]/70 max-w-md">
+          <p class="text-sm md:text-base text-[#1a1a2e]/70 max-w-md mx-auto md:mx-0">
             Join our newsletter to receive expert pet care tips, exclusive discounts, and new product early-access.
           </p>
         </div>

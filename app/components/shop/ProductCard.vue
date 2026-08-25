@@ -26,7 +26,7 @@
       >
         <svg
           class="w-4 h-4 transition-colors"
-          :class="isWishlisted ? 'text-red-500 fill-red-500' : 'text-gray-400'"
+          :class="isWishlisted ? 'text-[#1a1a2e] fill-[#c3b5df]' : 'text-gray-400'"
           fill="currentColor"
           viewBox="0 0 24 24"
         >
