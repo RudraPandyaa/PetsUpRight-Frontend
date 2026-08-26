@@ -175,7 +175,7 @@ function formatPriceDisplay(price: number) {
 
 .new-arrivals {
   margin: 0 auto;
-  padding-top: 4rem;
+  padding-top: 80px;
   padding-bottom: 4rem;
   background: #ffffff;
 }
@@ -202,10 +202,10 @@ function formatPriceDisplay(price: number) {
 }
 
 .subtitle {
-  font-size: 0.95rem;
+  font-size: 20px;
   color: #6b7280;
   margin: 0;
-  max-width: 420px;
+  max-width: 560px;
   margin-inline: auto;
 }
 

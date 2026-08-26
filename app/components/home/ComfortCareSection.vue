@@ -250,10 +250,9 @@
 /* ========== ROW 1: Intro ========== */
 .intro-row {
   display: grid;
-  grid-template-columns: 1.15fr 0.85fr;
+  grid-template-columns: 1.75fr 0.85fr;
   gap: 1.5rem;
-  align-items: center;
-  margin-bottom: 1.5rem;
+  align-items: end;
   width: 100%;
 }
 
@@ -262,6 +261,7 @@
   background: #f8f6fb;
   border-radius: 20px;
   padding: 2.2rem 2.8rem 2.2rem 2.4rem;
+  height:330px;
 }
 
 .intro-title {
@@ -271,6 +271,12 @@
   letter-spacing: 0.02em;
   line-height: 1.2;
   color: #44476f;
+}
+
+.intro-desc {
+  margin-top: 1.5rem;
+  width: 850px;
+  font-size: 20px;
 }
 /* 
 .intro-desc,
@@ -427,22 +433,24 @@
 
 .row-2 {
   display: grid;
-  grid-template-columns: 160px 1.2fr 0.8fr;
+  grid-template-columns: 360px 1.2fr 0.8fr;
   gap: 1.25rem;
   align-items: stretch;
 }
 
 /* Dog */
 .dog-illustration {
+  width: 360px;
+  height: 360px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .dog-img {
-  width: 150px !important;
-  height: auto !important;
-  max-width: 150px !important;
+  width: 360px !important;
+  height: 360px !important;
+  max-width: none !important;
   object-fit: contain;
 }
 
@@ -546,6 +554,7 @@
   background: #f8f6fb;
   border-radius: 18px;
   padding: 1.3rem 1.4rem;
+  height: 360px;
 }
 
 /* ---- Health Essentials (title upar, image left + text right) ---- */
@@ -709,8 +718,8 @@
 .row-3 .card-toys .card-text h3,
 .row-4 .card > h3 {
   font-family: 'Paytone One', sans-serif !important;
-  font-size: 1.25rem !important;   /* 20px */
-  font-weight: 400 !important;
+  font-size: 32px;
+  font-weight: 500 !important;
   color: #44476f !important;
   line-height: 1.25 !important;
 }
@@ -723,7 +732,7 @@
 .row-3 .card-content .card-text p,
 .row-4 .card-content .card-text p {
   font-family: 'Inter', system-ui, sans-serif !important;
-  font-size: 0.95rem !important;   /* ~15px */
+  font-size: 20px;
   font-weight: 400 !important;
   line-height: 1.6 !important;
   color: #5a5a6e !important;

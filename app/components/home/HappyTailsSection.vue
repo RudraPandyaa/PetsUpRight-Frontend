@@ -2,7 +2,7 @@
   <section class="happy-tails">
     <!-- Header -->
     <div class="section-header">
-      <div class="paw-icons">🐾 🐾</div>
+      <div class="paw-icons">🐾</div>
       <h2 class="title">HAPPY TAILS</h2>
       <p class="subtitle">
         Catch our cutest customers trying toys, treats, beds, and more.
@@ -144,9 +144,9 @@ onUnmounted(() => {
 }
 
 .paw-icons {
-  font-size: 1.2rem;
-  margin-bottom: 0.4rem;
-  opacity: 0.7;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color:  #c3b5df;
 }
 
 .title {
@@ -159,9 +159,11 @@ onUnmounted(() => {
 }
 
 .subtitle {
-  font-size: 0.95rem;
+  font-size: 20px;
   color: #6b7280;
   margin: 0;
+  max-width: 560px;
+  margin-inline: auto;
 }
 
 /* Carousel */

@@ -94,19 +94,15 @@ onBeforeUnmount(stopAutoplay)
 </script>
 
 <template>
-  <section class="py-14 md:py-20 bg-white relative overflow-hidden">
+  <section class=" md:pt-20 bg-white relative overflow-hidden">
     <div class="container mx-auto px-4">
       <!-- Heading -->
       <div class="text-center mb-10 md:mb-12">
-        <img
-            src="/images/icons/paw.png"
-            alt=""
-            class="w-16 h-16 md:w-20 md:h-20 mx-auto mb-3 opacity-80"
-        />
+        <div class="paw-icon">🐾</div>
         <h2 class="text-2xl md:text-3xl font-extrabold text-[#1a1a2e] tracking-wider">
           CATEGORIES
         </h2>
-        <p class="text-sm md:text-base text-[#1a1a2e]/55 mt-2 max-w-md mx-auto">
+        <p class="text-[20px] text-[#1a1a2e]/55 mt-2 max-w-[560px] mx-auto">
           From nutritious treats to fun toys and everyday must-haves.
         </p>
       </div>
@@ -169,3 +165,12 @@ onBeforeUnmount(stopAutoplay)
     </div>
   </section>
 </template>
+
+<style>
+.paw-icon {
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: #c3b5df;
+}
+
+</style>

@@ -25,8 +25,8 @@
         class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
       >
         <svg
-          class="w-4 h-4 transition-colors"
-          :class="isWishlisted ? 'text-[#1a1a2e] fill-[#c3b5df]' : 'text-gray-400'"
+          class="w-5 h-5 transition-colors"
+          :class="isWishlisted ? 'text-[#1a1a2e] fill-[#E85D75]' : 'text-gray-400'"
           fill="currentColor"
           viewBox="0 0 24 24"
         >
@@ -37,13 +37,13 @@
 
     <!-- Content -->
     <div :class="['p-4 flex flex-col', isList ? 'flex-1 justify-center' : '']">
-      <h3 class="text-sm font-medium text-[#1a1a2e] line-clamp-2">
+      <h3 class="text-md font-medium text-[#1a1a2e] line-clamp-2">
         {{ product.name }}
       </h3>
 
       <!-- Rating -->
       <div class="flex items-center gap-1 mt-1.5">
-        <div class="flex text-amber-400 text-xs">
+        <div class="flex text-amber-400 text-lg">
           <span v-for="i in 5" :key="i">
             {{ i <= Math.round(product.rating) ? '★' : '☆' }}
           </span>
@@ -52,7 +52,7 @@
       </div>
 
       <!-- Price -->
-      <p class="text-base font-semibold text-[#1a1a2e] mt-2">
+      <p class="text-base font-semibold text-lg text-[#1a1a2e] mt-2">
         ₹{{ product.price.toFixed(2) }}
       </p>
 
