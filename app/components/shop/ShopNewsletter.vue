@@ -8,7 +8,7 @@
           <img
             src="/images/shop/image-6.png"
             alt="Happy pets"
-            class="h-36 md:h-44 object-contain"
+            class="h-36 md:h-44 object-contain translate-y-11"
           />
         </div>
 

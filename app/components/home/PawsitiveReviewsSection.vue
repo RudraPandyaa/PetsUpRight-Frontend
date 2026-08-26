@@ -2,7 +2,7 @@
   <section class="pawsitive-reviews container mx-auto px-4">
     <!-- Header -->
     <div class="section-header">
-      <div class="paw-icons">🐾 🐾</div>
+      <div class="paw-icons">🐾</div>
       <h2 class="title">PAWSITIVE REVIEWS</h2>
     </div>
 
@@ -267,9 +267,9 @@ onUnmounted(() => {
 }
 
 .paw-icons {
-  font-size: 1.1rem;
-  margin-bottom: 0.35rem;
-  opacity: 0.7;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+  color: #c3b5df;
 }
 
 .title {

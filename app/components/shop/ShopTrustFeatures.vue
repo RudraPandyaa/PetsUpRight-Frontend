@@ -27,10 +27,10 @@
             </svg>
           </div>
 
-          <h3 class="text-base font-semibold text-[#1a1a2e] mb-2">
+          <h3 class="text-base font-semibold text-xl text-[#1a1a2e] mb-2">
             {{ feature.title }}
           </h3>
-          <p class="text-sm text-gray-500 leading-relaxed">
+          <p class="text-md text-gray-500 leading-relaxed">
             {{ feature.description }}
           </p>
         </div>

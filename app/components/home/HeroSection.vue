@@ -57,7 +57,7 @@ const infoStrip = [
             <!-- divider with paw icon -->
             <div class="relative flex items-center mb-6 w-full max-w-md">
             <div class="flex-1 border-t border-dashed border-[#c3b5df]"></div>
-            <img src="/images/icons/paw.png" alt="" class="mx-3 w-4 h-4 object-contain" />
+            <div class="paw-icon">🐾</div>
             <div class="flex-1 border-t border-dashed border-[#c3b5df]"></div>
             </div>
 
@@ -68,14 +68,14 @@ const infoStrip = [
             <span class="text-[#1a1a2e] font-semibold">playful</span> life.
             </p>
 
-            <div class="flex flex-nowrap items-center gap-3 md:gap-4 mb-5 max-w-[540px] overflow-hidden">
+            <div class="flex flex-nowrap items-center gap-3 md:gap-2 mb-5 max-w-[540px] overflow-hidden ">
                 <div
                     v-for="badge in trustBadges"
                     :key="badge.label"
                     class="flex items-center gap-2.5 shrink-0"
                 >
                     <!-- Bigger circle + less padding so icon looks large -->
-                    <div class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#f3eef9] flex items-center justify-center shrink-0 p-4.5">
+                    <div class="w-12 h-12 md:w-10 md:h-10 rounded-full bg-[#f3eef9] flex items-center justify-center shrink-0 p-4.5">
                     <img
                         :src="badge.icon"
                         :alt="`${badge.label} ${badge.label2}`"
@@ -83,7 +83,7 @@ const infoStrip = [
                     />
                     </div>
 
-                    <div class="font-['Paytone_One'] text-[16px] md:text-[10px] font-normal text-[#1a1a2e] leading-tight whitespace-nowrap tracking-wide">
+                    <div class="font-['Inter'] text-[16px] md:text-[14px] font-bold text-[#1a1a2e] leading-tight whitespace-nowrap tracking-wide">
                     {{ badge.label }}<br />{{ badge.label2 }}
                     </div>
                 </div>
@@ -124,10 +124,10 @@ const infoStrip = [
                 <img :src="item.icon" :alt="item.title" class="w-full h-full object-contain" />
                 </div>
                 <div>
-                <h4 class="font-['Paytone_One'] text-sm font-normal text-[#1a1a2e] tracking-wide">
+                <h4 class="font-['Inter'] text-[14px] font-bold text-[#1a1a2e] tracking-wide">
                     {{ item.title }}
                 </h4>
-                <p class="font-['Paytone_One'] text-xs text-[#1a1a2e]/60 mt-0.5 tracking-wide">
+                <p class="font-['Inter'] text-[12px] text-[#1a1a2e]/60 mt-0.5 tracking-wide">
                     {{ item.desc }}
                 </p>
                 </div>
@@ -137,3 +137,9 @@ const infoStrip = [
         </div>
   </section>
 </template>
+<style>
+.paw-icon {
+  font-size: 30px;
+  color: #c3b5df;
+}
+</style>
