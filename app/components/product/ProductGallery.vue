@@ -60,7 +60,12 @@ watch(
 }
 
 .main-image {
-  position: relative;
+  flex: 1;                 /* baaki saari height le lega */
+  min-height: 320px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
 }
 
 .discount-badge {
@@ -78,7 +83,7 @@ watch(
 }
 
 .main-frame {
-  aspect-ratio: 1 / 1;
+  aspect-ratio: 1 / 0.95; 
   background: #f5f3f0;
   border-radius: 12px;
   overflow: hidden;
@@ -100,11 +105,10 @@ watch(
 }
 
 .thumbs {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
   margin-top: 0.85rem;
-  overflow-x: auto;
-  scrollbar-width: none;
 }
 
 .thumbs::-webkit-scrollbar {
@@ -112,9 +116,8 @@ watch(
 }
 
 .thumb {
-  flex-shrink: 0;
-  width: 72px;
-  height: 72px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid transparent;
@@ -134,7 +137,6 @@ watch(
   object-fit: cover;
   display: block;
 }
-
 @media (max-width: 640px) {
   .thumb {
     width: 60px;

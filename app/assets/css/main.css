@@ -6,9 +6,13 @@
   html {
     scroll-behavior: auto !important; /* Lenis handle karega */
   }
+  html, body {
+    overflow-x: hidden;
+  }
 
   body {
     @apply bg-white text-gray-900 antialiased;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
