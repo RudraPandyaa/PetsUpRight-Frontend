@@ -16,6 +16,7 @@ export function useProducts() {
             preview
           }
           priceWithTax {
+            __typename
             ... on SinglePrice {
               value
             }

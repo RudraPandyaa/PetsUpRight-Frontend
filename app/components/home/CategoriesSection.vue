@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
-const categories = [
-  { name: 'Dry Food', image: '/images/categories/dry-food.jpg', link: '/shop?category=dry-food' },
-  { name: 'Furniture', image: '/images/categories/furniture.jpg', link: '/shop?category=furniture' },
-  { name: 'Collars', image: '/images/categories/collars.jpg', link: '/shop?category=collars' },
-  { name: 'Leashes', image: '/images/categories/leashes.jpg', link: '/shop?category=leashes' },
-  { name: 'Toys', image: '/images/categories/toys.jpg', link: '/shop?category=toys' },
-  { name: 'Grooming', image: '/images/categories/grooming.jpg', link: '/shop?category=grooming' },
-  { name: 'Beds', image: '/images/categories/beds.jpg', link: '/shop?category=beds' },
-  { name: 'Treats', image: '/images/categories/treats.jpg', link: '/shop?category=treats' },
-]
+const { getCollections } = useCollections()
+
+const categories = ref<any[]>([])
+const loading = ref(true)
 
 const currentIndex = ref(0)
 const isDragging = ref(false)
@@ -34,8 +28,12 @@ const trackStyle = computed(() => {
   }
 })
 
+const maxIndex = computed(() =>
+  Math.max(0, categories.value.length - visibleCount)
+)
+
 function next() {
-  if (currentIndex.value < categories.length - visibleCount) {
+  if (currentIndex.value < maxIndex.value) {
     currentIndex.value++
   } else {
     currentIndex.value = 0
@@ -46,7 +44,7 @@ function prev() {
   if (currentIndex.value > 0) {
     currentIndex.value--
   } else {
-    currentIndex.value = Math.max(0, categories.length - visibleCount)
+    currentIndex.value = maxIndex.value
   }
 }
 
@@ -56,7 +54,9 @@ function goTo(index: number) {
 
 function startAutoplay() {
   stopAutoplay()
-  autoplayTimer = setInterval(next, 3500)
+  if (categories.value.length > visibleCount) {
+    autoplayTimer = setInterval(next, 3500)
+  }
 }
 
 function stopAutoplay() {
@@ -89,12 +89,28 @@ function onDragEnd() {
   startAutoplay()
 }
 
-onMounted(startAutoplay)
+onMounted(async () => {
+  try {
+    const items = await getCollections()
+    categories.value = items.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      image: c.featuredAsset?.preview || '/images/categories/placeholder.jpg',
+      link: `/shop?collection=${c.slug}`,
+    }))
+  } catch (error) {
+    console.error('Failed to fetch collections:', error)
+  } finally {
+    loading.value = false
+    startAutoplay()
+  }
+})
+
 onBeforeUnmount(stopAutoplay)
 </script>
 
 <template>
-  <section class=" md:pt-20 bg-white relative overflow-hidden">
+  <section class="md:pt-20 bg-white relative overflow-hidden">
     <div class="container mx-auto px-4">
       <!-- Heading -->
       <div class="text-center mb-10 md:mb-12">
@@ -107,8 +123,23 @@ onBeforeUnmount(stopAutoplay)
         </p>
       </div>
 
+      <!-- Loading -->
+      <div v-if="loading" class="flex justify-center gap-6">
+        <div
+          v-for="i in 6"
+          :key="i"
+          class="flex flex-col items-center"
+        >
+          <div class="w-32 h-32 md:w-36 md:h-36 rounded-full bg-gray-200 animate-pulse"></div>
+          <div class="h-4 w-16 bg-gray-200 rounded mt-3 animate-pulse"></div>
+        </div>
+      </div>
+
       <!-- Slider -->
-      <div class="relative overflow-hidden select-none cursor-grab active:cursor-grabbing">
+      <div
+        v-else
+        class="relative overflow-hidden select-none cursor-grab active:cursor-grabbing"
+      >
         <div
           class="flex"
           :style="trackStyle"
@@ -122,14 +153,14 @@ onBeforeUnmount(stopAutoplay)
         >
           <div
             v-for="cat in categories"
-            :key="cat.name"
-              class="shrink-0 px-0"
+            :key="cat.id"
+            class="shrink-0 px-0"
             :style="{ width: `${slideWidth}%` }"
           >
             <NuxtLink :to="cat.link" class="flex flex-col items-center group">
               <div
-                class="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden 
-                    shadow-md ring-2 ring-transparent group-hover:ring-[#c3b5df] 
+                class="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden
+                    shadow-md ring-2 ring-transparent group-hover:ring-[#c3b5df]
                     transition-all duration-300 group-hover:scale-105 mx-auto"
               >
                 <img
@@ -140,15 +171,15 @@ onBeforeUnmount(stopAutoplay)
                 />
               </div>
               <span class="text-sm md:text-base font-semibold text-[#44476f] mt-3 group-hover:text-[#1a1a2e] transition">
-                    {{ cat.name }}
-                </span>
+                {{ cat.name }}
+              </span>
             </NuxtLink>
           </div>
         </div>
       </div>
 
       <!-- Dots -->
-      <div class="flex justify-center gap-2 mt-8">
+      <div v-if="!loading && categories.length > visibleCount" class="flex justify-center gap-2 mt-8">
         <button
           v-for="i in Math.ceil(categories.length / visibleCount)"
           :key="i"
@@ -172,5 +203,4 @@ onBeforeUnmount(stopAutoplay)
   margin-bottom: 0.5rem;
   color: #c3b5df;
 }
-
 </style>

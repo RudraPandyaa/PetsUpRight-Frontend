@@ -5,10 +5,11 @@
       isList ? 'flex flex-row' : 'flex flex-col'
     ]"
   >
-    <!-- Image -->
-    <div
+    <!-- Image → product page -->
+    <NuxtLink
+      :to="productLink"
       :class="[
-        'relative bg-gray-50 overflow-hidden shrink-0',
+        'relative bg-gray-50 overflow-hidden shrink-0 block',
         isList ? 'w-32 sm:w-40 md:w-48 aspect-square' : 'aspect-square w-full'
       ]"
     >
@@ -21,7 +22,8 @@
 
       <!-- Wishlist -->
       <button
-        @click.stop="toggleWishlist"
+        type="button"
+        @click.prevent.stop="toggleWishlist"
         class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
       >
         <svg
@@ -33,39 +35,36 @@
           <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
         </svg>
       </button>
-    </div>
+    </NuxtLink>
 
     <!-- Content -->
     <div :class="['p-4 flex flex-col', isList ? 'flex-1 justify-center' : '']">
-      <h3 class="text-md font-medium text-[#1a1a2e] line-clamp-2">
-        {{ product.name }}
-      </h3>
+      <NuxtLink :to="productLink">
+        <h3 class="text-md font-medium text-[#1a1a2e] line-clamp-2 hover:text-[#44476f]">
+          {{ product.name }}
+        </h3>
+      </NuxtLink>
 
-      <!-- Rating -->
       <div class="flex items-center gap-1 mt-1.5">
         <div class="flex text-amber-400 text-lg">
           <span v-for="i in 5" :key="i">
-            {{ i <= Math.round(product.rating) ? '★' : '☆' }}
+            {{ i <= Math.round(product.rating || 0) ? '★' : '☆' }}
           </span>
         </div>
-        <span class="text-xs text-gray-500">({{ product.rating }})</span>
+        <span class="text-xs text-gray-500">({{ product.rating || 4.9 }})</span>
       </div>
 
-      <!-- Price -->
       <p class="text-base font-semibold text-lg text-[#1a1a2e] mt-2">
-        ₹{{ product.price.toFixed(2) }}
+        ₹{{ Math.round(product.price) }}
       </p>
 
-      <!-- Buttons -->
       <div :class="['mt-3', isList ? 'flex flex-wrap items-center gap-2' : 'space-y-2']">
         <button
+          type="button"
           @click="$emit('add-to-cart', product)"
           class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
           :class="isList ? '' : 'w-full'"
         >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-          </svg>
           Add to Cart
         </button>
 
@@ -74,7 +73,8 @@
         </template>
 
         <button
-          @click="$emit('buy-now', product)"
+          type="button"
+          @click="onBuyNow"
           class="border border-[#1a1a2e] text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
           :class="isList ? '' : 'w-full'"
         >
@@ -92,6 +92,7 @@ interface Product {
   image: string
   price: number
   rating: number
+  slug?: string
 }
 
 const props = defineProps<{
@@ -99,7 +100,7 @@ const props = defineProps<{
   viewMode?: 'grid' | 'list'
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'add-to-cart': [product: Product]
   'buy-now': [product: Product]
 }>()
@@ -107,7 +108,17 @@ defineEmits<{
 const isList = computed(() => props.viewMode === 'list')
 const isWishlisted = ref(false)
 
+const productLink = computed(() => {
+  const slug = props.product.slug || props.product.id
+  return `/product/${slug}`
+})
+
 function toggleWishlist() {
   isWishlisted.value = !isWishlisted.value
+}
+
+function onBuyNow() {
+  emit('buy-now', props.product)
+  navigateTo(productLink.value)
 }
 </script>

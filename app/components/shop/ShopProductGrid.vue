@@ -60,28 +60,64 @@ const props = defineProps<{
   }
 }>()
 
-const loading = ref(false)
+const route = useRoute()
+const { getProducts } = useProducts()
 
-const products = ref([
-  { id: 1, name: 'Grain-Free Kibble', image: '/images/shop/Rectangle-5.png', price: 80, rating: 4.9, slug: 'grain-free-kibble' },
-  { id: 2, name: 'Chicken & Rice Food', image: '/images/shop/Rectangle-5.png', price: 120, rating: 4.8, slug: 'chicken-rice-food' },
-  { id: 3, name: 'Salmon Dog Treats', image: '/images/shop/Rectangle-5.png', price: 45, rating: 4.7, slug: 'salmon-dog-treats' },
-  { id: 4, name: 'Soft Pet Bed', image: '/images/shop/Rectangle-5.png', price: 999, rating: 4.9, slug: 'soft-pet-bed' },
-  { id: 5, name: 'Rope Chew Toy', image: '/images/shop/Rectangle-5.png', price: 35, rating: 4.6, slug: 'rope-chew-toy' },
-  { id: 6, name: 'Catnip Mouse Toy', image: '/images/shop/Rectangle-5.png', price: 25, rating: 4.5, slug: 'catnip-mouse-toy' },
-  { id: 7, name: 'Grooming Brush', image: '/images/shop/Rectangle-5.png', price: 60, rating: 4.8, slug: 'grooming-brush' },
-  { id: 8, name: 'Leather Collar', image: '/images/shop/Rectangle-5.png', price: 150, rating: 4.7, slug: 'leather-collar' },
-  { id: 9, name: 'Nylon Leash', image: '/images/shop/Rectangle-5.png', price: 90, rating: 4.6, slug: 'nylon-leash' },
-  { id: 10, name: 'Stainless Bowl Set', image: '/images/shop/Rectangle-5.png', price: 75, rating: 4.9, slug: 'stainless-bowl-set' },
-  { id: 11, name: 'Dental Chew Sticks', image: '/images/shop/Rectangle-5.png', price: 40, rating: 4.4, slug: 'dental-chew-sticks' },
-  { id: 12, name: 'Pet Carrier Bag', image: '/images/shop/Rectangle-5.png', price: 1299, rating: 4.8, slug: 'pet-carrier-bag' },
-])
+const products = ref<any[]>([])
+const loading = ref(true)
+
+async function fetchProducts() {
+  loading.value = true
+  try {
+    const facetValueIds = [
+      ...(props.filters?.petType || []),
+      ...(props.filters?.category || []),
+    ]
+
+    const result = await getProducts({
+      take: 24,
+      facetValueIds: facetValueIds.length ? facetValueIds : undefined,
+      minPrice: props.filters?.priceRange?.[0],
+      maxPrice: props.filters?.priceRange?.[1],
+      collectionSlug: (route.query.collection as string) || undefined,
+    })
+
+    products.value = result.items.map((item: any) => {
+      const priceObj = item.priceWithTax || {}
+      let priceValue = 0
+      if (typeof priceObj.value === 'number') priceValue = priceObj.value
+      else if (typeof priceObj.min === 'number') priceValue = priceObj.min
+
+      return {
+        id: item.productId,
+        name: item.productName,
+        slug: item.slug,
+        image: item.productAsset?.preview
+          ? item.productAsset.preview + '?preset=medium'
+          : '/images/shop/Rectangle-5.png',
+        price: Math.round(priceValue / 100),
+        rating: 4.9,
+      }
+    })
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+    products.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(
+  () => [props.filters, route.query.collection],
+  () => fetchProducts(),
+  { deep: true, immediate: true }
+)
 
 function onAddToCart(product: any) {
   console.log('Add to cart:', product.name)
 }
 
 function onBuyNow(product: any) {
-  navigateTo(`/product/${product.slug || product.id}`)
+  navigateTo(`/product/${product.slug}`)
 }
 </script>
