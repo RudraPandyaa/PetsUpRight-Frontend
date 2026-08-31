@@ -61,10 +61,26 @@
             class="savings-section"
           >
             <div class="saving-labels">
-              <span class="active">DELIVERY FREE</span>
-              <span>SAVE ₹50</span>
-              <span>SAVE ₹75</span>
-            </div>
+
+  <span
+    :class="{ active: totalPrice >= 750 }"
+  >
+    DELIVERY FREE
+  </span>
+
+  <span
+    :class="{ active: totalPrice >= 2000 }"
+  >
+    SAVE ₹200
+  </span>
+
+  <span
+    :class="{ active: totalPrice >= 5000 }"
+  >
+    SAVE ₹400
+  </span>
+
+</div>
 
             <div class="saving-line">
               <div
@@ -74,7 +90,7 @@
             </div>
 
             <div class="saving-values">
-              <span>₹750</span>
+              <span>₹0</span>
               <span>₹2000</span>
               <span>₹3000</span>
               <span>₹5000</span>
@@ -358,12 +374,33 @@ const totalSavings = computed(() =>
 |--------------------------------------------------------------------------
 */
 const savingProgress = computed(() => {
-  if (totalPrice.value <= 0) return 0
+  const total = totalPrice.value
 
-  return Math.min(
-    (totalPrice.value / 5000) * 100,
-    100
-  )
+  if (total <= 0) {
+    return 0
+  }
+
+  // ₹750 = first milestone
+  if (total <= 750) {
+    return (total / 750) * 25
+  }
+
+  // ₹750 → ₹2000
+  if (total <= 2000) {
+    return 25 + ((total - 750) / (2000 - 750)) * 25
+  }
+
+  // ₹2000 → ₹3000
+  if (total <= 3000) {
+    return 50 + ((total - 2000) / (3000 - 2000)) * 25
+  }
+
+  // ₹3000 → ₹5000
+  if (total <= 5000) {
+    return 75 + ((total - 3000) / (5000 - 3000)) * 25
+  }
+
+  return 100
 })
 
 
@@ -664,10 +701,11 @@ const buyNow = () => {
 
 
 .saving-progress {
-  width: 22%;
   height: 3px;
 
   background: #288f3a;
+
+  transition: width 0.3s ease;
 }
 
 
