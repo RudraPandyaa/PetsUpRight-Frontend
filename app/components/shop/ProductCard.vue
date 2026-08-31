@@ -66,14 +66,43 @@
       </p>
 
       <div :class="['mt-3', isList ? 'flex flex-wrap items-center gap-2' : 'space-y-2']">
+        <!-- Not in cart → Add to Cart -->
         <button
-  type="button"
-  @click="addToCart(product)"
-  class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
-  :class="isList ? '' : 'w-full'"
->
-  Add to Cart
-</button>
+          v-if="!cartQty"
+          type="button"
+          @click="addToCart(product)"
+          class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+          :class="isList ? '' : 'w-full'"
+        >
+          Add to Cart
+        </button>
+
+        <!-- In cart → qty controls -->
+        <div
+          v-else
+          class="flex items-center justify-between border border-[#1a1a2e] rounded-lg overflow-hidden"
+          :class="isList ? 'min-w-[120px]' : 'w-full'"
+        >
+          <button
+            type="button"
+            @click="changeQty(-1)"
+            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 transition font-medium text-lg"
+            aria-label="Decrease quantity"
+          >
+            −
+          </button>
+          <span class="flex-1 text-center text-sm font-semibold text-[#1a1a2e]">
+            {{ cartQty }}
+          </span>
+          <button
+            type="button"
+            @click="changeQty(1)"
+            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 transition font-medium text-lg"
+            aria-label="Increase quantity"
+          >
+            +
+          </button>
+        </div>
 
         <template v-if="!isList">
           <div class="text-center text-xs text-gray-400 font-medium">OR</div>
@@ -87,8 +116,8 @@
         >
           Buy Now
         </button>
+        </div>
       </div>
-    </div>
   </div>
 </template>
 
@@ -99,12 +128,19 @@ interface Product {
   image: string
   price: number
   rating: number
-
-  // ADD THESE
   originalPrice?: number
   discount?: number
-
   slug?: string
+}
+
+interface CartItem {
+  id: number | string
+  name: string
+  image: string
+  price: number
+  quantity: number
+  originalPrice?: number
+  discount?: number
 }
 
 const props = defineProps<{
@@ -119,30 +155,28 @@ const emit = defineEmits<{
 
 const isList = computed(() => props.viewMode === 'list')
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL WISHLIST
-|--------------------------------------------------------------------------
-| Shared across ProductCard, Wishlist page and Header.
-*/
 const wishlist = useState<Product[]>('wishlist', () => [])
-
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-
-  originalPrice?: number
-  discount?: number
-}
-
 const cart = useState<CartItem[]>('cart', () => [])
+
+const cartQty = computed(() => {
+  const item = cart.value.find(
+    (i) => String(i.id) === String(props.product.id)
+  )
+  return item?.quantity || 0
+})
+
+const isWishlisted = computed(() =>
+  wishlist.value.some((item) => String(item.id) === String(props.product.id))
+)
+
+const productLink = computed(() => {
+  const slug = props.product.slug || props.product.id
+  return `/product/${slug}`
+})
 
 function addToCart(product: Product) {
   const existingItem = cart.value.find(
-    item => String(item.id) === String(product.id)
+    (item) => String(item.id) === String(product.id)
   )
 
   if (existingItem) {
@@ -153,37 +187,37 @@ function addToCart(product: Product) {
       name: product.name,
       image: product.image,
       price: Number(product.price),
-
-      // IMPORTANT: keep the discount information
       originalPrice:
         product.originalPrice !== undefined
           ? Number(product.originalPrice)
           : undefined,
-
       discount:
-        product.discount !== undefined
-          ? Number(product.discount)
-          : undefined,
-
-      quantity: 1
+        product.discount !== undefined ? Number(product.discount) : undefined,
+      quantity: 1,
     })
   }
 
   emit('add-to-cart', product)
 }
 
-const isWishlisted = computed(() =>
-  wishlist.value.some(item => String(item.id) === String(props.product.id))
-)
+function changeQty(delta: number) {
+  const index = cart.value.findIndex(
+    (item) => String(item.id) === String(props.product.id)
+  )
+  if (index === -1) return
 
-const productLink = computed(() => {
-  const slug = props.product.slug || props.product.id
-  return `/product/${slug}`
-})
+  const next = cart.value[index].quantity + delta
+
+  if (next <= 0) {
+    cart.value.splice(index, 1)
+  } else {
+    cart.value[index].quantity = next
+  }
+}
 
 function toggleWishlist() {
   const index = wishlist.value.findIndex(
-    item => String(item.id) === String(props.product.id)
+    (item) => String(item.id) === String(props.product.id)
   )
 
   if (index === -1) {
