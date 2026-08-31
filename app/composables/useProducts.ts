@@ -104,18 +104,6 @@ export function useProducts() {
       input.facetValueFilters = facetValueIds.map((id) => ({ and: id }))
     }
 
-    // default 0–10000 mat bhejo
-    if (
-      minPrice != null &&
-      maxPrice != null &&
-      !(minPrice === 0 && maxPrice >= 10000)
-    ) {
-      input.priceRangeWithTax = {
-        min: minPrice * 100,
-        max: maxPrice * 100,
-      }
-    }
-
     const data = await client.request(SEARCH_PRODUCTS, { input })
     return data?.search ?? { totalItems: 0, items: [] }
   }

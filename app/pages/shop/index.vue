@@ -19,6 +19,10 @@
           <ShopProductGrid 
             :view-mode="viewMode" 
             :filters="activeFilters"
+            :current-page="currentPage"
+            :sort-by="sortBy"
+            :per-page="12"
+            @update:total="totalProducts = $event"
           />
           <ShopPagination
             v-model:current-page="currentPage"
@@ -42,16 +46,18 @@ const totalProducts = ref(0)
 const currentPage = ref(1)
 
 const activeFilters = ref({
+  search: '',
   petType: [] as string[],
   category: [] as string[],
   brand: [] as string[],
+  priceMin: 0,
+  priceMax: 10000,
   ratings: [] as number[],
-  priceRange: [0, 10000] as number[],
 })
 
-function onFiltersChange(filters: any) {
-  activeFilters.value = filters
-  currentPage.value = 1 // filter change pe page 1 pe le aao
+function onFiltersChange(filters: typeof activeFilters.value) {
+  activeFilters.value = { ...filters }
+  currentPage.value = 1
 }
 
 useHead({
