@@ -229,6 +229,20 @@
 </template>
 
 <script setup lang="ts">
+export interface ShopFiltersState {
+  search: string
+  petType: string[]
+  category: string[]
+  brand: string[]
+  priceMin: number
+  priceMax: number
+  ratings: number[]
+}
+
+const emit = defineEmits<{
+  'update:filters': [filters: ShopFiltersState]
+}>()
+
 const brandSearch = ref('')
 const priceRange = ref([0, 10000])
 
@@ -254,23 +268,9 @@ const petTypes = [
 
 const categories = [
   { label: 'Food', value: '44' },
-  // { label: 'Toys', value: 'toys' },
-  // { label: 'Grooming', value: 'grooming' },
-  // { label: 'Beds & Furniture', value: 'beds' },
-  // { label: 'Collars & Leashes', value: 'collars' },
-  // { label: 'Health & Wellness', value: 'health' },
 ]
 
-const brands = [
-  'Fresh Kisses',
-  'Royal Canin',
-  'Pedigree',
-  'Whiskas',
-  'Drools',
-  'Farmina',
-  'Orijen',
-  'Acana',
-]
+const brands: string[] = [] // empty for now
 
 const ratings = [
   { label: '4★ & above', value: 4 },
@@ -289,9 +289,17 @@ function toggleSection(key: keyof typeof openSections) {
   openSections[key] = !openSections[key]
 }
 
-const emit = defineEmits<{
-  (e: 'update:filters', value: any): void
-}>()
+function emitFilters() {
+  emit('update:filters', {
+    search: brandSearch.value,
+    petType: [...selected.petType],
+    category: [...selected.category],
+    brand: [...selected.brand],
+    priceMin: priceRange.value[0],
+    priceMax: priceRange.value[1],
+    ratings: [...selected.ratings],
+  })
+}
 
 function clearAll() {
   selected.petType = []
@@ -303,22 +311,8 @@ function clearAll() {
   emitFilters()
 }
 
-function emitFilters() {
-  emit('update:filters', {
-    petType: [...selected.petType],
-    category: [...selected.category],
-    brand: [...selected.brand],
-    ratings: [...selected.ratings],
-    priceRange: [...priceRange.value],
-  })
-}
+watch([selected, priceRange, brandSearch], emitFilters, { deep: true })
 
-// Jab bhi filter change ho
-watch(
-  [selected, priceRange],
-  () => {
-    emitFilters()
-  },
-  { deep: true }
-)
+// first load
+onMounted(() => emitFilters())
 </script>

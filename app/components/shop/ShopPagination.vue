@@ -63,7 +63,7 @@ const props = withDefaults(
   {
     currentPage: 1,
     totalItems: 128,
-    perPage: 8,
+    perPage: 12,
   }
 )
 

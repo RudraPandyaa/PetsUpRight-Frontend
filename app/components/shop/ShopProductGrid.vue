@@ -51,12 +51,18 @@ import ProductCard from '~/components/shop/ProductCard.vue'
 
 const props = defineProps<{
   viewMode: 'grid' | 'list'
+  sortBy?: string
+  currentPage?: number
+  perPage?: number
   filters?: {
+    search?: string
     petType: string[]
     category: string[]
     brand: string[]
+    priceMin?: number
+    priceMax?: number
+    priceRange?: number[]
     ratings: number[]
-    priceRange: number[]
   }
 }>()
 
@@ -69,20 +75,26 @@ const loading = ref(true)
 async function fetchProducts() {
   loading.value = true
   try {
+    const f = props.filters
     const facetValueIds = [
-      ...(props.filters?.petType || []),
-      ...(props.filters?.category || []),
+      ...(f?.petType || []),
+      ...(f?.category || []),
     ]
 
+    const minPrice = Number(f?.priceMin ?? 0)
+    const maxPrice = Number(f?.priceMax ?? 10000)
+    const page = props.currentPage || 1
+    const perPage = props.perPage || 12
+
     const result = await getProducts({
-      take: 24,
+      take: 100, // enough for client pagination
+      skip: 0,
       facetValueIds: facetValueIds.length ? facetValueIds : undefined,
-      minPrice: props.filters?.priceRange?.[0],
-      maxPrice: props.filters?.priceRange?.[1],
+      term: f?.search || undefined,
       collectionSlug: (route.query.collection as string) || undefined,
     })
 
-    products.value = result.items.map((item: any) => {
+    let items = (result.items || []).map((item: any) => {
       const priceObj = item.priceWithTax || {}
       let priceValue = 0
       if (typeof priceObj.value === 'number') priceValue = priceObj.value
@@ -93,26 +105,51 @@ async function fetchProducts() {
         name: item.productName,
         slug: item.slug,
         image: item.productAsset?.preview
-          ? item.productAsset.preview + '?preset=medium'
+          ? String(item.productAsset.preview).replace(/\\/g, '/') + '?preset=medium'
           : '/images/shop/Rectangle-5.png',
         price: Math.round(priceValue / 100),
         rating: 4.9,
       }
     })
-  } catch (error) {
-    console.error('Failed to fetch products:', error)
+
+    // Price
+    if (!(minPrice <= 0 && maxPrice >= 10000)) {
+      items = items.filter((p) => p.price >= minPrice && p.price <= maxPrice)
+    }
+
+    // Ratings
+    if (f?.ratings?.length) {
+      const minRating = Math.min(...f.ratings)
+      items = items.filter((p) => p.rating >= minRating)
+    }
+
+    // Sort
+    const sort = props.sortBy || 'popularity'
+    if (sort === 'price-low') items.sort((a, b) => a.price - b.price)
+    else if (sort === 'price-high') items.sort((a, b) => b.price - a.price)
+    else if (sort === 'rating') items.sort((a, b) => b.rating - a.rating)
+
+    // Total (full filtered list)
+    emit('update:total', items.length)
+
+    // Page slice
+    const start = (page - 1) * perPage
+    products.value = items.slice(start, start + perPage)
+  } catch (e) {
+    console.error(e)
     products.value = []
+    emit('update:total', 0)
   } finally {
     loading.value = false
   }
 }
 
 watch(
-  () => [props.filters, route.query.collection],
+  () => [props.filters, props.sortBy, props.currentPage, props.perPage, route.query.collection],
   () => fetchProducts(),
   { deep: true, immediate: true }
 )
-
+const emit = defineEmits<{ 'update:total': [n: number] }>()
 function onAddToCart(product: any) {
   console.log('Add to cart:', product.name)
 }
