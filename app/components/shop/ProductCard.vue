@@ -22,19 +22,26 @@
 
       <!-- Wishlist -->
       <button
-        type="button"
-        @click.prevent.stop="toggleWishlist"
-        class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
-      >
-        <svg
-          class="w-5 h-5 transition-colors"
-          :class="isWishlisted ? 'text-[#1a1a2e] fill-[#E85D75]' : 'text-gray-400'"
-          fill="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      </button>
+  type="button"
+  @click.prevent.stop="toggleWishlist"
+  class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
+  :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
+>
+  <svg
+    class="w-5 h-5 transition-colors"
+    :class="
+      isWishlisted
+        ? 'text-[#E85D75] fill-[#E85D75]'
+        : 'text-gray-400'
+    "
+    fill="currentColor"
+    viewBox="0 0 24 24"
+  >
+    <path
+      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+    />
+  </svg>
+</button>
     </NuxtLink>
 
     <!-- Content -->
@@ -60,13 +67,13 @@
 
       <div :class="['mt-3', isList ? 'flex flex-wrap items-center gap-2' : 'space-y-2']">
         <button
-          type="button"
-          @click="$emit('add-to-cart', product)"
-          class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
-          :class="isList ? '' : 'w-full'"
-        >
-          Add to Cart
-        </button>
+  type="button"
+  @click="addToCart(product)"
+  class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+  :class="isList ? '' : 'w-full'"
+>
+  Add to Cart
+</button>
 
         <template v-if="!isList">
           <div class="text-center text-xs text-gray-400 font-medium">OR</div>
@@ -92,6 +99,11 @@ interface Product {
   image: string
   price: number
   rating: number
+
+  // ADD THESE
+  originalPrice?: number
+  discount?: number
+
   slug?: string
 }
 
@@ -106,7 +118,63 @@ const emit = defineEmits<{
 }>()
 
 const isList = computed(() => props.viewMode === 'list')
-const isWishlisted = ref(false)
+
+/*
+|--------------------------------------------------------------------------
+| GLOBAL WISHLIST
+|--------------------------------------------------------------------------
+| Shared across ProductCard, Wishlist page and Header.
+*/
+const wishlist = useState<Product[]>('wishlist', () => [])
+
+interface CartItem {
+  id: number | string
+  name: string
+  image: string
+  price: number
+  quantity: number
+
+  originalPrice?: number
+  discount?: number
+}
+
+const cart = useState<CartItem[]>('cart', () => [])
+
+function addToCart(product: Product) {
+  const existingItem = cart.value.find(
+    item => String(item.id) === String(product.id)
+  )
+
+  if (existingItem) {
+    existingItem.quantity += 1
+  } else {
+    cart.value.push({
+      id: product.id,
+      name: product.name,
+      image: product.image,
+      price: Number(product.price),
+
+      // IMPORTANT: keep the discount information
+      originalPrice:
+        product.originalPrice !== undefined
+          ? Number(product.originalPrice)
+          : undefined,
+
+      discount:
+        product.discount !== undefined
+          ? Number(product.discount)
+          : undefined,
+
+      quantity: 1
+    })
+  }
+
+  emit('add-to-cart', product)
+}
+
+const isWishlisted = computed(() =>
+  wishlist.value.some(item => String(item.id) === String(props.product.id))
+)
 
 const productLink = computed(() => {
   const slug = props.product.slug || props.product.id
@@ -114,7 +182,15 @@ const productLink = computed(() => {
 })
 
 function toggleWishlist() {
-  isWishlisted.value = !isWishlisted.value
+  const index = wishlist.value.findIndex(
+    item => String(item.id) === String(props.product.id)
+  )
+
+  if (index === -1) {
+    wishlist.value.push({ ...props.product })
+  } else {
+    wishlist.value.splice(index, 1)
+  }
 }
 
 function onBuyNow() {

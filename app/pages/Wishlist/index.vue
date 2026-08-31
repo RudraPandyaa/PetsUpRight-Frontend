@@ -23,7 +23,37 @@
       <!-- Wishlist Products -->
 <section class="wishlist-products">
 
-  <div class="products-grid">
+  <!-- EMPTY WISHLIST -->
+  <div
+    v-if="wishlistProducts.length === 0"
+    class="flex flex-col items-center justify-center py-20 text-center"
+  >
+    <div class="text-5xl mb-4">
+      ♡
+    </div>
+
+    <h2 class="text-xl font-semibold text-[#292b50]">
+      Your wishlist is empty
+    </h2>
+
+    <p class="mt-2 text-sm text-gray-500">
+      Tap the heart on a product to save it here.
+    </p>
+
+    <NuxtLink
+      to="/shop"
+      class="mt-5 px-5 py-2.5 rounded-lg bg-[#44476f] text-white text-sm font-semibold"
+    >
+      Continue Shopping
+    </NuxtLink>
+  </div>
+
+
+  <!-- WISHLIST PRODUCTS -->
+  <div
+    v-else
+    class="products-grid"
+  >
 
     <div
       v-for="product in wishlistProducts"
@@ -31,30 +61,28 @@
       class="product-card"
     >
 
-      <!-- Wishlist heart -->
       <button
-  type="button"
-  class="wishlist-btn active"
-  aria-label="Remove from wishlist"
-  @click="removeFromWishlist(product.id)"
->
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 24 24"
-    fill="#ef4f72"
-    stroke="#ef4f72"
-    stroke-width="2"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  >
-    <path
-      d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
-    />
-  </svg>
-</button>
+        type="button"
+        class="wishlist-btn active"
+        aria-label="Remove from wishlist"
+        @click="removeFromWishlist(product.id)"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="#ef4f72"
+          stroke="#ef4f72"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path
+            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+          />
+        </svg>
+      </button>
 
 
-      <!-- Product Image -->
       <div class="image-wrapper">
         <img
           :src="product.image"
@@ -64,33 +92,29 @@
       </div>
 
 
-      <!-- Product Info -->
       <div class="product-info">
 
         <h3 class="product-name">
           {{ product.name }}
         </h3>
 
-
-        <!-- Rating -->
         <div class="rating">
-          <span class="stars">★★★★★</span>
+          <span class="stars">
+            ★★★★★
+          </span>
+
           <span class="rating-value">
-            (4.9)
+            ({{ product.reviews }})
           </span>
         </div>
 
-
-        <!-- Price -->
         <p class="price">
           {{ formatPriceDisplay(product.price) }}
         </p>
 
 
-        <!-- Actions -->
         <div class="actions">
 
-          <!-- Add To Cart -->
           <button
             class="btn-add-to-cart"
             @click="addToCart(product)"
@@ -117,35 +141,15 @@
           </button>
 
 
-          <!-- OR -->
           <span class="or-text">
             OR
           </span>
 
 
-          <!-- Buy Now -->
           <button
             class="btn-buy-now"
             @click="buyNow(product)"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
-              />
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-
             Buy Now
           </button>
 
@@ -328,7 +332,7 @@
 <script setup lang="ts">
 
 interface Product {
-  id: number
+  id: number | string
   name: string
   price: number
   originalPrice: number
@@ -337,119 +341,49 @@ interface Product {
   image: string
 }
 
-function formatPriceDisplay(price: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(price)
-}
+
+/*
+|--------------------------------------------------------------------------
+| GLOBAL WISHLIST
+|--------------------------------------------------------------------------
+| Starts completely empty.
+| ProductCard adds products here when the heart is clicked.
+*/
+const wishlistProducts = useState<Product[]>(
+  'wishlist',
+  () => []
+)
 
 
 /*
 |--------------------------------------------------------------------------
-| Product Images
+| GLOBAL CART
 |--------------------------------------------------------------------------
-| Use your actual product image paths here.
+*/
+interface CartItem extends Product {
+  quantity: number
+}
+
+const cart = useState<CartItem[]>(
+  'cart',
+  () => []
+)
+
+
+/*
+|--------------------------------------------------------------------------
+| RECOMMENDED PRODUCTS
+|--------------------------------------------------------------------------
+| These are only recommendations.
+| They are NOT automatically added to wishlist.
 */
 const productImages = [
-  '/images/shop/Rectangle-5.png',
-  '/images/shop/Rectangle-5.png',
-  '/images/shop/Rectangle-5.png',
-  '/images/shop/Rectangle-5.png',
   '/images/shop/Rectangle-5.png',
   '/images/shop/Rectangle-5.png',
   '/images/shop/Rectangle-5.png',
   '/images/shop/Rectangle-5.png'
 ]
 
-
-/*
-|--------------------------------------------------------------------------
-| Wishlist Products
-|--------------------------------------------------------------------------
-*/
-const wishlistProducts = ref<Product[]>([
-  {
-    id: 1,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[0]
-  },
-  {
-    id: 2,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[1]
-  },
-  {
-    id: 3,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[2]
-  },
-  {
-    id: 4,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[3]
-  },
-  {
-    id: 5,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[4]
-  },
-  {
-    id: 6,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[5]
-  },
-  {
-    id: 7,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[6]
-  },
-  {
-    id: 8,
-    name: 'Grain-Free Kibble',
-    price: 450,
-    originalPrice: 500,
-    discount: 10,
-    reviews: 48,
-    image: productImages[7]
-  }
-])
-
-
-/*
-|--------------------------------------------------------------------------
-| Recommended Products
-|--------------------------------------------------------------------------
-*/
 const recommendedProducts = ref<Product[]>([
   {
     id: 101,
@@ -492,27 +426,75 @@ const recommendedProducts = ref<Product[]>([
 
 /*
 |--------------------------------------------------------------------------
-| Wishlist Actions
+| FORMAT PRICE
 |--------------------------------------------------------------------------
 */
+function formatPriceDisplay(price: number) {
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    minimumFractionDigits: 0,
+  }).format(price)
+}
 
-function removeFromWishlist(id: number) {
+
+/*
+|--------------------------------------------------------------------------
+| ADD TO WISHLIST
+|--------------------------------------------------------------------------
+*/
+function addToWishlist(product: Product) {
+  const exists = wishlistProducts.value.some(
+    item => String(item.id) === String(product.id)
+  )
+
+  if (!exists) {
+    wishlistProducts.value.push({
+      ...product
+    })
+  }
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| REMOVE FROM WISHLIST
+|--------------------------------------------------------------------------
+*/
+function removeFromWishlist(id: number | string) {
   wishlistProducts.value = wishlistProducts.value.filter(
-    product => product.id !== id
+    product => String(product.id) !== String(id)
   )
 }
 
 
-function addToWishlist(product: Product) {
-  console.log('Added to wishlist:', product)
-}
-
-
+/*
+|--------------------------------------------------------------------------
+| ADD TO CART
+|--------------------------------------------------------------------------
+*/
 function addToCart(product: Product) {
-  console.log('Added to cart:', product)
+  const existingItem = cart.value.find(
+    item => String(item.id) === String(product.id)
+  )
+
+  if (existingItem) {
+    existingItem.quantity++
+    return
+  }
+
+  cart.value.push({
+    ...product,
+    quantity: 1
+  })
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| BUY NOW
+|--------------------------------------------------------------------------
+*/
 function buyNow(product: Product) {
   console.log('Buy now:', product)
 }

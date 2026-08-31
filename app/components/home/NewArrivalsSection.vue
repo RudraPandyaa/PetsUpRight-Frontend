@@ -220,6 +220,7 @@ function formatPriceDisplay(price: number) {
   color: #44476f;
   margin: 0 0 0.5rem;
   text-transform: uppercase;
+  font-family: 'Paytone One', sans-serif;
 }
 
 .subtitle {

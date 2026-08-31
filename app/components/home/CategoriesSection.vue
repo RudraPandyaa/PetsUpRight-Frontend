@@ -115,7 +115,7 @@ onBeforeUnmount(stopAutoplay)
       <!-- Heading -->
       <div class="text-center mb-10 md:mb-12">
         <div class="paw-icon">🐾</div>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-[#1a1a2e] tracking-wider">
+        <h2 class="title">
           CATEGORIES
         </h2>
         <p class="text-[20px] text-[#1a1a2e]/55 mt-2 max-w-[560px] mx-auto">
@@ -178,21 +178,26 @@ onBeforeUnmount(stopAutoplay)
         </div>
       </div>
 
-      <!-- Dots -->
-      <div v-if="!loading && categories.length > visibleCount" class="flex justify-center gap-2 mt-8">
-        <button
-          v-for="i in Math.ceil(categories.length / visibleCount)"
-          :key="i"
-          type="button"
-          class="h-2 rounded-full transition-all duration-300"
-          :class="
-            currentIndex === i - 1
-              ? 'bg-[#44476f] w-6'
-              : 'bg-[#d4c8e8] w-2 hover:bg-[#c3b5df]'
-          "
-          @click="goTo(i - 1)"
-        />
-      </div>
+
+<!-- Dots -->
+<div
+  v-if="!loading && categories.length > visibleCount"
+  class="flex justify-center gap-2 mt-8"
+>
+  <button
+    v-for="i in maxIndex + 1"
+    :key="i"
+    type="button"
+    class="h-2 rounded-full transition-all duration-300"
+    :class="
+      currentIndex === i - 1
+        ? 'bg-[#44476f] w-2'
+        : 'bg-[#d4c8e8] w-2 hover:bg-[#c3b5df]'
+    "
+    @click="goTo(i - 1)"
+  />
+</div>
+
     </div>
   </section>
 </template>
@@ -202,5 +207,15 @@ onBeforeUnmount(stopAutoplay)
   font-size: 2.2rem;
   margin-bottom: 0.5rem;
   color: #c3b5df;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #44476f;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+  font-family: 'Paytone One', sans-serif;
 }
 </style>
