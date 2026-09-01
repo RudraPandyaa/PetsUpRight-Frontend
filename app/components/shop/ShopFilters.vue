@@ -43,6 +43,7 @@
     <!-- Pet Type -->
     <div class="mb-5 border-b border-gray-100 pb-5">
       <button
+        type="button"
         @click="toggleSection('petType')"
         class="flex items-center justify-between w-full text-left"
       >
@@ -67,7 +68,7 @@
       </button>
 
       <div
-        v-show="openSections.petType"
+        v-if="openSections.petType"
         class="mt-3 space-y-2.5"
       >
         <label
@@ -88,6 +89,13 @@
             {{ type.label }}
           </span>
         </label>
+
+        <p
+          v-if="!loadingFacets && petTypes.length === 0"
+          class="text-xs text-gray-400"
+        >
+          No pet types available
+        </p>
       </div>
     </div>
 
@@ -420,24 +428,26 @@ async function loadFacets() {
   try {
     const facets = await getShopFacets()
 
+    console.log('ALL FACETS:', facets)
+
     const petTypeFacet = facets.find(
-      (facet: any) =>
-        facet.code === 'pet-type'
+      (facet: any) => facet.code === 'pet-type'
     )
 
     const categoryFacet = facets.find(
-      (facet: any) =>
-        facet.code === 'category'
+      (facet: any) => facet.code === 'category'
     )
 
     const brandFacet = facets.find(
-      (facet: any) =>
-        facet.code === 'brand'
+      (facet: any) => facet.code === 'brand'
     )
+
+    console.log('PET TYPE FACET:', petTypeFacet)
+    console.log('PET TYPE VALUES:', petTypeFacet?.values)
 
     petTypes.value =
       petTypeFacet?.values?.map(
-        (value: any): FilterOption => ({
+        (value: any) => ({
           label: value.name,
           value: String(value.id),
         })
@@ -445,7 +455,7 @@ async function loadFacets() {
 
     categories.value =
       categoryFacet?.values?.map(
-        (value: any): FilterOption => ({
+        (value: any) => ({
           label: value.name,
           value: String(value.id),
         })
@@ -453,20 +463,15 @@ async function loadFacets() {
 
     brands.value =
       brandFacet?.values?.map(
-        (value: any): FilterOption => ({
+        (value: any) => ({
           label: value.name,
           value: String(value.id),
         })
       ) ?? []
-  } catch (error) {
-    console.error(
-      'Failed to load shop facets:',
-      error
-    )
 
-    petTypes.value = []
-    categories.value = []
-    brands.value = []
+    console.log('FINAL PET TYPES:', petTypes.value)
+  } catch (error) {
+    console.error('Failed to load shop facets:', error)
   } finally {
     loadingFacets.value = false
   }

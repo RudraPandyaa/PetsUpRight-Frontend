@@ -93,19 +93,16 @@ watch(
 }
 
 .main-frame {
-  aspect-ratio: 1 / 0.95; 
-  background: #f5f3f0;
+  width: 100%;
+  aspect-ratio: 1 / 0.95;
   border-radius: 12px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .main-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 
