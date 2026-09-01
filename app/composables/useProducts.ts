@@ -7,28 +7,51 @@ export function useProducts() {
     query SearchProducts($input: SearchInput!) {
       search(input: $input) {
         totalItems
+
+        facetValues {
+          count
+          facetValue {
+            id
+            name
+            code
+            facet {
+              id
+              name
+              code
+            }
+          }
+        }
+
         items {
           productId
           productName
           slug
+
           productAsset {
             id
             preview
           }
+
           priceWithTax {
+            __typename
+
             ... on SinglePrice {
               value
             }
+
             ... on PriceRange {
               min
               max
             }
           }
+
           currencyCode
+          facetValueIds
         }
       }
     }
   `
+
   const GET_PRODUCT = `
     query GetProduct($slug: String!) {
       product(slug: $slug) {
@@ -36,6 +59,9 @@ export function useProducts() {
         name
         slug
         description
+        customFields {
+          petType
+        }
         featuredAsset {
           preview
         }
@@ -76,18 +102,18 @@ export function useProducts() {
     skip?: number
     term?: string
     collectionSlug?: string
-    facetValueIds?: string[]
-    minPrice?: number
-    maxPrice?: number
+
+    facetValueFilters?: Array<{
+      and?: string
+      or?: string[]
+    }>
   } = {}) {
     const {
       take = 12,
       skip = 0,
       term,
       collectionSlug,
-      facetValueIds,
-      minPrice,
-      maxPrice,
+      facetValueFilters,
     } = options
 
     const input: any = {
@@ -96,27 +122,93 @@ export function useProducts() {
       skip,
     }
 
-    if (term) input.term = term
-    if (collectionSlug) input.collectionSlug = collectionSlug
-
-    if (facetValueIds?.length) {
-      input.facetValueFilters = facetValueIds.map((id) => ({ and: id }))
+    if (term) {
+      input.term = term
     }
 
-    // default 0–10000 mat bhejo
-    if (
-      minPrice != null &&
-      maxPrice != null &&
-      !(minPrice === 0 && maxPrice >= 10000)
-    ) {
-      input.priceRangeWithTax = {
-        min: minPrice * 100,
-        max: maxPrice * 100,
+    if (collectionSlug) {
+      input.collectionSlug = collectionSlug
+    }
+
+    if (facetValueFilters?.length) {
+      input.facetValueFilters = facetValueFilters
+    }
+
+    const data = await client.request(
+      SEARCH_PRODUCTS,
+      { input }
+    )
+
+    return data?.search ?? {
+      totalItems: 0,
+      items: [],
+      facetValues: [],
+    }
+  }
+
+  const GET_PRODUCTS = `
+    query GetProducts($options: ProductListOptions) {
+      products(options: $options) {
+        totalItems
+        items {
+          id
+          name
+          slug
+          description
+
+          customFields {
+            petType
+          }
+
+          featuredAsset {
+            id
+            preview
+          }
+
+          facetValues {
+            id
+            name
+            code
+            facet {
+              id
+              name
+              code
+            }
+          }
+
+          variants {
+            id
+            name
+            sku
+            priceWithTax
+            stockLevel
+            currencyCode
+          }
+        }
       }
     }
+  `
 
-    const data = await client.request(SEARCH_PRODUCTS, { input })
-    return data?.search ?? { totalItems: 0, items: [] }
+  async function getShopProducts(options: {
+    take?: number
+    skip?: number
+  } = {}) {
+    const {
+      take = 100,
+      skip = 0,
+    } = options
+
+    const data = await client.request(GET_PRODUCTS, {
+      options: {
+        take,
+        skip,
+      },
+    })
+
+    return data?.products ?? {
+      totalItems: 0,
+      items: [],
+    }
   }
 
   function formatPrice(price: number, currencyCode = 'INR') {
@@ -127,9 +219,34 @@ export function useProducts() {
     }).format(price / 100)
   }
 
+  const GET_SHOP_FACETS = `
+    query GetShopFacets {
+      facets(options: { take: 100 }) {
+        items {
+          id
+          name
+          code
+
+          values {
+            id
+            name
+            code
+          }
+        }
+      }
+    }
+  `
+  async function getShopFacets() {
+    const data = await client.request(GET_SHOP_FACETS)
+
+    return data?.facets?.items ?? []
+  }
+
   return {
     getProducts,
+    getShopProducts,
     getProductBySlug,
+    getShopFacets,
     formatPrice,
   }
 }

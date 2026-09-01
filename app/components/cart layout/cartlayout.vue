@@ -8,10 +8,8 @@
         @click="closeCart"
       >
 
-        <!-- Dark overlay -->
         <div class="cart-backdrop"></div>
 
-        <!-- Cart Drawer -->
         <aside
           class="cart-drawer"
           @click.stop
@@ -19,9 +17,8 @@
 
           <!-- Header -->
           <header class="cart-header">
-
             <div class="cart-title">
-              BAG (1 ITEMS)
+              BAG ({{ cartCount }} ITEMS)
             </div>
 
             <button
@@ -32,15 +29,12 @@
             >
               ×
             </button>
-
           </header>
 
 
           <!-- Delivery Location -->
           <div class="location-bar">
-
             <div class="location-left">
-
               <svg
                 class="location-icon"
                 viewBox="0 0 24 24"
@@ -48,77 +42,99 @@
                 stroke="currentColor"
                 stroke-width="1.8"
               >
-                <path
-                  d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"
-                />
-
-                <circle
-                  cx="12"
-                  cy="10"
-                  r="2.5"
-                />
+                <path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z" />
+                <circle cx="12" cy="10" r="2.5" />
               </svg>
 
               <span>
                 Enter Pincode to view delivery timelines
               </span>
-
             </div>
 
-            <span class="location-arrow">
-              ›
-            </span>
-
+            <span class="location-arrow">›</span>
           </div>
 
 
           <!-- Savings -->
-          <div class="savings-section">
-
+          <div
+            v-if="cart.length > 0"
+            class="savings-section"
+          >
             <div class="saving-labels">
 
-              <span class="active">
-                DELIVERY FREE
-              </span>
+  <span
+    :class="{ active: totalPrice >= 750 }"
+  >
+    DELIVERY FREE
+  </span>
 
-              <span>
-                SAVE ₹50
-              </span>
+  <span
+    :class="{ active: totalPrice >= 2000 }"
+  >
+    SAVE ₹200
+  </span>
 
-              <span>
-                SAVE ₹75
-              </span>
+  <span
+    :class="{ active: totalPrice >= 5000 }"
+  >
+    SAVE ₹400
+  </span>
 
-            </div>
+</div>
 
             <div class="saving-line">
-              <div class="saving-progress"></div>
+              <div
+                class="saving-progress"
+                :style="{ width: `${savingProgress}%` }"
+              ></div>
             </div>
 
             <div class="saving-values">
-              <span>₹750</span>
+              <span>₹0</span>
               <span>₹2000</span>
               <span>₹3000</span>
               <span>₹5000</span>
             </div>
-
           </div>
 
 
           <!-- Cart Content -->
           <main class="cart-content">
 
-            <div class="product-card">
+            <!-- EMPTY CART -->
+            <div
+              v-if="cart.length === 0"
+              class="flex flex-col items-center justify-center h-full text-center px-6"
+            >
+              <div class="text-5xl mb-4">
+                🛒
+              </div>
+
+              <h3 class="text-lg font-semibold text-[#30386b]">
+                Your cart is empty
+              </h3>
+
+              <p class="text-sm text-gray-500 mt-2">
+                Add products to your cart and they will appear here.
+              </p>
+            </div>
+
+
+            <!-- CART ITEMS -->
+            <div
+              v-else
+              v-for="item in cart"
+              :key="item.id"
+              class="product-card"
+            >
 
               <!-- Product image -->
               <div class="product-image-wrapper">
-
                 <img
-                  src="/images/shop/Rectangle-5.png"
-                  alt="ZL Rain Ready Raincoat Red"
+                  :src="item.image"
+                  :alt="item.name"
                   class="product-image"
                 />
-
               </div>
 
 
@@ -126,7 +142,7 @@
               <div class="product-info">
 
                 <h3 class="product-name">
-                  ZL Rain Ready Raincoat Red
+                  {{ item.name }}
                 </h3>
 
                 <div class="product-size">
@@ -134,19 +150,23 @@
                 </div>
 
                 <div class="price-row">
-
                   <span class="current-price">
-                    ₹1,169
+                    ₹{{ Math.round(item.price).toLocaleString('en-IN') }}
                   </span>
 
-                  <span class="old-price">
-                    ₹1,299
+                  <span
+                    v-if="item.originalPrice"
+                    class="old-price"
+                  >
+                    ₹{{ Math.round(item.originalPrice).toLocaleString('en-IN') }}
                   </span>
 
-                  <span class="discount">
-                    (10% OFF)
+                  <span
+                    v-if="item.discount"
+                    class="discount"
+                  >
+                    ({{ item.discount }}% OFF)
                   </span>
-
                 </div>
 
 
@@ -156,20 +176,20 @@
                   <button
                     type="button"
                     class="quantity-btn"
-                    :disabled="quantity <= 1"
-                    @click="decreaseQuantity"
+                    :disabled="item.quantity <= 1"
+                    @click="decreaseQuantity(item.id)"
                   >
                     −
                   </button>
 
                   <span class="quantity">
-                    {{ quantity }}
+                    {{ item.quantity }}
                   </span>
 
                   <button
                     type="button"
                     class="quantity-btn"
-                    @click="increaseQuantity"
+                    @click="increaseQuantity(item.id)"
                   >
                     +
                   </button>
@@ -184,9 +204,8 @@
                 type="button"
                 class="delete-btn"
                 aria-label="Remove item"
-                @click="removeItem"
+                @click="removeItem(item.id)"
               >
-
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -199,7 +218,6 @@
                   <path d="M6 7l1 13h10l1-13" />
                   <path d="M9 7V4h6v3" />
                 </svg>
-
               </button>
 
             </div>
@@ -208,17 +226,16 @@
 
 
           <!-- Bottom Section -->
-          <div class="bottom-section">
+          <div
+            v-if="cart.length > 0"
+            class="bottom-section"
+          >
 
-            <!-- Order summary -->
             <button
               type="button"
               class="order-summary"
             >
-
-              <span>
-                ORDER SUMMARY
-              </span>
+              <span>ORDER SUMMARY</span>
 
               <svg
                 class="summary-arrow"
@@ -229,21 +246,17 @@
               >
                 <path d="m6 9 6 6 6-6" />
               </svg>
-
             </button>
 
 
-            <!-- Saving message -->
             <div class="saving-message">
-              You're saving ₹205 on this order
+              You're saving ₹{{ totalSavings.toLocaleString('en-IN') }} on this order
             </div>
 
 
-            <!-- Checkout -->
             <div class="checkout-bar">
 
               <div class="total-section">
-
                 <div class="total-price">
                   ₹{{ totalPrice.toLocaleString('en-IN') }}
                 </div>
@@ -251,7 +264,6 @@
                 <div class="tax-text">
                   Inclusive of all taxes
                 </div>
-
               </div>
 
 
@@ -260,10 +272,7 @@
                 class="buy-btn"
                 @click="buyNow"
               >
-
-                <span>
-                  BUY NOW
-                </span>
+                <span>BUY NOW</span>
 
                 <svg
                   viewBox="0 0 24 24"
@@ -273,7 +282,6 @@
                 >
                   <path d="m9 18 6-6-6-6" />
                 </svg>
-
               </button>
 
             </div>
@@ -290,7 +298,7 @@
 
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 defineProps<{
   isOpen: boolean
@@ -300,39 +308,167 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const quantity = ref(1)
+interface CartItem {
+  id: number | string
+  name: string
+  image: string
+  price: number
+  quantity: number
+  originalPrice?: number
+  discount?: number
+}
 
-const unitPrice = 1169
+/*
+|--------------------------------------------------------------------------
+| GLOBAL CART
+|--------------------------------------------------------------------------
+*/
+const cart = useState<CartItem[]>('cart', () => [])
 
-const totalPrice = computed(() => {
-  return unitPrice * quantity.value
+
+/*
+|--------------------------------------------------------------------------
+| CART COUNT
+|--------------------------------------------------------------------------
+*/
+const cartCount = computed(() =>
+  cart.value.reduce(
+    (total, item) => total + item.quantity,
+    0
+  )
+)
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL PRICE
+|--------------------------------------------------------------------------
+*/
+const totalPrice = computed(() =>
+  cart.value.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  )
+)
+
+
+/*
+|--------------------------------------------------------------------------
+| TOTAL SAVINGS
+|--------------------------------------------------------------------------
+*/
+const totalSavings = computed(() =>
+  cart.value.reduce((total, item) => {
+    if (!item.originalPrice) return total
+
+    return total + (
+      (item.originalPrice - item.price) * item.quantity
+    )
+  }, 0)
+)
+
+
+/*
+|--------------------------------------------------------------------------
+| SAVINGS PROGRESS
+|--------------------------------------------------------------------------
+*/
+const savingProgress = computed(() => {
+  const total = totalPrice.value
+
+  if (total <= 0) {
+    return 0
+  }
+
+  // ₹750 = first milestone
+  if (total <= 750) {
+    return (total / 750) * 25
+  }
+
+  // ₹750 → ₹2000
+  if (total <= 2000) {
+    return 25 + ((total - 750) / (2000 - 750)) * 25
+  }
+
+  // ₹2000 → ₹3000
+  if (total <= 3000) {
+    return 50 + ((total - 2000) / (3000 - 2000)) * 25
+  }
+
+  // ₹3000 → ₹5000
+  if (total <= 5000) {
+    return 75 + ((total - 3000) / (5000 - 3000)) * 25
+  }
+
+  return 100
 })
 
 
+/*
+|--------------------------------------------------------------------------
+| CLOSE
+|--------------------------------------------------------------------------
+*/
 const closeCart = () => {
   emit('close')
 }
 
 
-const increaseQuantity = () => {
-  quantity.value++
-}
+/*
+|--------------------------------------------------------------------------
+| INCREASE QUANTITY
+|--------------------------------------------------------------------------
+*/
+const increaseQuantity = (id: number | string) => {
+  const item = cart.value.find(
+    item => String(item.id) === String(id)
+  )
 
-
-const decreaseQuantity = () => {
-  if (quantity.value > 1) {
-    quantity.value--
+  if (item) {
+    item.quantity++
   }
 }
 
 
-const removeItem = () => {
-  console.log('Product removed')
+/*
+|--------------------------------------------------------------------------
+| DECREASE QUANTITY
+|--------------------------------------------------------------------------
+*/
+const decreaseQuantity = (id: number | string) => {
+  const item = cart.value.find(
+    item => String(item.id) === String(id)
+  )
+
+  if (!item) return
+
+  if (item.quantity > 1) {
+    item.quantity--
+  }
 }
 
 
+/*
+|--------------------------------------------------------------------------
+| REMOVE ITEM
+|--------------------------------------------------------------------------
+*/
+const removeItem = (id: number | string) => {
+  cart.value = cart.value.filter(
+    item => String(item.id) !== String(id)
+  )
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| BUY NOW
+|--------------------------------------------------------------------------
+*/
 const buyNow = () => {
-  console.log('Buy Now clicked')
+  if (cart.value.length === 0) return
+
+  console.log('Buy Now clicked', cart.value)
 }
 </script>
 
@@ -565,10 +701,11 @@ const buyNow = () => {
 
 
 .saving-progress {
-  width: 22%;
   height: 3px;
 
   background: #288f3a;
+
+  transition: width 0.3s ease;
 }
 
 
@@ -604,27 +741,31 @@ const buyNow = () => {
   position: relative;
 
   width: 100%;
-  min-height: 95px;
+  height: 100px;
+  min-height: 120px;
+  max-height: 120px;
 
   display: flex;
+  align-items: center;
 
-  padding: 6px;
+  padding: 6px 10px;
 
   border: 1px solid #dcdcdc;
-
   border-radius: 8px;
 
   background: #ffffff;
 
   margin-top: 8px;
+
+  overflow: hidden;
 }
 
 
 .product-image-wrapper {
-  /* flex: 0 0 79px; */
+  width: 68px;
+  height: 68px;
 
-  width: 100px;
-  height: 100px;
+  flex: 0 0 68px;
 
   overflow: hidden;
 
@@ -632,8 +773,7 @@ const buyNow = () => {
 
   background: #f3f3f3;
 
-  margin-top: 8px;
-  margin-left:8px;
+  margin: 0 10px 0 2px;
 }
 
 
@@ -651,70 +791,94 @@ const buyNow = () => {
   position: relative;
 
   flex: 1;
-
   min-width: 0;
 
-  padding: 3px 22px 0 12px;
+  height: 100%;
+
+  padding: 6px 42px 6px 0;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 
 .product-name {
-  margin: 4px;
+  margin: 0;
 
   font-size: 16px;
-
-  line-height: 13px;
+  line-height: 18px;
 
   font-weight: 600;
 
   color: #30386b;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-
 .product-size {
-  margin: 4px;
+  margin: 0;
 
   font-size: 12px;
+  line-height: 15px;
 
   color: #777777;
 }
 
 
+
 .price-row {
   display: flex;
-
-  align-items: baseline;
-
+  align-items: center;
   gap: 6px;
 
-  margin: 4px;
+  margin: 0;
+
+  height: 20px;
+  min-height: 20px;
 
   white-space: nowrap;
+  overflow: visible;
 }
 
 
 .current-price {
-  font-size: 18px;
-
+  font-size: 17px;
+  line-height: 20px;
   font-weight: 600;
-
   color: #202020;
+
+  flex-shrink: 0;
 }
 
-
 .old-price {
-  font-size: 18px;
+  display: inline-block;
+
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 400;
 
   color: #999999;
 
-  text-decoration: line-through;
+  text-decoration-line: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: #999999;
+
+  flex-shrink: 0;
 }
 
-
 .discount {
-  font-size: 14px;
+  display: inline-block;
+
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
 
   color: #ec5a4c;
+
+  flex-shrink: 0;
 }
 
 
@@ -723,38 +887,44 @@ const buyNow = () => {
 ===================================== */
 
 .quantity-control {
-  width: 110px;
-  height: 30px;
+  width: 82px;
+  height: 24px;
 
   display: flex;
 
   align-items: center;
-
   justify-content: space-between;
 
-  margin-top: 10px;
-  margin-left: 4px;
+  margin: 0;
 
-  padding: 0 8px;
+  padding: 0 7px;
 
   border: 1px solid #e6d7fa;
-
   border-radius: 23px;
 
   background: #fbf8ff;
+
+  flex-shrink: 0;
 }
 
 
 .quantity-btn {
-  border: 0;
+  width: 18px;
+  height: 18px;
 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
   padding: 0;
 
   background: transparent;
 
   color: #39305a;
 
-  font-size: 13px;
+  font-size: 14px;
+  line-height: 18px;
 
   cursor: pointer;
 }
@@ -768,9 +938,12 @@ const buyNow = () => {
 
 
 .quantity {
-  font-size: 9px;
+  font-size: 11px;
+  line-height: 16px;
 
   color: #514b58;
+
+  font-weight: 500;
 }
 
 
@@ -781,8 +954,8 @@ const buyNow = () => {
 .delete-btn {
   position: absolute;
 
-  right: 10px;
-  bottom: 10px;
+  right: 8px;
+  top: 8px;
 
   width: 28px;
   height: 28px;
@@ -801,12 +974,14 @@ const buyNow = () => {
   color: #666666;
 
   cursor: pointer;
+
+  z-index: 2;
 }
 
 
 .delete-btn svg {
-  width: 24px;
-  height: 24px;
+  width: 19px;
+  height: 19px;
 }
 
 

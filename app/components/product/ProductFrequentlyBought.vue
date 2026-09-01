@@ -1,9 +1,15 @@
-<template>
-  <section class="frequently-bought mt-12 md:mt-16">
-    <h2 class="section-title">Frequently Bought Together</h2>
+<script setup lang="ts">
+const { items, bundleName, bundleDesc, currentPrice, pending } =
+  useFrequentlyBought()
 
+// originalPrice optional – collection custom field se la sakte ho
+const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
+</script>
+
+<template>
+  <section v-if="!pending && items.length" class="frequently-bought mt-12 md:mt-16">
+    <h2 class="section-title">Frequently Bought Together</h2>
     <div class="bundle-card">
-      <!-- Products row -->
       <div class="products-row">
         <template v-for="(item, index) in items" :key="item.id">
           <div class="product-thumb">
@@ -13,19 +19,17 @@
         </template>
       </div>
 
-      <!-- Bundle info -->
       <div class="bundle-info">
         <div>
           <h3 class="bundle-name">{{ bundleName }}</h3>
           <p class="bundle-desc">{{ bundleDesc }}</p>
         </div>
-
         <div class="price-action">
           <div class="prices">
             <span class="current-price">₹{{ currentPrice.toLocaleString('en-IN') }}</span>
-            <span v-if="originalPrice" class="original-price">₹{{ originalPrice.toLocaleString('en-IN') }}</span>
+            <span class="original-price">₹{{ originalPrice.toLocaleString('en-IN') }}</span>
           </div>
-          <button class="add-btn" @click="$emit('add-bundle')">
+          <button class="add-btn" @click="$emit('add-bundle', items)">
             Add Both to Cart
           </button>
         </div>
@@ -33,51 +37,6 @@
     </div>
   </section>
 </template>
-
-<script setup lang="ts">
-interface BundleItem {
-  id: string | number
-  name: string
-  image: string
-}
-
-withDefaults(
-  defineProps<{
-    items?: BundleItem[]
-    bundleName?: string
-    bundleDesc?: string
-    currentPrice?: number
-    originalPrice?: number
-  }>(),
-  {
-    items: () => [
-      {
-        id: 1,
-        name: 'Dental Treats',
-        image: '/images/shop/Rectangle-5.png',
-      },
-      {
-        id: 2,
-        name: 'Lavender Ceramic Bowl',
-        image: '/images/shop/Rectangle-5.png',
-      },
-      {
-        id: 3,
-        name: 'Dentals',
-        image: '/images/shop/Rectangle-5.png',
-      },
-    ],
-    bundleName: 'Essential Care Bundle',
-    bundleDesc: 'Dental Treats + Lavender Ceramic Bowl + Dentals',
-    currentPrice: 1850,
-    originalPrice: 2200,
-  }
-)
-
-defineEmits<{
-  'add-bundle': []
-}>()
-</script>
 
 <style scoped>
 .section-title {

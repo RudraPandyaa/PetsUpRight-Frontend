@@ -13,10 +13,9 @@
     </div>
 
     <!-- Price -->
+
     <div class="price-row">
-      <span class="price">₹4,160</span>
-      <span class="mrp">₹5,200</span>
-      <span class="save">Save ₹1040</span>
+      <span class="price">₹{{ displayPrice }}</span>
     </div>
 
     <!-- Flavor -->
@@ -155,7 +154,10 @@ const emit = defineEmits<{
   (e: 'add-to-cart'): void
   (e: 'buy-now'): void
 }>()
-
+const displayPrice = computed(() => {
+  const raw = props.variant?.priceWithTax ?? 0
+  return Math.round(Number(raw) / 100)
+})
 const pincode = ref('')
 const wishlisted = ref(false)
 const selectedFlavor = ref('Salmon')
@@ -185,7 +187,7 @@ function changeQty(delta: number) {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #44476f;
-  margin: 0;
+  margin: 20px 0 0 0;
 }
 
 .title {
@@ -362,7 +364,7 @@ function changeQty(delta: number) {
 .delivery-box {
   background: #EDE7E7;
   border-radius: 10px;
-  padding: 1.4rem 1rem 2rem 1.4rem;
+  padding: 3.4rem 1rem 2rem 1.4rem;
 }
 
 .delivery-head {

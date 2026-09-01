@@ -21,9 +21,9 @@
     </div>
 
     <!-- Thumbnails -->
-    <div v-if="images.length > 1" class="thumbs">
+    <div class="thumbs">
       <button
-        v-for="(img, i) in images"
+        v-for="(img, i) in displayImages"
         :key="i"
         type="button"
         class="thumb"
@@ -42,7 +42,14 @@ const props = defineProps<{
   name: string
   discount?: number
 }>()
-
+const displayImages = computed(() => {
+  const imgs = props.images?.length ? [...props.images] : []
+  // kam se kam 3 slots (duplicate last / placeholder)
+  while (imgs.length < 3) {
+    imgs.push(imgs[0] || '/images/shop/Rectangle-5.png')
+  }
+  return imgs.slice(0, 3)
+})
 const activeImage = ref('')
 
 watch(
@@ -57,10 +64,13 @@ watch(
 <style scoped>
 .product-gallery {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .main-image {
-  flex: 1;                 /* baaki saari height le lega */
+  flex: 1;
   min-height: 320px;
   border-radius: 12px;
   overflow: hidden;
@@ -83,19 +93,16 @@ watch(
 }
 
 .main-frame {
-  aspect-ratio: 1 / 0.95; 
-  background: #f5f3f0;
+  width: 100%;
+  aspect-ratio: 1 / 0.95;
   border-radius: 12px;
   overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .main-img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   display: block;
 }
 

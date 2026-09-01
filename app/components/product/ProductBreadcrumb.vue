@@ -42,7 +42,7 @@ defineProps<{
   list-style: none;
   padding: 0;
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 1.18rem;
 }
 
 .crumb {

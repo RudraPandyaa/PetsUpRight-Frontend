@@ -2,7 +2,20 @@
   <section class="you-may-like mt-12 md:mt-16">
     <h2 class="section-title">You May Also Like</h2>
 
-    <div class="products-grid">
+    <!-- Loading -->
+    <div v-if="pending" class="products-grid">
+      <div v-for="i in 4" :key="i" class="product-card animate-pulse">
+        <div class="image-wrap bg-gray-200" />
+        <div class="info space-y-2 p-3">
+          <div class="h-4 bg-gray-200 rounded w-3/4" />
+          <div class="h-3 bg-gray-200 rounded w-1/2" />
+          <div class="h-4 bg-gray-200 rounded w-1/3" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Products -->
+    <div v-else-if="products.length" class="products-grid">
       <div
         v-for="product in products"
         :key="product.id"
@@ -21,12 +34,7 @@
             @click="toggleWishlist(product)"
             aria-label="Wishlist"
           >
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
           </button>
@@ -43,7 +51,6 @@
 
           <p class="price">₹{{ product.price.toFixed(2) }}</p>
 
-          <!-- Buttons -->
           <button class="btn-cart" @click="$emit('add-to-cart', product)">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -59,62 +66,23 @@
         </div>
       </div>
     </div>
+
+    <!-- Empty -->
+    <p v-else class="text-gray-400 text-sm">No products found.</p>
   </section>
 </template>
 
 <script setup lang="ts">
-interface Product {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  rating: number
-  wishlisted?: boolean
-}
-
-const products = ref<Product[]>([
-  {
-    id: 1,
-    name: 'Grain-Free Kibble',
-    image: '/images/shop/Rectangle-5.png',
-    price: 80,
-    rating: 4.9,
-    wishlisted: false,
-  },
-  {
-    id: 2,
-    name: 'Grain-Free Kibble',
-    image: '/images/shop/Rectangle-5.png',
-    price: 80,
-    rating: 4.9,
-    wishlisted: false,
-  },
-  {
-    id: 3,
-    name: 'Grain-Free Kibble',
-    image: '/images/shop/Rectangle-5.png',
-    price: 80,
-    rating: 4.9,
-    wishlisted: false,
-  },
-  {
-    id: 4,
-    name: 'Grain-Free Kibble',
-    image: '/images/shop/Rectangle-5.png',
-    price: 80,
-    rating: 4.9,
-    wishlisted: false,
-  },
-])
-
-function toggleWishlist(product: Product) {
-  product.wishlisted = !product.wishlisted
-}
+const { products, pending, error } = useYouMayAlsoLike()
 
 defineEmits<{
-  'add-to-cart': [product: Product]
-  'buy-now': [product: Product]
+  'add-to-cart': [product: any]
+  'buy-now': [product: any]
 }>()
+
+function toggleWishlist(product: any) {
+  product.wishlisted = !product.wishlisted
+}
 </script>
 
 <style scoped>
