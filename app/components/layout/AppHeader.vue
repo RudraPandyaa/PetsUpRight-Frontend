@@ -7,6 +7,8 @@ const isDogsOpen = ref(false)
 const isCatsOpen = ref(false)
 const isCartOpen = ref(false)
 const searchQuery = ref('')
+const isHeaderVisible = ref(true)
+const lastScrollY = ref(0)
 
 /*
 |--------------------------------------------------------------------------
@@ -24,6 +26,29 @@ interface CartItem {
 }
 
 const cart = useState<CartItem[]>('cart', () => [])
+
+function handleScroll() {
+  const currentScrollY = window.scrollY
+
+  // Page ke bilkul top par header visible rahe
+  if (currentScrollY <= 10) {
+    isHeaderVisible.value = true
+    lastScrollY.value = currentScrollY
+    return
+  }
+
+  // Scroll DOWN → header SHOW
+  if (currentScrollY > lastScrollY.value) {
+    isHeaderVisible.value = true
+  }
+
+  // Scroll UP → header HIDE
+  else if (currentScrollY < lastScrollY.value) {
+    isHeaderVisible.value = false
+  }
+
+  lastScrollY.value = currentScrollY
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -49,10 +74,25 @@ const cartCount = computed(() =>
 )
 
 const wishlistCount = computed(() => wishlist.value.length)
+
+
+onMounted(() => {
+  lastScrollY.value = window.scrollY
+  window.addEventListener('scroll', handleScroll, {
+    passive: true,
+  })
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
+})
 </script>
 
 <template>
-  <header class="sticky top-0 z-50">
+  <header
+    class="fixed top-0 left-0 right-0 z-50 w-full transition-transform duration-300 ease-in-out"
+    :class="isHeaderVisible ? 'translate-y-0' : '-translate-y-full'"
+  >
     <!-- Top utility bar -->
     <div class="bg-[#44476f] text-white text-xs md:text-sm">
       <div class="container mx-auto px-4">

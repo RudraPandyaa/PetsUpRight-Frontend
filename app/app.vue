@@ -1,16 +1,32 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const isLoginPage = computed(() => route.path === '/login')
+const isLoginPage = computed(
+  () => route.path === '/login'
+)
 </script>
+
 <template>
   <div class="min-h-screen flex flex-col">
-    <LayoutAppHeader v-if="!isLoginPage" />
-    
-    <main class="flex-1">
+
+    <LayoutAppHeader
+      v-if="!isLoginPage"
+    />
+
+    <main
+      :class="[
+        'flex-1',
+        !isLoginPage
+          ? 'pt-[140px] md:pt-[116px]'
+          : ''
+      ]"
+    >
       <NuxtPage />
     </main>
-    
-    <LayoutAppFooter v-if="!isLoginPage" />
+
+    <LayoutAppFooter
+      v-if="!isLoginPage"
+    />
+
   </div>
 </template>

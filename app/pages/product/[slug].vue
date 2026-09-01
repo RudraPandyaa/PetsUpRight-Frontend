@@ -14,11 +14,10 @@
     <template v-else-if="product">
       <ProductBreadcrumb :name="product.name" />
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mt-4 items-stretch">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mt-4 items-start">
         <ProductGallery
           :images="galleryImages"
           :name="product.name"
-          class="h-full"
         />
 
         <ProductInfo

@@ -23,93 +23,12 @@
 
     <!-- Product Grid -->
     <div v-else class="products-grid">
-      <div
+      <ProductCard
         v-for="product in products"
-        :key="product.productId"
-        class="product-card"
-      >
-        <!-- Wishlist heart -->
-        <button
-          class="wishlist-btn"
-          :class="{ active: product.isWishlisted }"
-          @click="toggleWishlist(product)"
-          aria-label="Add to wishlist"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path
-              d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
-            />
-          </svg>
-        </button>
-
-        <!-- Product Image -->
-        <div class="image-wrapper">
-          <img :src="product.image" :alt="product.productName" loading="lazy" />
-        </div>
-
-        <!-- Product Info -->
-        <div class="product-info">
-          <h3 class="product-name">{{ product.productName }}</h3>
-
-          <div class="rating">
-            <span class="stars">★★★★★</span>
-            <span class="rating-value">(4.9)</span>
-          </div>
-
-          <p class="price">{{ formatPriceDisplay(product.price) }}</p>
-
-          <!-- Actions -->
-          <div class="actions">
-            <button class="btn-add-to-cart" @click="addToCart(product)">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="9" cy="21" r="1" />
-                <circle cx="20" cy="21" r="1" />
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-              </svg>
-              Add to Cart
-            </button>
-
-            <span class="or-text">OR</span>
-
-            <button class="btn-buy-now" @click="buyNow(product)">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <line x1="3" y1="6" x2="21" y2="6" />
-                <path d="M16 10a4 4 0 0 1-8 0" />
-              </svg>
-              Buy Now
-            </button>
-          </div>
-        </div>
-      </div>
+        :key="product.id"
+        :product="product"
+        view-mode="grid"
+      />
     </div>
 
     <!-- Shop All Button -->
@@ -122,7 +41,8 @@
 </template>
 
 <script setup lang="ts">
-const { getProducts, formatPrice } = useProducts()
+import ProductCard from '~/components/shop/ProductCard.vue'
+const { getProducts } = useProducts()
 
 const products = ref<any[]>([])
 const loading = ref(true)
@@ -143,14 +63,17 @@ onMounted(async () => {
       }
 
       return {
-        productId: item.productId,
-        productName: item.productName,
+        id: item.productId,
+        name: item.productName,
         slug: item.slug,
+
         image: item.productAsset?.preview
           ? item.productAsset.preview + '?preset=medium'
           : '/images/shop/Rectangle-5.png',
+
         price: Math.round(priceValue / 100),
-        isWishlisted: false,
+
+        rating: 4.9,
       }
     })
   } catch (error) {
@@ -160,30 +83,30 @@ onMounted(async () => {
   }
 })
 
-function toggleWishlist(product: any) {
-  product.isWishlisted = !product.isWishlisted
-}
+// function toggleWishlist(product: any) {
+//   product.isWishlisted = !product.isWishlisted
+// }
 
-function addToCart(product: any) {
-  console.log('Added to cart:', product.productName)
-  // baad mein cart store
-}
+// function addToCart(product: any) {
+//   console.log('Added to cart:', product.productName)
+//   // baad mein cart store
+// }
 
-function buyNow(product: any) {
-  navigateTo(`/product/${product.slug}`)
-}
+// function buyNow(product: any) {
+//   navigateTo(`/product/${product.slug}`)
+// }
 
 function goToShopAll() {
   navigateTo('/shop')
 }
 
-function formatPriceDisplay(price: number) {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    minimumFractionDigits: 0,
-  }).format(price)
-}
+// function formatPriceDisplay(price: number) {
+//   return new Intl.NumberFormat('en-IN', {
+//     style: 'currency',
+//     currency: 'INR',
+//     minimumFractionDigits: 0,
+//   }).format(price)
+// }
 </script>
 <style scoped>
 /* ========== Pets Upright Brand Colors ==========

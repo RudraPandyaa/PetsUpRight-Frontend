@@ -66,12 +66,10 @@ watch(
   width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 .main-image {
-  flex: 1;
-  min-height: 320px;
+  width: 100%;
   border-radius: 12px;
   overflow: hidden;
   background: #f3f4f6;
@@ -95,7 +93,6 @@ watch(
 .main-frame {
   width: 100%;
   aspect-ratio: 1 / 0.95;
-  border-radius: 12px;
   overflow: hidden;
 }
 
@@ -104,6 +101,7 @@ watch(
   height: 100%;
   object-fit: cover;
   display: block;
+  transform: scale(1.03);
 }
 
 .no-image {
