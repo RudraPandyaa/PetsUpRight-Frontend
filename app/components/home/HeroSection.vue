@@ -32,7 +32,7 @@ const infoStrip = [
 
 <template>
   <section
-          class="relative overflow-hidden bg-[url('/images/hero-bg.png')] bg-cover bg-right-top bg-no-repeat"
+        class="relative overflow-hidden bg-[url('/images/hero-bg.png')] bg-cover bg-[66%_top] bg-no-repeat"
   >
     <div class="container mx-auto px-4 pt-12 pb-16 md:pt-16 md:pb-8 relative z-10">
 
