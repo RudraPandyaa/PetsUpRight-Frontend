@@ -115,11 +115,11 @@ onUnmounted(() => {
     <!-- Main nav bar -->
     <div class="bg-white border-b border-[#ede7e7]">
       <div class="container mx-auto px-4">
-        <div class="flex items-center gap-6 h-16 md:h-20">
+        <div class="flex items-center justify-between gap-2 h-14 md:h-20">
 
           <!-- Logo -->
           <NuxtLink to="/" class="flex items-center gap-2 shrink-0">
-            <span class="text-2xl font-bold tracking-tight text-[#44476f]">
+            <span class="text-xl sm:text-2xl font-bold tracking-tight text-[#44476f] whitespace-nowrap">
               Pets<span class="text-[#c3b5df]">U</span>pright
             </span>
           </NuxtLink>
@@ -209,7 +209,7 @@ onUnmounted(() => {
           </div>
 
           <!-- Right Actions -->
-          <div class="flex items-center gap-4 shrink-0">
+          <div class="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0">
             <NuxtLink
   to="/wishlist"
   class="relative p-1 text-[#1a1a2e] hover:text-[#44476f] transition"
@@ -288,9 +288,9 @@ onUnmounted(() => {
               Login
             </NuxtLink>
 
-            <button class="md:hidden p-2 text-[#44476f]" @click="isMobileMenuOpen = !isMobileMenuOpen"
+            <button class="md:hidden p-1.5 text-[#44476f]" @click="isMobileMenuOpen = !isMobileMenuOpen"
               aria-label="Menu">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -299,7 +299,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Mobile search -->
-        <div class="lg:hidden pb-3">
+        <div class="lg:hidden px-0 pb-3">
           <div class="relative w-full">
             <svg xmlns="http://www.w3.org/2000/svg"
               class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24"
@@ -308,32 +308,96 @@ onUnmounted(() => {
                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input v-model="searchQuery" type="text" placeholder="Search for food, toys, grooming essentials..."
-              class="w-full bg-[#f5f4f7] rounded-full pl-9 pr-4 py-2 text-sm text-[#44476f] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c3b5df]" />
+              class="w-full bg-[#f5f4f7] rounded-full pl-9 pr-4 py-2.5 text-[13px] sm:text-sm text-[#44476f] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c3b5df]" />
           </div>
         </div>
       </div>
 
       <!-- Mobile Menu -->
-      <div v-if="isMobileMenuOpen" class="md:hidden border-t border-[#ede7e7] py-4 bg-white">
-        <nav class="container mx-auto px-4 flex flex-col gap-1">
-          <NuxtLink to="/shop?pet=dog" class="px-2 py-2 text-[#44476f] font-semibold" @click="isMobileMenuOpen = false">
-            Dogs</NuxtLink>
-          <NuxtLink to="/shop?pet=cat" class="px-2 py-2 text-[#44476f] font-semibold" @click="isMobileMenuOpen = false">
-            Cats</NuxtLink>
-          <NuxtLink to="/new-arrivals" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">New Arrivals
+      <div
+        v-if="isMobileMenuOpen"
+        class="md:hidden border-t border-[#ede7e7] bg-white shadow-lg"
+      >
+        <nav class="container mx-auto px-4 py-3 flex flex-col gap-1">
+
+          <NuxtLink
+            to="/shop?pet=dog"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Dogs
           </NuxtLink>
-          <NuxtLink to="/trending" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">Trending Now
+
+          <NuxtLink
+            to="/shop?pet=cat"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Cats
           </NuxtLink>
-          <NuxtLink to="/combo-deals" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">Combo Deals
+
+          <NuxtLink
+            to="/new-arrivals"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            New Arrivals
           </NuxtLink>
-          <NuxtLink to="/offers" class="px-2 py-2 text-red-500 font-semibold" @click="isMobileMenuOpen = false">Offers
+
+          <NuxtLink
+            to="/trending"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Trending Now
           </NuxtLink>
-          <NuxtLink to="/brands" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">Brands</NuxtLink>
-          <NuxtLink to="/store-locator" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">Store Locator
+
+          <NuxtLink
+            to="/combo-deals"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Combo Deals
           </NuxtLink>
-          <NuxtLink to="/track-order" class="px-2 py-2 text-[#44476f]" @click="isMobileMenuOpen = false">Track Order
+
+          <NuxtLink
+            to="/offers"
+            class="px-3 py-2.5 rounded-lg text-sm text-red-500 font-semibold hover:bg-red-50 transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Offers
           </NuxtLink>
-          <NuxtLink to="/login" class="px-2 py-2 text-[#44476f] font-semibold" @click="isMobileMenuOpen = false">Login
+
+          <NuxtLink
+            to="/brands"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Brands
+          </NuxtLink>
+
+          <NuxtLink
+            to="/store-locator"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Store Locator
+          </NuxtLink>
+
+          <NuxtLink
+            to="/track-order"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Track Order
+          </NuxtLink>
+
+          <NuxtLink
+            to="/login"
+            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false"
+          >
+            Login
           </NuxtLink>
         </nav>
       </div>
