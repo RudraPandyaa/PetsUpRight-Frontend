@@ -293,16 +293,41 @@ onUnmounted(() => {
 }
 
 @media (max-width: 600px) {
+  .happy-tails {
+    padding: 3rem 0.75rem;
+  }
+
+  .carousel-wrapper {
+    overflow: hidden;
+  }
+
+  .carousel-track {
+    gap: 0;
+    padding: 0;
+    scroll-snap-type: x mandatory;
+    scroll-padding: 0;
+  }
+
   .video-card {
-    flex: 0 0 calc(50% - 0.5rem);
+    flex: 0 0 100%;
+    min-width: 100%;
+    max-width: 100%;
+    scroll-snap-align: center;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0 4px; /* bahut kam side gap */
+  }
+
+  .video-thumb {
+    width: 100%;
+    max-width: none; /* full card width */
+    aspect-ratio: 3 / 4;
+    border-radius: 12px;
   }
 
   .nav-btn {
     display: none;
-  }
-
-  .happy-tails {
-    padding: 3rem 1rem;
   }
 }
 </style>

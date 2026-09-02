@@ -143,9 +143,24 @@ watch(
   display: block;
 }
 @media (max-width: 640px) {
+  .main-frame {
+    aspect-ratio: 1 / 1;
+  }
+
+  .thumbs {
+    display: flex;
+    justify-content: space-between; /* 1 left, 2 center, 3 right */
+    align-items: center;
+    gap: 0;              /* space-between khud gap dega */
+    margin-top: 0.6rem;
+    width: 100%;
+  }
+
   .thumb {
-    width: 60px;
-    height: 60px;
+    width: 150px;
+    height: 88px;
+    flex: 0 0 88px;
+    border-radius: 10px;
   }
 }
 </style>

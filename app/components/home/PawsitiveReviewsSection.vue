@@ -91,12 +91,12 @@ const isTransitioning = ref(false)
 
 const reviews = ref([
   {
-    name: 'Ananya Patel',
+    name: 'Dhruvi Khanna',
     rating: 4,
     text: 'Excellent products and great customer service. The collar fits perfectly, and the quality exceeded my expectations. Highly recommended!',
   },
   {
-    name: 'Rahul Mehta',
+    name: 'Urmi Patel',
     rating: 4,
     text: 'The pet bed is soft, comfortable, and exactly as shown. My dog started using it right away. Great shopping experience overall!',
   },
@@ -106,7 +106,7 @@ const reviews = ref([
     text: 'Amazing quality and super fast delivery! My Golden Retriever absolutely loves the treats, and the toys are durable too. Will definitely order again!',
   },
   {
-    name: 'Priya Singh',
+    name: 'Vidhi Singh',
     rating: 5,
     text: 'Loved the grooming kit. My cat looks so fresh and the brushes are gentle on her skin. Will buy again soon!',
   },

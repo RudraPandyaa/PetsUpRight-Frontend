@@ -1,7 +1,7 @@
 <template>
   <div
     :class="[
-      'bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300 group',
+      'bg-white rounded-xl overflow-hidden border border-gray-100 hover:shadow-md transition-shadow duration-300 group h-full',
       isList ? 'flex flex-row' : 'flex flex-col'
     ]"
   >
@@ -45,9 +45,21 @@
     </NuxtLink>
 
     <!-- Content -->
-    <div :class="['p-4 flex flex-col', isList ? 'flex-1 justify-center' : '']">
+    <div
+      :class="[
+        'p-4 flex flex-col',
+        isList ? 'flex-1 justify-center' : 'flex-1'
+      ]"
+    >
       <NuxtLink :to="productLink">
-        <h3 class="text-md font-medium text-[#1a1a2e] line-clamp-2 hover:text-[#44476f]">
+        <h3
+          class="
+            text-md font-medium text-[#1a1a2e]
+            line-clamp-2
+            hover:text-[#44476f]
+            max-sm:min-h-[2.6rem]
+          "
+        >
           {{ product.name }}
         </h3>
       </NuxtLink>
@@ -65,7 +77,13 @@
         ₹{{ Math.round(product.price) }}
       </p>
 
-      <div :class="['mt-3', isList ? 'flex flex-wrap items-center gap-2' : 'space-y-2']">
+      <div
+          :class="[
+            isList
+              ? 'mt-3 flex flex-wrap items-center gap-2'
+              : 'mt-auto pt-3 space-y-2'
+          ]"
+        >
         <!-- Not in cart → Add to Cart -->
         <button
           v-if="!cartQty"

@@ -127,10 +127,10 @@ const features = [
     gap: 1.5rem 1rem;
   }
 }
-
+/* 
 @media (max-width: 480px) {
   .features-grid {
     grid-template-columns: 1fr;
   }
-}
+} */
 </style>

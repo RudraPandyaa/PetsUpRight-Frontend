@@ -1,9 +1,36 @@
 <script setup lang="ts">
-const { items, bundleName, bundleDesc, currentPrice, pending } =
-  useFrequentlyBought()
+const props = defineProps<{
+  excludeProductId?: string
+}>()
 
-// originalPrice optional – collection custom field se la sakte ho
-const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
+const {
+  items: allItems,
+  bundleName,
+  pending,
+  error,
+} = useFrequentlyBought()
+const bundleDesc = computed(() =>
+  items.value.map((item) => item.name).join(' + ')
+)
+const items = computed(() =>
+  allItems.value
+    .filter(
+      (item) =>
+        String(item.id) !== String(props.excludeProductId)
+    )
+    .slice(0, 3)
+)
+
+const currentPrice = computed(() =>
+  items.value.reduce(
+    (sum, item) => sum + Number(item.price || 0),
+    0
+  )
+)
+
+const originalPrice = computed(() =>
+  Math.round(currentPrice.value * 1.2)
+)
 </script>
 
 <template>
@@ -30,7 +57,7 @@ const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
             <span class="original-price">₹{{ originalPrice.toLocaleString('en-IN') }}</span>
           </div>
           <button class="add-btn" @click="$emit('add-bundle', items)">
-            Add Both to Cart
+            Add Bundle to Cart
           </button>
         </div>
       </div>
@@ -65,7 +92,7 @@ const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
 }
 
 .product-thumb {
-  width: 100;
+  width: 100px;
   height: 100px;
   border-radius: 0.75rem;
   border: 1px solid #e5e7eb;
@@ -96,6 +123,8 @@ const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
   gap: 1rem 1.5rem;
   flex: 1;
   min-width: 200px;
+
+  padding-left: 2rem;
 }
 
 .bundle-name {
@@ -152,6 +181,173 @@ const originalPrice = computed(() => Math.round(currentPrice.value * 1.2))
 .add-btn:hover {
   background: #1a1a2e;
   color: #ffffff;
+}
+
+/* ==============================
+   Tablet: 641px - 1023px
+================================ */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .frequently-bought {
+    margin-top: 3rem;
+  }
+
+  .section-title {
+    font-size: 1.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .bundle-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: left;
+    gap: 2rem;
+    padding: 1.75rem 2rem;
+    border-radius: 1.5rem;
+  }
+
+  /* LEFT SIDE IMAGES */
+  .products-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.65rem;
+  }
+
+  .product-thumb {
+    width: 105px;
+    height: 105px;
+  }
+
+  .plus {
+    font-size: 1.3rem;
+  }
+
+  /* RIGHT SIDE CONTENT */
+  .bundle-info {
+    width: 100%;
+    min-width: 0;
+    padding-left: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+
+    text-align: right;
+    gap: 1rem;
+  }
+
+  .bundle-name {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+    text-align: right;
+  }
+
+  .bundle-desc {
+    font-size: 0.95rem;
+    line-height: 1.4;
+    text-align: right;
+  }
+
+  /* PRICE + BUTTON RIGHT */
+  .price-action {
+    width: 100%;
+    margin-left: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
+
+    gap: 0.65rem;
+  }
+
+  .prices {
+    justify-content: flex-end;
+  }
+
+  .add-btn {
+    margin: 0;
+  }
+}
+
+
+/* ==============================
+   Mobile: <= 640px
+================================ */
+@media (max-width: 640px) {
+  .frequently-bought {
+    margin-top: 2.5rem;
+  }
+
+  .section-title {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .bundle-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 1.5rem;
+  }
+
+  .products-row {
+    width: 100%;
+    justify-content: center;
+    gap: 0.6rem;
+  }
+
+  .product-thumb {
+    width: 72px;
+    height: 72px;
+  }
+
+  .plus {
+    font-size: 1.1rem;
+  }
+
+  .bundle-info {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    min-width: 0;
+    gap: 1rem;
+  }
+
+  .bundle-name {
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .bundle-desc {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .price-action {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+
+  .current-price {
+    font-size: 1rem;
+  }
+
+  .original-price {
+    font-size: 0.8rem;
+  }
+
+  .add-btn {
+    font-size: 0.8rem;
+    padding: 0.5rem 0.8rem;
+  }
 }
 
 /* Responsive */

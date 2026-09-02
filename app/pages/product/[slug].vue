@@ -56,7 +56,7 @@
     <!-- Not found -->
     <div v-else class="py-20 text-center text-gray-400">
       Product not found
-    </div>
+    </div>  
   </div>
 </template>
 

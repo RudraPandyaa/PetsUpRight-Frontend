@@ -5,8 +5,8 @@
       v-if="loading"
       :class="
         viewMode === 'grid'
-          ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5'
-          : 'grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5'
+          ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4'
+          : 'grid grid-cols-1 md:grid-cols-2 gap-4'
       "
     >
       <div
@@ -25,8 +25,8 @@
       v-else-if="products.length"
       :class="
         viewMode === 'grid'
-          ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5'
-          : 'grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5'
+          ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4'
+          : 'grid grid-cols-1 md:grid-cols-2 gap-4'
       "
     >
       <ProductCard

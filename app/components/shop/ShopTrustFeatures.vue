@@ -1,11 +1,11 @@
 <template>
   <section class="bg-[#f7f7f8] pb-16 md:pb-20">
     <div class="container mx-auto px-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-5">
         <div
           v-for="feature in features"
           :key="feature.title"
-          class="bg-white rounded-xl p-6 text-center shadow-sm hover:shadow-md transition-shadow duration-300"
+          class="bg-white rounded-xl p-3 sm:p-5 lg:p-6 text-center shadow-sm hover:shadow-md transition-shadow duration-300"
         >
           <div class="w-12 h-12 mx-auto mb-4 rounded-full bg-[#f3eef9] flex items-center justify-center text-[#44476f]">
             <!-- Simple icons using SVG -->
@@ -27,10 +27,10 @@
             </svg>
           </div>
 
-          <h3 class="text-base font-semibold text-xl text-[#1a1a2e] mb-2">
+          <h3 class="text-sm sm:text-base lg:text-xl font-semibold text-[#1a1a2e] mb-2">
             {{ feature.title }}
           </h3>
-          <p class="text-md text-gray-500 leading-relaxed">
+          <p class="text-xs sm:text-sm lg:text-base text-gray-500 leading-relaxed">
             {{ feature.description }}
           </p>
         </div>

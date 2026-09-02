@@ -24,7 +24,7 @@
     <!-- Product Grid -->
     <div v-else class="products-grid">
       <ProductCard
-        v-for="product in products"
+          v-for="product in displayedProducts"
         :key="product.id"
         :product="product"
         view-mode="grid"
@@ -47,15 +47,30 @@ const { getProducts } = useProducts()
 const products = ref<any[]>([])
 const loading = ref(true)
 
+const isMobile = ref(false)
+
+const displayedProducts = computed(() => {
+  return isMobile.value
+    ? products.value.slice(0, 6)
+    : products.value
+})
+
+function updateScreenSize() {
+  if (typeof window === 'undefined') return
+  isMobile.value = window.innerWidth < 640
+}
 onMounted(async () => {
+  updateScreenSize()
+  window.addEventListener('resize', updateScreenSize)
+
   try {
     const result = await getProducts({ take: 12 })
 
     products.value = result.items.map((item: any) => {
       const priceObj = item.priceWithTax || {}
 
-      // SinglePrice → value | PriceRange → min
       let priceValue = 0
+
       if (typeof priceObj.value === 'number') {
         priceValue = priceObj.value
       } else if (typeof priceObj.min === 'number') {
@@ -72,7 +87,6 @@ onMounted(async () => {
           : '/images/shop/Rectangle-5.png',
 
         price: Math.round(priceValue / 100),
-
         rating: 4.9,
       }
     })
@@ -81,6 +95,10 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateScreenSize)
 })
 
 // function toggleWishlist(product: any) {
@@ -381,9 +399,14 @@ function goToShopAll() {
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 639px) {
   .products-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .new-arrivals {
+    padding: 3rem 0.75rem;
   }
 }
 </style>
