@@ -9,6 +9,39 @@ const isCartOpen = ref(false)
 const searchQuery = ref('')
 const isHeaderVisible = ref(true)
 const lastScrollY = ref(0)
+const { getShopFacets } = useProducts()
+
+interface HeaderFacetOption {
+  id: string
+  name: string
+  code: string
+}
+
+const dogCategories = ref<HeaderFacetOption[]>([])
+const catCategories = ref<HeaderFacetOption[]>([])
+
+async function loadHeaderCategories() {
+  try {
+    const facets = await getShopFacets()
+
+    const categoryFacet = facets.find(
+      (facet: any) => facet.code === 'category'
+    )
+
+    const categories =
+      categoryFacet?.values?.map((value: any) => ({
+        id: String(value.id),
+        name: value.name,
+        code: value.code,
+      })) ?? []
+
+    // Abhi same real category list Dog/Cat dono me dikhegi.
+    dogCategories.value = categories
+    catCategories.value = categories
+  } catch (error) {
+    console.error('Failed to load header categories:', error)
+  }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -76,11 +109,14 @@ const cartCount = computed(() =>
 const wishlistCount = computed(() => wishlist.value.length)
 
 
-onMounted(() => {
+onMounted(async () => {
   lastScrollY.value = window.scrollY
+
   window.addEventListener('scroll', handleScroll, {
     passive: true,
   })
+
+  await loadHeaderCategories()
 })
 
 onUnmounted(() => {
@@ -127,48 +163,124 @@ onUnmounted(() => {
           <!-- Desktop Navigation -->
           <nav class="hidden md:flex items-center gap-6 flex-1">
             <!-- Dogs dropdown -->
-            <div class="relative" @mouseenter="isDogsOpen = true" @mouseleave="isDogsOpen = false">
+            <div
+              class="relative"
+              @mouseenter="isDogsOpen = true"
+              @mouseleave="isDogsOpen = false"
+            >
               <button
-                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition">
+                type="button"
+                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition"
+              >
                 Dogs
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
-              <div v-if="isDogsOpen"
-                class="absolute top-full left-0 mt-2 w-56 bg-white shadow-lg rounded-md border border-[#ede7e7] py-2">
-                <NuxtLink to="/shop?pet=dog&cat=food" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">
-                  Food</NuxtLink>
-                <NuxtLink to="/shop?pet=dog&cat=toys" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">
-                  Toys</NuxtLink>
-                <NuxtLink to="/shop?pet=dog&cat=grooming"
-                  class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">Grooming</NuxtLink>
-                <NuxtLink to="/shop?pet=dog&cat=accessories"
-                  class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">Accessories</NuxtLink>
+
+              <div
+                v-if="isDogsOpen"
+                class="absolute top-full left-0 pt-2 w-56 z-50"
+              >
+                <div
+                  class="bg-white shadow-lg rounded-md border border-[#ede7e7] py-2"
+                >
+                  <NuxtLink
+                    v-for="category in dogCategories"
+                    :key="category.id"
+                    :to="{
+                      path: '/shop',
+                      query: {
+                        pet: 'dog',
+                        category: category.code,
+                      },
+                    }"
+                    class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]"
+                    @click="isDogsOpen = false"
+                  >
+                    {{ category.name }}
+                  </NuxtLink>
+
+                  <p
+                    v-if="dogCategories.length === 0"
+                    class="px-4 py-2 text-sm text-gray-400"
+                  >
+                    No categories available
+                  </p>
+                </div>
               </div>
             </div>
 
-            <!-- Cats dropdown -->
-            <div class="relative" @mouseenter="isCatsOpen = true" @mouseleave="isCatsOpen = false">
+           <!-- Cats dropdown -->
+            <div
+              class="relative"
+              @mouseenter="isCatsOpen = true"
+              @mouseleave="isCatsOpen = false"
+            >
               <button
-                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition">
+                type="button"
+                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition"
+              >
                 Cats
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
-              <div v-if="isCatsOpen"
-                class="absolute top-full left-0 mt-2 w-56 bg-white shadow-lg rounded-md border border-[#ede7e7] py-2">
-                <NuxtLink to="/shop?pet=cat&cat=food" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">
-                  Food</NuxtLink>
-                <NuxtLink to="/shop?pet=cat&cat=toys" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">
-                  Toys</NuxtLink>
-                <NuxtLink to="/shop?pet=cat&cat=litter"
-                  class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">Litter</NuxtLink>
-                <NuxtLink to="/shop?pet=cat&cat=accessories"
-                  class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]">Accessories</NuxtLink>
+
+              <div
+                v-if="isCatsOpen"
+                class="absolute top-full left-0 pt-2 w-56 z-50"
+              >
+                <div
+                  class="bg-white shadow-lg rounded-md border border-[#ede7e7] py-2"
+                >
+                  <NuxtLink
+                    v-for="category in catCategories"
+                    :key="category.id"
+                    :to="{
+                      path: '/shop',
+                      query: {
+                        pet: 'cat',
+                        category: category.code,
+                      },
+                    }"
+                    class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]"
+                    @click="isCatsOpen = false"
+                  >
+                    {{ category.name }}
+                  </NuxtLink>
+
+                  <p
+                    v-if="catCategories.length === 0"
+                    class="px-4 py-2 text-sm text-gray-400"
+                  >
+                    No categories available
+                  </p>
+                </div>
               </div>
             </div>
 
