@@ -10,6 +10,11 @@ const searchQuery = ref('')
 const isHeaderVisible = ref(true)
 const lastScrollY = ref(0)
 const { getShopFacets } = useProducts()
+const isBrandsOpen = ref(false)
+const brandOptions = ref<HeaderFacetOption[]>([])
+const isMobileDogsOpen = ref(false)
+const isMobileCatsOpen = ref(false)
+const isMobileBrandsOpen = ref(false)
 
 interface HeaderFacetOption {
   id: string
@@ -20,9 +25,10 @@ interface HeaderFacetOption {
 const dogCategories = ref<HeaderFacetOption[]>([])
 const catCategories = ref<HeaderFacetOption[]>([])
 
-async function loadHeaderCategories() {
+async function loadHeaderData() {
   try {
     const facets = await getShopFacets()
+
 
     const categoryFacet = facets.find(
       (facet: any) => facet.code === 'category'
@@ -35,12 +41,45 @@ async function loadHeaderCategories() {
         code: value.code,
       })) ?? []
 
-    // Abhi same real category list Dog/Cat dono me dikhegi.
     dogCategories.value = categories
     catCategories.value = categories
+
+    const brandFacet = facets.find(
+      (facet: any) => facet.code === 'brand'
+    )
+
+    brandOptions.value =
+      brandFacet?.values?.map((value: any) => ({
+        id: String(value.id),
+        name: value.name,
+        code: value.code,
+      })) ?? []
+
   } catch (error) {
-    console.error('Failed to load header categories:', error)
+    console.error(
+      'Failed to load header data:',
+      error
+    )
+
+    dogCategories.value = []
+    catCategories.value = []
+    brandOptions.value = []
   }
+}
+
+function handleSearch() {
+  const term = searchQuery.value.trim()
+
+  if (!term) return
+
+  navigateTo({
+    path: '/shop',
+    query: {
+      search: term,
+    },
+  })
+
+  isMobileMenuOpen.value = false
 }
 
 /*
@@ -116,7 +155,7 @@ onMounted(async () => {
     passive: true,
   })
 
-  await loadHeaderCategories()
+  await loadHeaderData()
 })
 
 onUnmounted(() => {
@@ -154,7 +193,7 @@ onUnmounted(() => {
         <div class="flex items-center justify-between gap-2 h-14 md:h-20">
 
           <!-- Logo -->
-          <NuxtLink to="/" class="flex items-center gap-2 shrink-0">
+          <NuxtLink to="/" class="flex items-center gap-2 shrink-0 mr-12">
             <span class="text-xl sm:text-2xl font-bold tracking-tight text-[#44476f] whitespace-nowrap">
               Pets<span class="text-[#c3b5df]">U</span>pright
             </span>
@@ -284,26 +323,81 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <NuxtLink to="/new-arrivals"
+            <NuxtLink to="/shop?sort=newest"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               New Arrivals
             </NuxtLink>
-            <NuxtLink to="/trending"
+            <NuxtLink to="/shop?collection=trending-now"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Trending Now
             </NuxtLink>
-            <NuxtLink to="/combo-deals"
+            <NuxtLink  to="/shop?collection=combo-deals"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Combo Deals
             </NuxtLink>
-            <NuxtLink to="/offers"
+            <NuxtLink to="/shop?collection=offers"
               class="text-sm font-semibold text-red-500 hover:text-red-600 transition whitespace-nowrap">
               Offers
             </NuxtLink>
-            <NuxtLink to="/brands"
-              class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
-              Brands
-            </NuxtLink>
+            <!-- Brands dropdown -->
+            <div
+              class="relative"
+              @mouseenter="isBrandsOpen = true"
+              @mouseleave="isBrandsOpen = false"
+            >
+              <button
+                type="button"
+                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap"
+              >
+                Brands
+
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3.5 w-3.5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+
+              <div
+                v-if="isBrandsOpen"
+                class="absolute top-full left-0 pt-2 w-56 z-50"
+              >
+                <div
+                  class="bg-white shadow-lg rounded-md border border-[#ede7e7] py-2 max-h-80 overflow-y-auto"
+                >
+                  <NuxtLink
+                    v-for="brand in brandOptions"
+                    :key="brand.id"
+                    :to="{
+                      path: '/shop',
+                      query: {
+                        brand: brand.code,
+                      },
+                    }"
+                    class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]"
+                    @click="isBrandsOpen = false"
+                  >
+                    {{ brand.name }}
+                  </NuxtLink>
+
+                  <p
+                    v-if="brandOptions.length === 0"
+                    class="px-4 py-2 text-sm text-gray-400"
+                  >
+                    No brands available
+                  </p>
+                </div>
+              </div>
+            </div>
           </nav>
 
           <!-- Search -->
@@ -315,7 +409,7 @@ onUnmounted(() => {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
-              <input v-model="searchQuery" type="text" placeholder="Search for food, toys, grooming essentials..."
+              <input v-model="searchQuery" type="text" placeholder="Search for food, toys, grooming essentials..."   @keyup.enter="handleSearch"
                 class="w-full bg-[#f5f4f7] rounded-full pl-9 pr-4 py-2 text-sm text-[#44476f] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#c3b5df]" />
             </div>
           </div>
@@ -425,94 +519,215 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- Mobile Menu -->
-      <div
-        v-if="isMobileMenuOpen"
-        class="md:hidden border-t border-[#ede7e7] bg-white shadow-lg"
-      >
-        <nav class="container mx-auto px-4 py-3 flex flex-col gap-1">
+    <!-- Mobile Menu -->
+    <div
+      v-if="isMobileMenuOpen"
+      class="md:hidden border-t border-[#ede7e7] bg-white shadow-lg"
+    >
+      <nav class="container mx-auto px-4 py-3 flex flex-col gap-1">
 
-          <NuxtLink
-            to="/shop?pet=dog"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
+        <!-- Dogs -->
+        <div>
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileDogsOpen = !isMobileDogsOpen"
           >
-            Dogs
-          </NuxtLink>
+            <span>Dogs</span>
 
-          <NuxtLink
-            to="/shop?pet=cat"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
-          >
-            Cats
-          </NuxtLink>
+            <span>
+              {{ isMobileDogsOpen ? '−' : '+' }}
+            </span>
+          </button>
 
-          <NuxtLink
-            to="/new-arrivals"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
+          <div
+            v-if="isMobileDogsOpen"
+            class="pl-4 pb-2"
           >
-            New Arrivals
-          </NuxtLink>
+            <NuxtLink
+              v-for="category in dogCategories"
+              :key="category.id"
+              :to="{
+                path: '/shop',
+                query: {
+                  pet: 'dog',
+                  category: category.code,
+                },
+              }"
+              class="block px-3 py-2 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg"
+              @click="
+                isMobileMenuOpen = false;
+                isMobileDogsOpen = false
+              "
+            >
+              {{ category.name }}
+            </NuxtLink>
 
-          <NuxtLink
-            to="/trending"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
-          >
-            Trending Now
-          </NuxtLink>
+            <p
+              v-if="dogCategories.length === 0"
+              class="px-3 py-2 text-sm text-gray-400"
+            >
+              No categories available
+            </p>
+          </div>
+        </div>
 
-          <NuxtLink
-            to="/combo-deals"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
+        <!-- Cats -->
+        <div>
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileCatsOpen = !isMobileCatsOpen"
           >
-            Combo Deals
-          </NuxtLink>
+            <span>Cats</span>
 
-          <NuxtLink
-            to="/offers"
-            class="px-3 py-2.5 rounded-lg text-sm text-red-500 font-semibold hover:bg-red-50 transition"
-            @click="isMobileMenuOpen = false"
-          >
-            Offers
-          </NuxtLink>
+            <span>
+              {{ isMobileCatsOpen ? '−' : '+' }}
+            </span>
+          </button>
 
-          <NuxtLink
-            to="/brands"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
+          <div
+            v-if="isMobileCatsOpen"
+            class="pl-4 pb-2"
           >
-            Brands
-          </NuxtLink>
+            <NuxtLink
+              v-for="category in catCategories"
+              :key="category.id"
+              :to="{
+                path: '/shop',
+                query: {
+                  pet: 'cat',
+                  category: category.code,
+                },
+              }"
+              class="block px-3 py-2 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg"
+              @click="
+                isMobileMenuOpen = false;
+                isMobileCatsOpen = false
+              "
+            >
+              {{ category.name }}
+            </NuxtLink>
 
-          <NuxtLink
-            to="/store-locator"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
-          >
-            Store Locator
-          </NuxtLink>
+            <p
+              v-if="catCategories.length === 0"
+              class="px-3 py-2 text-sm text-gray-400"
+            >
+              No categories available
+            </p>
+          </div>
+        </div>
 
-          <NuxtLink
-            to="/track-order"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
-          >
-            Track Order
-          </NuxtLink>
+        <!-- New Arrivals -->
+        <NuxtLink
+          to="/shop?sort=newest"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          New Arrivals
+        </NuxtLink>
 
-          <NuxtLink
-            to="/login"
-            class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
-            @click="isMobileMenuOpen = false"
+        <!-- Trending Now -->
+        <NuxtLink
+          to="/shop?collection=trending-now"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Trending Now
+        </NuxtLink>
+
+        <!-- Combo Deals -->
+        <NuxtLink
+          to="/shop?collection=combo-deals"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Combo Deals
+        </NuxtLink>
+
+        <!-- Offers -->
+        <NuxtLink
+          to="/shop?collection=offers"
+          class="px-3 py-2.5 rounded-lg text-sm text-red-500 font-semibold hover:bg-red-50 transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Offers
+        </NuxtLink>
+
+        <!-- Brands -->
+        <div>
+          <button
+            type="button"
+            class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileBrandsOpen = !isMobileBrandsOpen"
           >
-            Login
-          </NuxtLink>
-        </nav>
-      </div>
+            <span>Brands</span>
+
+            <span>
+              {{ isMobileBrandsOpen ? '−' : '+' }}
+            </span>
+          </button>
+
+          <div
+            v-if="isMobileBrandsOpen"
+            class="pl-4 pb-2 max-h-64 overflow-y-auto"
+          >
+            <NuxtLink
+              v-for="brand in brandOptions"
+              :key="brand.id"
+              :to="{
+                path: '/shop',
+                query: {
+                  brand: brand.code,
+                },
+              }"
+              class="block px-3 py-2 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg"
+              @click="
+                isMobileMenuOpen = false;
+                isMobileBrandsOpen = false
+              "
+            >
+              {{ brand.name }}
+            </NuxtLink>
+
+            <p
+              v-if="brandOptions.length === 0"
+              class="px-3 py-2 text-sm text-gray-400"
+            >
+              No brands available
+            </p>
+          </div>
+        </div>
+
+        <!-- Store Locator -->
+        <NuxtLink
+          to="/store-locator"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Store Locator
+        </NuxtLink>
+
+        <!-- Track Order -->
+        <NuxtLink
+          to="/track-order"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Track Order
+        </NuxtLink>
+
+        <!-- Login -->
+        <NuxtLink
+          to="/login"
+          class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+          @click="isMobileMenuOpen = false"
+        >
+          Login
+        </NuxtLink>
+
+      </nav>
+    </div>
     </div>
   </header>
   <CartDrawer :is-open="isCartOpen" @close="isCartOpen = false" />

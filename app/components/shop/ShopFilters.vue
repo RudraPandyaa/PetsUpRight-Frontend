@@ -348,6 +348,7 @@
 interface FilterOption {
   label: string
   value: string
+  code: string
 }
 
 export interface ShopFiltersState {
@@ -469,26 +470,25 @@ async function loadFacets() {
     console.log('PET TYPE VALUES:', petTypeFacet?.values)
 
     petTypes.value =
-      petTypeFacet?.values?.map(
-        (value: any) => ({
-          label: value.name,
-          value: String(value.id),
-        })
-      ) ?? []
+    petTypeFacet?.values?.map((value: any) => ({
+      label: value.name,
+      value: String(value.id),
+      code: String(value.code).toLowerCase(),
+    })) ?? []
 
     categories.value =
-      categoryFacet?.values?.map(
-        (value: any) => ({
-          label: value.name,
-          value: String(value.id),
-        })
-      ) ?? []
+    categoryFacet?.values?.map((value: any) => ({
+      label: value.name,
+      value: String(value.id),
+      code: String(value.code).toLowerCase(),
+    })) ?? []
 
     brands.value =
       brandFacet?.values?.map(
         (value: any) => ({
           label: value.name,
           value: String(value.id),
+          code: String(value.code).toLowerCase(),
         })
       ) ?? []
 

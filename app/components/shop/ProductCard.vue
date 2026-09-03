@@ -10,7 +10,9 @@
       :to="productLink"
       :class="[
         'relative bg-gray-50 overflow-hidden shrink-0 block',
-        isList ? 'w-32 sm:w-40 md:w-48 aspect-square' : 'aspect-square w-full'
+        isList
+          ? 'w-32 sm:w-40 md:w-48 aspect-square'
+          : 'aspect-square w-full'
       ]"
     >
       <img
@@ -22,39 +24,48 @@
 
       <!-- Wishlist -->
       <button
-  type="button"
-  @click.prevent.stop="toggleWishlist"
-  class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
-  :aria-label="isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'"
->
-  <svg
-    class="w-5 h-5 transition-colors"
-    :class="
-      isWishlisted
-        ? 'text-[#E85D75] fill-[#E85D75]'
-        : 'text-gray-400'
-    "
-    fill="currentColor"
-    viewBox="0 0 24 24"
-  >
-    <path
-      d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-    />
-  </svg>
-</button>
+        type="button"
+        @click.prevent.stop="toggleWishlist"
+        class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 backdrop-blur flex items-center justify-center shadow-sm hover:bg-white transition"
+        :aria-label="
+          isWishlisted
+            ? 'Remove from wishlist'
+            : 'Add to wishlist'
+        "
+      >
+        <svg
+          class="w-5 h-5 transition-colors"
+          :class="
+            isWishlisted
+              ? 'text-[#E85D75] fill-[#E85D75]'
+              : 'text-gray-400'
+          "
+          fill="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+      </button>
     </NuxtLink>
 
     <!-- Content -->
     <div
       :class="[
         'p-4 flex flex-col',
-        isList ? 'flex-1 justify-center' : 'flex-1'
+        isList
+          ? 'flex-1 justify-center'
+          : 'flex-1'
       ]"
     >
+      <!-- Product Name -->
       <NuxtLink :to="productLink">
         <h3
           class="
-            text-md font-medium text-[#1a1a2e]
+            text-md
+            font-medium
+            text-[#1a1a2e]
             line-clamp-2
             hover:text-[#44476f]
             max-sm:min-h-[2.6rem]
@@ -63,85 +74,207 @@
           {{ product.name }}
         </h3>
       </NuxtLink>
+      <!-- Rating -->
+      <div class="flex items-center gap-2 mt-1">
+        <!-- Stars -->
+        <div class="flex items-center gap-0.5">
+          <div
+            v-for="star in 5"
+            :key="star"
+            class="relative w-4 h-4"
+          >
+            <!-- Empty Star -->
+            <span
+              class="absolute inset-0 text-gray-300 text-lg leading-4"
+            >
+              ★
+            </span>
 
-      <div class="flex items-center gap-1 mt-1.5">
-        <div class="flex text-amber-400 text-lg">
-          <span v-for="i in 5" :key="i">
-            {{ i <= Math.round(product.rating || 0) ? '★' : '☆' }}
-          </span>
+            <!-- Filled Star -->
+            <span
+              class="absolute inset-0 overflow-hidden text-yellow-400 text-lg leading-4"
+              :style="{
+                width: `${getStarFill(star)}%`
+              }"
+            >
+              ★
+            </span>
+          </div>
         </div>
-        <span class="text-xs text-gray-500">({{ product.rating || 4.9 }})</span>
-      </div>
 
-      <p class="text-base font-semibold text-lg text-[#1a1a2e] mt-2">
+        <!-- Rating Number -->
+        <span class="text-gray-500 text-base font-semibold">
+          ({{ product.rating.toFixed(1) }})
+        </span>
+      </div>
+      <!-- Price -->
+      <p
+        class="text-base font-semibold text-lg text-[#1a1a2e] mt-2"
+      >
         ₹{{ Math.round(product.price) }}
       </p>
 
+      <!-- Actions -->
       <div
-          :class="[
-            isList
-              ? 'mt-3 flex flex-wrap items-center gap-2'
-              : 'mt-auto pt-3 space-y-2'
-          ]"
-        >
-        <!-- Not in cart → Add to Cart -->
+        :class="[
+          isList
+            ? 'mt-3 flex flex-wrap items-center gap-2'
+            : 'mt-auto pt-3 space-y-2'
+        ]"
+      >
+        <!-- ADD TO CART -->
         <button
-          v-if="!cartQty"
+          v-if="cartQty === 0"
           type="button"
-          @click="addToCart(product)"
-          class="bg-[#1a1a2e] hover:bg-[#44476f] text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+          :disabled="cartLoading || !product.variantId"
+          @click.stop="addToCart"
+          class="
+            bg-[#1a1a2e]
+            hover:bg-[#44476f]
+            disabled:opacity-60
+            disabled:cursor-not-allowed
+            text-white
+            text-sm
+            font-medium
+            py-2
+            px-4
+            rounded-lg
+            flex
+            items-center
+            justify-center
+            gap-2
+            transition
+          "
           :class="isList ? '' : 'w-full'"
         >
-          Add to Cart
+          {{ cartLoading ? 'Adding...' : 'Add to Cart' }}
         </button>
 
-        <!-- In cart → qty controls -->
+        <!-- QUANTITY CONTROLS -->
         <div
           v-else
-          class="flex items-center justify-between border border-[#1a1a2e] rounded-lg overflow-hidden"
-          :class="isList ? 'min-w-[120px]' : 'w-full'"
+          class="
+            flex
+            items-center
+            justify-between
+            border
+            border-[#1a1a2e]
+            rounded-lg
+            overflow-hidden
+          "
+          :class="
+            isList
+              ? 'min-w-[120px]'
+              : 'w-full'
+          "
         >
+          <!-- Minus -->
           <button
             type="button"
-            @click="changeQty(-1)"
-            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 transition font-medium text-lg"
+            :disabled="cartLoading"
+            @click.stop="changeQty(-1)"
+            class="
+              w-10
+              h-10
+              flex
+              items-center
+              justify-center
+              text-[#1a1a2e]
+              hover:bg-gray-100
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              transition
+              font-medium
+              text-lg
+            "
             aria-label="Decrease quantity"
           >
             −
           </button>
-          <span class="flex-1 text-center text-sm font-semibold text-[#1a1a2e]">
+
+          <!-- Quantity -->
+          <span
+            class="
+              flex-1
+              text-center
+              text-sm
+              font-semibold
+              text-[#1a1a2e]
+            "
+          >
             {{ cartQty }}
           </span>
+
+          <!-- Plus -->
           <button
             type="button"
-            @click="changeQty(1)"
-            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 transition font-medium text-lg"
+            :disabled="cartLoading"
+            @click.stop="changeQty(1)"
+            class="
+              w-10
+              h-10
+              flex
+              items-center
+              justify-center
+              text-[#1a1a2e]
+              hover:bg-gray-100
+              disabled:opacity-50
+              disabled:cursor-not-allowed
+              transition
+              font-medium
+              text-lg
+            "
             aria-label="Increase quantity"
           >
             +
           </button>
         </div>
 
+        <!-- OR -->
         <template v-if="!isList">
-          <div class="text-center text-xs text-gray-400 font-medium">OR</div>
+          <div
+            class="text-center text-xs text-gray-400 font-medium"
+          >
+            OR
+          </div>
         </template>
 
+        <!-- BUY NOW -->
         <button
           type="button"
-          @click="onBuyNow"
-          class="border border-[#1a1a2e] text-[#1a1a2e] hover:bg-[#1a1a2e] hover:text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+          @click.stop="onBuyNow"
+          class="
+            border
+            border-[#1a1a2e]
+            text-[#1a1a2e]
+            hover:bg-[#1a1a2e]
+            hover:text-white
+            text-sm
+            font-medium
+            py-2
+            px-4
+            rounded-lg
+            flex
+            items-center
+            justify-center
+            gap-2
+            transition
+          "
           :class="isList ? '' : 'w-full'"
         >
           Buy Now
         </button>
-        </div>
       </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+
 interface Product {
   id: number | string
+  variantId: string
+
   name: string
   image: string
   price: number
@@ -149,16 +282,6 @@ interface Product {
   originalPrice?: number
   discount?: number
   slug?: string
-}
-
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-  originalPrice?: number
-  discount?: number
 }
 
 const props = defineProps<{
@@ -171,82 +294,226 @@ const emit = defineEmits<{
   'buy-now': [product: Product]
 }>()
 
-const isList = computed(() => props.viewMode === 'list')
+/*
+|--------------------------------------------------------------------------
+| VIEW MODE
+|--------------------------------------------------------------------------
+*/
 
-const wishlist = useState<Product[]>('wishlist', () => [])
-const cart = useState<CartItem[]>('cart', () => [])
-
-const cartQty = computed(() => {
-  const item = cart.value.find(
-    (i) => String(i.id) === String(props.product.id)
-  )
-  return item?.quantity || 0
-})
-
-const isWishlisted = computed(() =>
-  wishlist.value.some((item) => String(item.id) === String(props.product.id))
+const isList = computed(
+  () => props.viewMode === 'list'
 )
 
+/*
+|--------------------------------------------------------------------------
+| WISHLIST
+|--------------------------------------------------------------------------
+*/
+
+const wishlist = useState<Product[]>(
+  'wishlist',
+  () => []
+)
+
+const isWishlisted = computed(() =>
+  wishlist.value.some(
+    item =>
+      String(item.id) ===
+      String(props.product.id)
+  )
+)
+
+function getStarFill(star: number) {
+  const rating = Number(props.product.rating ?? 0)
+
+  const fill = (rating - (star - 1)) * 100
+
+  return Math.min(
+    100,
+    Math.max(0, fill)
+  )
+}
+
+/*
+|--------------------------------------------------------------------------
+| VENDURE CART
+|--------------------------------------------------------------------------
+*/
+
+const {
+  cartLines,
+  cartLoading,
+  addItem,
+  adjustQuantity,
+  removeItem,
+} = useCart()
+
+/*
+|--------------------------------------------------------------------------
+| CURRENT PRODUCT ORDER LINE
+|--------------------------------------------------------------------------
+|
+| Vendure cart me product ID ke bajay
+| productVariant.id compare karenge.
+|
+*/
+
+const cartLine = computed(() => {
+  return cartLines.value.find(
+    (line: any) =>
+      String(line.productVariant?.id) ===
+      String(props.product.variantId)
+  )
+})
+
+/*
+|--------------------------------------------------------------------------
+| CART QUANTITY
+|--------------------------------------------------------------------------
+*/
+
+const cartQty = computed(() => {
+  return Number(
+    cartLine.value?.quantity ?? 0
+  )
+})
+
+/*
+|--------------------------------------------------------------------------
+| PRODUCT LINK
+|--------------------------------------------------------------------------
+*/
+
 const productLink = computed(() => {
-  const slug = props.product.slug || props.product.id
+  const slug =
+    props.product.slug ||
+    props.product.id
+
   return `/product/${slug}`
 })
 
-function addToCart(product: Product) {
-  const existingItem = cart.value.find(
-    (item) => String(item.id) === String(product.id)
-  )
+/*
+|--------------------------------------------------------------------------
+| ADD TO CART
+|--------------------------------------------------------------------------
+*/
 
-  if (existingItem) {
-    existingItem.quantity += 1
-  } else {
-    cart.value.push({
-      id: product.id,
-      name: product.name,
-      image: product.image,
-      price: Number(product.price),
-      originalPrice:
-        product.originalPrice !== undefined
-          ? Number(product.originalPrice)
-          : undefined,
-      discount:
-        product.discount !== undefined ? Number(product.discount) : undefined,
-      quantity: 1,
-    })
+async function addToCart() {
+  if (!props.product.variantId) {
+    console.error(
+      'Missing product variant id:',
+      props.product
+    )
+    return
   }
 
-  emit('add-to-cart', product)
-}
+  try {
+    await addItem(
+      String(props.product.variantId),
+      1
+    )
 
-function changeQty(delta: number) {
-  const index = cart.value.findIndex(
-    (item) => String(item.id) === String(props.product.id)
-  )
-  if (index === -1) return
-
-  const next = cart.value[index].quantity + delta
-
-  if (next <= 0) {
-    cart.value.splice(index, 1)
-  } else {
-    cart.value[index].quantity = next
+    emit(
+      'add-to-cart',
+      props.product
+    )
+  } catch (error) {
+    console.error(
+      'Unable to add product to cart:',
+      error
+    )
   }
 }
+
+/*
+|--------------------------------------------------------------------------
+| CHANGE QUANTITY
+|--------------------------------------------------------------------------
+*/
+
+async function changeQty(delta: number) {
+  const line = cartLine.value
+
+  if (!line) {
+    return
+  }
+
+  const currentQuantity =
+    Number(line.quantity ?? 0)
+
+  const nextQuantity =
+    currentQuantity + delta
+
+  try {
+    /*
+    |--------------------------------------------------------------------------
+    | Quantity becomes 0 → Remove order line
+    |--------------------------------------------------------------------------
+    */
+
+    if (nextQuantity <= 0) {
+      await removeItem(
+        String(line.id)
+      )
+
+      return
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Otherwise update quantity
+    |--------------------------------------------------------------------------
+    */
+
+    await adjustQuantity(
+      String(line.id),
+      nextQuantity
+    )
+  } catch (error) {
+    console.error(
+      'Unable to change cart quantity:',
+      error
+    )
+  }
+}
+
+/*
+|--------------------------------------------------------------------------
+| WISHLIST
+|--------------------------------------------------------------------------
+*/
 
 function toggleWishlist() {
-  const index = wishlist.value.findIndex(
-    (item) => String(item.id) === String(props.product.id)
-  )
+  const index =
+    wishlist.value.findIndex(
+      item =>
+        String(item.id) ===
+        String(props.product.id)
+    )
 
   if (index === -1) {
-    wishlist.value.push({ ...props.product })
+    wishlist.value.push({
+      ...props.product,
+    })
   } else {
-    wishlist.value.splice(index, 1)
+    wishlist.value.splice(
+      index,
+      1
+    )
   }
 }
 
+/*
+|--------------------------------------------------------------------------
+| BUY NOW
+|--------------------------------------------------------------------------
+*/
+
 function onBuyNow() {
-  emit('buy-now', props.product)
-  navigateTo(productLink.value)
+  emit(
+    'buy-now',
+    props.product
+  )
 }
+
 </script>

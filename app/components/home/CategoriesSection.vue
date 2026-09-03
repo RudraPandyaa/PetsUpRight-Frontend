@@ -119,12 +119,29 @@ onMounted(async () => {
   try {
     const items = await getCollections()
 
-    categories.value = items.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      image: c.featuredAsset?.preview || '/images/categories/placeholder.jpg',
-      link: `/shop?collection=${c.slug}`,
-    }))
+    const hiddenSlugs = [
+      'merchandising',
+      'trending-now',
+      'combo-deals',
+      'offers',
+      'frequently-bought-together',
+    ]
+
+    categories.value = items
+      .filter(
+        (c: any) =>
+          !hiddenSlugs.includes(
+            String(c.slug).toLowerCase()
+          )
+      )
+      .map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        image:
+          c.featuredAsset?.preview ||
+          '/images/categories/placeholder.jpg',
+        link: `/shop?collection=${c.slug}`,
+      }))
   } catch (error) {
     console.error('Failed to fetch collections:', error)
   } finally {
