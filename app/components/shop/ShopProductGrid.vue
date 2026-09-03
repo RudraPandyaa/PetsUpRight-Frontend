@@ -5,8 +5,8 @@
       v-if="loading"
       :class="
         viewMode === 'grid'
-          ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5'
-          : 'grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5'
+          ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4'
+          : 'grid grid-cols-1 md:grid-cols-2 gap-4'
       "
     >
       <div
@@ -25,8 +25,8 @@
       v-else-if="products.length"
       :class="
         viewMode === 'grid'
-          ? 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5'
-          : 'grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5'
+          ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4'
+          : 'grid grid-cols-1 md:grid-cols-2 gap-4'
       "
     >
       <ProductCard
@@ -71,6 +71,7 @@ interface ShopFilters {
 
 interface ShopProduct {
   id: string
+  variantId: string
   name: string
   slug: string
   image: string
@@ -102,48 +103,92 @@ const route = useRoute()
 
 const {
   getProducts,
+  getShopProducts,
   getShopFacets,
 } = useProducts()
 
 const products = ref<ShopProduct[]>([])
 const loading = ref(false)
 
-/*
-|--------------------------------------------------------------------------
-| Collection slug -> Category Facet Value ID
-|--------------------------------------------------------------------------
-|
-| Homepage may open:
-|
-| /shop?collection=toys
-|
-| But Vendure search facetValueFilters requires the actual Facet Value ID.
-|
-*/
 const categoryIdByCode = ref<Record<string, string>>({})
+const petTypeIdByCode = ref<Record<string, string>>({})
+const brandIdByCode = ref<Record<string, string>>({})
 
-async function loadCategoryFacetMap() {
+async function loadHeaderFacetMaps() {
   try {
     const facets = await getShopFacets()
+
+    /*
+    |--------------------------------------------------------------------------
+    | Category map
+    |--------------------------------------------------------------------------
+    |
+    | food -> actual Vendure facet value ID
+    | toys -> actual Vendure facet value ID
+    |
+    */
 
     const categoryFacet = facets.find(
       (facet: any) => facet.code === 'category'
     )
 
-    const map: Record<string, string> = {}
+    const categoryMap: Record<string, string> = {}
 
     for (const value of categoryFacet?.values ?? []) {
-      map[String(value.code)] = String(value.id)
+      categoryMap[String(value.code).toLowerCase()] =
+        String(value.id)
     }
 
-    categoryIdByCode.value = map
+    categoryIdByCode.value = categoryMap
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pet Type map
+    |--------------------------------------------------------------------------
+    |
+    | dog -> actual Vendure facet value ID
+    | cat -> actual Vendure facet value ID
+    |
+    */
+
+    const petTypeFacet = facets.find(
+      (facet: any) =>
+        facet.code === 'pet-type' ||
+        facet.code === 'petType' ||
+        facet.code === 'pet_type'
+    )
+
+    const petMap: Record<string, string> = {}
+
+    for (const value of petTypeFacet?.values ?? []) {
+      petMap[String(value.code).toLowerCase()] =
+        String(value.id)
+    }
+
+    petTypeIdByCode.value = petMap
+
+    const brandFacet = facets.find(
+      (facet: any) => facet.code === 'brand'
+    )
+
+    const brandMap: Record<string, string> = {}
+
+    for (const value of brandFacet?.values ?? []) {
+      brandMap[String(value.code).toLowerCase()] =
+        String(value.id)
+    }
+
+    brandIdByCode.value = brandMap
+
   } catch (error) {
     console.error(
-      'Failed to load category facet map:',
+      'Failed to load shop facet maps:',
       error
     )
 
     categoryIdByCode.value = {}
+    petTypeIdByCode.value = {}
+    brandIdByCode.value = {}
   }
 }
 
@@ -183,30 +228,55 @@ function buildFacetValueFilters() {
   }
 
   /*
+  * Pet Type coming from Header:
+  *
+  * /shop?pet=dog
+  * /shop?pet=cat
+  */
+
+  const petCode =
+    typeof route.query.pet === 'string'
+      ? route.query.pet.toLowerCase()
+      : undefined
+
+  if (petCode) {
+    const petTypeId =
+      petTypeIdByCode.value[petCode]
+
+    if (petTypeId) {
+      filters.push({
+        and: petTypeId,
+      })
+    }
+  }
+
+  /*
    * Category
    */
   const categoryIds = new Set<string>(
     f?.category ?? []
   )
 
-  /*
-   * Category coming from:
-   *
-   * /shop?collection=toys
-   */
-  const collectionSlug =
-    typeof route.query.collection === 'string'
-      ? route.query.collection
-      : undefined
+  const categoryCode =
+  typeof route.query.category === 'string'
+    ? route.query.category.toLowerCase()
+    : undefined
 
-  if (collectionSlug) {
+  if (categoryCode) {
     const categoryId =
-      categoryIdByCode.value[collectionSlug]
+      categoryIdByCode.value[categoryCode]
 
     if (categoryId) {
       categoryIds.add(categoryId)
     }
   }
+
+  /*
+   * Category coming from:
+   *
+   * /shop?collection=toys
+   */
+
 
   if (categoryIds.size) {
     filters.push({
@@ -221,6 +291,21 @@ function buildFacetValueFilters() {
     filters.push({
       or: [...f.brand],
     })
+  }
+
+  const brandCode =
+    typeof route.query.brand === 'string'
+      ? route.query.brand.toLowerCase()
+      : undefined
+
+  if (brandCode) {
+    const brandId = brandIdByCode.value[brandCode]
+
+    if (brandId) {
+      filters.push({
+        and: brandId,
+      })
+    }
   }
 
   return filters
@@ -244,6 +329,7 @@ function mapSearchProduct(item: any): ShopProduct {
 
   return {
     id: String(item.productId),
+    variantId: String(item.productVariantId),
 
     name: item.productName,
 
@@ -255,11 +341,34 @@ function mapSearchProduct(item: any): ShopProduct {
 
     // Vendure prices are minor units.
     price: Math.round(priceValue / 100),
+    rating: 4.2,
 
-    // Temporary until actual review/rating system exists.
-    rating: 4.9,
 
     currencyCode: item.currencyCode ?? 'INR',
+  }
+}
+
+function mapShopProduct(item: any): ShopProduct {
+  const firstVariant = item.variants?.[0]
+
+  return {
+    id: String(item.id),
+    name: item.name,
+    variantId: String(firstVariant?.id ?? ''),
+    slug: item.slug,
+
+    image: item.featuredAsset?.preview
+      ? `${String(item.featuredAsset.preview).replace(/\\/g, '/')}?preset=medium`
+      : '/images/shop/Rectangle-5.png',
+
+    price: Math.round(
+      Number(firstVariant?.priceWithTax ?? 0) / 100
+    ),
+    rating: 4.9,
+
+
+    currencyCode:
+      firstVariant?.currencyCode ?? 'INR',
   }
 }
 
@@ -278,40 +387,84 @@ async function fetchProducts() {
     const facetValueFilters =
       buildFacetValueFilters()
 
-    const result = await getProducts({
-      /*
-       * Real backend pagination.
-       *
-       * Page 1 -> take 12 / skip 0
-       * Page 2 -> take 12 / skip 12
-       */
-      take: perPage,
+    const routeSort =
+    typeof route.query.sort === 'string'
+      ? route.query.sort
+      : undefined
 
-      skip: (page - 1) * perPage,
+      const collectionSlug =
+      typeof route.query.collection === 'string'
+        ? route.query.collection
+        : undefined
 
-      term:
-        props.filters?.search?.trim() ||
-        undefined,
+        const isNewest =
+          routeSort === 'newest' ||
+          props.sortBy === 'newest'
 
-      facetValueFilters:
-        facetValueFilters.length
-          ? facetValueFilters
-          : undefined,
-    })
+        let result: any
 
-    let items: ShopProduct[] =
-      (result.items ?? []).map(mapSearchProduct)
+        if (isNewest) {
+          const newestResult = await getShopProducts({
+            take: perPage,
+            skip: (page - 1) * perPage,
+            newestFirst: true,
+          })
 
-    /*
-    |--------------------------------------------------------------------------
-    | Price
-    |--------------------------------------------------------------------------
-    |
-    | TEMPORARILY client-side.
-    |
-    | Later we can move this into Vendure search itself.
-    |
-    */
+          result = {
+            totalItems: newestResult.totalItems,
+            items: (newestResult.items ?? []).map(
+              mapShopProduct
+            ),
+            alreadyMapped: true,
+          }
+        } else {
+          const routeSearch =
+            typeof route.query.search === 'string'
+              ? route.query.search.trim()
+              : ''
+
+              let backendSort:
+                | { price: 'ASC' | 'DESC' }
+                | undefined
+
+              if (props.sortBy === 'price-low') {
+                backendSort = {
+                  price: 'ASC',
+                }
+              }
+
+              if (props.sortBy === 'price-high') {
+                backendSort = {
+                  price: 'DESC',
+                }
+              }
+
+          result = await getProducts({
+            take: perPage,
+
+            skip: (page - 1) * perPage,
+
+            term:
+              routeSearch ||
+              props.filters?.search?.trim() ||
+              undefined,
+
+            collectionSlug,
+
+            sort: backendSort,
+
+            facetValueFilters:
+              facetValueFilters.length
+                ? facetValueFilters
+                : undefined,
+          })
+        }
+
+      let items: ShopProduct[] =
+        result.alreadyMapped
+          ? result.items
+          : (result.items ?? []).map(mapSearchProduct)
+
     const minPrice = Number(
       props.filters?.priceMin ?? 0
     )
@@ -333,43 +486,19 @@ async function fetchProducts() {
 
     /*
     |--------------------------------------------------------------------------
-    | Rating
-    |--------------------------------------------------------------------------
-    |
-    | Temporary because every product currently has placeholder 4.9.
-    |
-    */
-    if (props.filters?.ratings?.length) {
-      const minimumRating = Math.min(
-        ...props.filters.ratings
-      )
-
-      items = items.filter(
-        (product) =>
-          product.rating >= minimumRating
-      )
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Sort
+    | Rating Filter
     |--------------------------------------------------------------------------
     */
-    if (props.sortBy === 'price-low') {
-      items.sort(
-        (a, b) => a.price - b.price
-      )
-    }
 
-    if (props.sortBy === 'price-high') {
-      items.sort(
-        (a, b) => b.price - a.price
-      )
-    }
+    const selectedRatings =
+      props.filters?.ratings ?? []
 
-    if (props.sortBy === 'rating') {
-      items.sort(
-        (a, b) => b.rating - a.rating
+    if (selectedRatings.length) {
+      items = items.filter((product) =>
+        selectedRatings.some(
+          (rating) =>
+            product.rating >= rating
+        )
       )
     }
 
@@ -407,15 +536,7 @@ async function fetchProducts() {
 |--------------------------------------------------------------------------
 */
 onMounted(async () => {
-  /*
-   * Needed only to support:
-   *
-   * /shop?collection=toys
-   *
-   * ShopFilters itself already uses real facet IDs.
-   */
-  await loadCategoryFacetMap()
-
+  await loadHeaderFacetMaps()
   await fetchProducts()
 })
 
@@ -436,6 +557,11 @@ watch(
     props.currentPage,
     props.perPage,
     route.query.collection,
+    route.query.pet,
+    route.query.category,
+    route.query.brand,
+    route.query.sort,
+    route.query.search,
   ],
   () => {
     fetchProducts()

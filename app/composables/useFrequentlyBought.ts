@@ -7,7 +7,7 @@ export function useFrequentlyBought(slug = 'frequently-bought-together') {
         collection(slug: $slug) {
           name
           description
-          productVariants(options: { take: 3 }) {
+          productVariants(options: { take: 4 }) {
             items {
               id
               name

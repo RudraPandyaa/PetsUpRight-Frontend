@@ -9,15 +9,37 @@ const loading = ref(true)
 const currentIndex = ref(0)
 const isDragging = ref(false)
 const dragOffset = ref(0)
-const visibleCount = 6
+const visibleCount = ref(6)
+
 
 let startX = 0
 let autoplayTimer: ReturnType<typeof setInterval> | null = null
 
-const slideWidth = 100 / visibleCount
+const slideWidth = computed(() => 100 / visibleCount.value)
+
+function updateVisibleCount() {
+  if (typeof window === 'undefined') return
+
+  const width = window.innerWidth
+
+  if (width >= 1024) {
+    visibleCount.value = 6
+  } else if (width >= 768) {
+    visibleCount.value = 4
+  } else if (width >= 640) {
+    visibleCount.value = 3
+  } else {
+    visibleCount.value = 2
+  }
+
+  // Resize ke baad invalid slider position avoid karega
+  if (currentIndex.value > maxIndex.value) {
+    currentIndex.value = maxIndex.value
+  }
+}
 
 const trackStyle = computed(() => {
-  const base = -(currentIndex.value * slideWidth)
+  const base = -(currentIndex.value * slideWidth.value)
   const dragPercent = isDragging.value
     ? (dragOffset.value / (typeof window !== 'undefined' ? window.innerWidth : 1)) * 100
     : 0
@@ -29,7 +51,7 @@ const trackStyle = computed(() => {
 })
 
 const maxIndex = computed(() =>
-  Math.max(0, categories.value.length - visibleCount)
+  Math.max(0, categories.value.length - visibleCount.value)
 )
 
 function next() {
@@ -54,7 +76,7 @@ function goTo(index: number) {
 
 function startAutoplay() {
   stopAutoplay()
-  if (categories.value.length > visibleCount) {
+  if (categories.value.length > visibleCount.value) {
     autoplayTimer = setInterval(next, 3500)
   }
 }
@@ -90,14 +112,36 @@ function onDragEnd() {
 }
 
 onMounted(async () => {
+  updateVisibleCount()
+
+  window.addEventListener('resize', updateVisibleCount)
+
   try {
     const items = await getCollections()
-    categories.value = items.map((c: any) => ({
-      id: c.id,
-      name: c.name,
-      image: c.featuredAsset?.preview || '/images/categories/placeholder.jpg',
-      link: `/shop?collection=${c.slug}`,
-    }))
+
+    const hiddenSlugs = [
+      'merchandising',
+      'trending-now',
+      'combo-deals',
+      'offers',
+      'frequently-bought-together',
+    ]
+
+    categories.value = items
+      .filter(
+        (c: any) =>
+          !hiddenSlugs.includes(
+            String(c.slug).toLowerCase()
+          )
+      )
+      .map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        image:
+          c.featuredAsset?.preview ||
+          '/images/categories/placeholder.jpg',
+        link: `/shop?collection=${c.slug}`,
+      }))
   } catch (error) {
     console.error('Failed to fetch collections:', error)
   } finally {
@@ -106,7 +150,10 @@ onMounted(async () => {
   }
 })
 
-onBeforeUnmount(stopAutoplay)
+onBeforeUnmount(() => {
+  stopAutoplay()
+  window.removeEventListener('resize', updateVisibleCount)
+})
 </script>
 
 <template>
@@ -159,9 +206,19 @@ onBeforeUnmount(stopAutoplay)
           >
             <NuxtLink :to="cat.link" class="flex flex-col items-center group">
               <div
-                class="w-32 h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 rounded-full overflow-hidden
-                    shadow-md ring-2 ring-transparent group-hover:ring-[#c3b5df]
-                    transition-all duration-300 group-hover:scale-105 mx-auto"
+                class="
+                  w-28 h-28
+                  sm:w-32 sm:h-32
+                  md:w-36 md:h-36
+                  lg:w-40 lg:h-40
+                  rounded-full overflow-hidden
+                  shadow-md
+                  ring-2 ring-transparent
+                  group-hover:ring-[#c3b5df]
+                  transition-all duration-300
+                  group-hover:scale-105
+                  mx-auto
+                "
               >
                 <img
                   :src="cat.image"

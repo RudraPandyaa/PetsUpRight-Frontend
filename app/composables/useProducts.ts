@@ -102,6 +102,10 @@ export function useProducts() {
     skip?: number
     term?: string
     collectionSlug?: string
+    sort?: {
+      name?: 'ASC' | 'DESC'
+      price?: 'ASC' | 'DESC'
+    }
 
     facetValueFilters?: Array<{
       and?: string
@@ -113,6 +117,7 @@ export function useProducts() {
       skip = 0,
       term,
       collectionSlug,
+      sort,
       facetValueFilters,
     } = options
 
@@ -128,6 +133,10 @@ export function useProducts() {
 
     if (collectionSlug) {
       input.collectionSlug = collectionSlug
+    }
+
+    if (sort) {
+      input.sort = sort
     }
 
     if (facetValueFilters?.length) {
@@ -152,6 +161,7 @@ export function useProducts() {
         totalItems
         items {
           id
+          createdAt
           name
           slug
           description
@@ -192,17 +202,28 @@ export function useProducts() {
   async function getShopProducts(options: {
     take?: number
     skip?: number
+    newestFirst?: boolean
   } = {}) {
     const {
       take = 100,
       skip = 0,
+      newestFirst = false,
     } = options
 
+    const productOptions: any = {
+      take,
+      skip,
+    }
+
+    if (newestFirst) {
+      productOptions.sort = {
+        createdAt: 'DESC',
+      }
+      
+    }
+
     const data = await client.request(GET_PRODUCTS, {
-      options: {
-        take,
-        skip,
-      },
+      options: productOptions,
     })
 
     return data?.products ?? {

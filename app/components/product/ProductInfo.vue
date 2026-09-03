@@ -489,5 +489,22 @@ function changeQty(delta: number) {
   .btn-cart {
     flex: 1;
   }
+
+  /* Pincode input + Check button vertically */
+  .pincode-row {
+    flex-direction: column;
+    width: 100%;
+    gap: 0.65rem;
+  }
+
+  .pincode-input {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .pincode-btn {
+    width: 100%;
+    padding: 0.7rem 1rem;
+  }
 }
 </style>

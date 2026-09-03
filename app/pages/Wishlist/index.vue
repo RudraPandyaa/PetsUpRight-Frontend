@@ -114,8 +114,9 @@
 
 
         <div class="actions">
-
+          <!-- Quantity = 0 → Add to Cart -->
           <button
+            v-if="getCartQty(product.id) === 0"
             class="btn-add-to-cart"
             @click="addToCart(product)"
           >
@@ -140,11 +141,37 @@
             Add to Cart
           </button>
 
+          <!-- Quantity > 0 → - qty + -->
+          <div
+            v-else
+            class="qty-control"
+          >
+            <button
+              type="button"
+              class="qty-btn"
+              @click="changeQty(product, -1)"
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+
+            <span class="qty-value">
+              {{ getCartQty(product.id) }}
+            </span>
+
+            <button
+              type="button"
+              class="qty-btn"
+              @click="changeQty(product, 1)"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
 
           <span class="or-text">
             OR
           </span>
-
 
           <button
             class="btn-buy-now"
@@ -173,7 +200,7 @@
     You May Also Like
   </h2>
 
-  <div class="products-grid mt-5">
+  <div class="products-grid recommended-grid mt-5">
 
     <div
       v-for="product in recommendedProducts"
@@ -181,27 +208,31 @@
       class="product-card"
     >
 
-      <!-- Wishlist Heart -->
-      <button
-        type="button"
-        class="wishlist-btn"
-        aria-label="Add to wishlist"
-        @click="addToWishlist(product)"
+    <button
+      type="button"
+      class="wishlist-btn"
+      :class="{ active: isWishlisted(product.id) }"
+      :aria-label="
+        isWishlisted(product.id)
+          ? 'Remove from wishlist'
+          : 'Add to wishlist'
+      "
+      @click="toggleWishlist(product)"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        :fill="isWishlisted(product.id) ? '#ef4f72' : 'none'"
+        :stroke="isWishlisted(product.id) ? '#ef4f72' : 'currentColor'"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <path
-            d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
-          />
-        </svg>
-      </button>
+        <path
+          d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78Z"
+        />
+      </svg>
+    </button>
 
 
       <!-- Product Image -->
@@ -240,12 +271,12 @@
           {{ formatPriceDisplay(product.price) }}
         </p>
 
-
         <!-- Buttons -->
         <div class="actions">
 
-          <!-- Add To Cart -->
+          <!-- Quantity = 0 → Add to Cart -->
           <button
+            v-if="getCartQty(product.id) === 0"
             type="button"
             class="btn-add-to-cart"
             @click="addToCart(product)"
@@ -263,7 +294,6 @@
             >
               <circle cx="9" cy="21" r="1" />
               <circle cx="20" cy="21" r="1" />
-
               <path
                 d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
               />
@@ -272,49 +302,47 @@
             Add to Cart
           </button>
 
+          <!-- Quantity > 0 → - qty + -->
+          <div
+            v-else
+            class="qty-control"
+          >
+            <button
+              type="button"
+              class="qty-btn"
+              @click="changeQty(product, -1)"
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
 
-          <!-- OR -->
+            <span class="qty-value">
+              {{ getCartQty(product.id) }}
+            </span>
+
+            <button
+              type="button"
+              class="qty-btn"
+              @click="changeQty(product, 1)"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+
           <span class="or-text">
             OR
           </span>
 
-
-          <!-- Buy Now -->
           <button
             type="button"
             class="btn-buy-now"
             @click="buyNow(product)"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"
-              />
-
-              <line
-                x1="3"
-                y1="6"
-                x2="21"
-                y2="6"
-              />
-
-              <path d="M16 10a4 4 0 0 1-8 0" />
-            </svg>
-
             Buy Now
           </button>
 
         </div>
-
       </div>
 
     </div>
@@ -354,6 +382,11 @@ const wishlistProducts = useState<Product[]>(
   () => []
 )
 
+function isWishlisted(productId: number | string) {
+  return wishlistProducts.value.some(
+    (item) => String(item.id) === String(productId)
+  )
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -423,6 +456,26 @@ const recommendedProducts = ref<Product[]>([
   }
 ])
 
+function getCartQty(productId: number | string) {
+  const item = cart.value.find(
+    (i) => String(i.id) === String(productId)
+  )
+  return item?.quantity || 0
+}
+
+function changeQty(product: Product, delta: number) {
+  const index = cart.value.findIndex(
+    (i) => String(i.id) === String(product.id)
+  )
+  if (index === -1) return
+
+  const next = cart.value[index].quantity + delta
+  if (next <= 0) {
+    cart.value.splice(index, 1)
+  } else {
+    cart.value[index].quantity = next
+  }
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -443,15 +496,17 @@ function formatPriceDisplay(price: number) {
 | ADD TO WISHLIST
 |--------------------------------------------------------------------------
 */
-function addToWishlist(product: Product) {
-  const exists = wishlistProducts.value.some(
-    item => String(item.id) === String(product.id)
+function toggleWishlist(product: Product) {
+  const index = wishlistProducts.value.findIndex(
+    (item) => String(item.id) === String(product.id)
   )
 
-  if (!exists) {
+  if (index === -1) {
     wishlistProducts.value.push({
       ...product
     })
+  } else {
+    wishlistProducts.value.splice(index, 1)
   }
 }
 
@@ -743,7 +798,52 @@ useHead({
 .btn-add-to-cart:hover {
   background: #35375a;
 }
+.qty-control {
+  width: 100%;
+  height: 42px;
 
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  border: 1.5px solid #44476f;
+  border-radius: 8px;
+
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.qty-btn {
+  width: 48px;
+  height: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  background: transparent;
+
+  color: #44476f;
+  font-size: 20px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.qty-btn:hover {
+  background: #f3eef9;
+}
+
+.qty-value {
+  flex: 1;
+  text-align: center;
+
+  font-size: 14px;
+  font-weight: 700;
+  color: #44476f;
+}
 
 /* OR */
 
@@ -797,6 +897,11 @@ useHead({
 /* =========================================
    RESPONSIVE
 ========================================= */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+}
 
 @media (max-width: 1024px) {
   .products-grid {
@@ -811,9 +916,13 @@ useHead({
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 767px) {
   .products-grid {
     grid-template-columns: 1fr;
+  }
+    .recommended-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
   }
 }
 </style>

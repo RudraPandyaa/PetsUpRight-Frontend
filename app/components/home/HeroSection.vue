@@ -39,7 +39,7 @@ const infoStrip = [
         <div class="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-10 items-center">
 
         <!-- Left: copy — full column width, no max-w here -->
-        <div>
+        <div class="w-full lg:max-w-[500px] xl:max-w-none">
             <p class="text-sm font-semibold tracking-wide text-[#1a1a2e] mb-4">
             <span class="inline-block w-2 h-2 rounded-full bg-[#c3b5df] mr-2 align-middle" />
             PREMIUM PRODUCTS.
