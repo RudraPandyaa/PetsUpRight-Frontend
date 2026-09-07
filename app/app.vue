@@ -17,7 +17,7 @@ const isLoginPage = computed(
       :class="[
         'flex-1',
         !isLoginPage
-            ? 'pt-[144px] md:pt-[168px] lg:pt-[116px]'
+                  ? 'pt-[116px] md:pt-[116px]'
           : ''
       ]"
     >

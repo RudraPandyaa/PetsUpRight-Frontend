@@ -7,8 +7,6 @@ const isDogsOpen = ref(false)
 const isCatsOpen = ref(false)
 const isCartOpen = ref(false)
 const searchQuery = ref('')
-const isHeaderVisible = ref(true)
-const lastScrollY = ref(0)
 const { getShopFacets } = useProducts()
 const isBrandsOpen = ref(false)
 const brandOptions = ref<HeaderFacetOption[]>([])
@@ -28,7 +26,6 @@ const catCategories = ref<HeaderFacetOption[]>([])
 async function loadHeaderData() {
   try {
     const facets = await getShopFacets()
-
 
     const categoryFacet = facets.find(
       (facet: any) => facet.code === 'category'
@@ -54,13 +51,8 @@ async function loadHeaderData() {
         name: value.name,
         code: value.code,
       })) ?? []
-
   } catch (error) {
-    console.error(
-      'Failed to load header data:',
-      error
-    )
-
+    console.error('Failed to load header data:', error)
     dogCategories.value = []
     catCategories.value = []
     brandOptions.value = []
@@ -69,64 +61,18 @@ async function loadHeaderData() {
 
 function handleSearch() {
   const term = searchQuery.value.trim()
-
   if (!term) return
 
   navigateTo({
     path: '/shop',
-    query: {
-      search: term,
-    },
+    query: { search: term },
   })
 
   isMobileMenuOpen.value = false
 }
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL CART
-|--------------------------------------------------------------------------
-*/
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-  originalPrice?: number
-  discount?: number
-}
+const { cartCount, getActiveOrder } = useCart()
 
-const cart = useState<CartItem[]>('cart', () => [])
-
-function handleScroll() {
-  const currentScrollY = window.scrollY
-
-  // Page ke bilkul top par header visible rahe
-  if (currentScrollY <= 10) {
-    isHeaderVisible.value = true
-    lastScrollY.value = currentScrollY
-    return
-  }
-
-  // Scroll DOWN → header SHOW
-  if (currentScrollY > lastScrollY.value) {
-    isHeaderVisible.value = true
-  }
-
-  // Scroll UP → header HIDE
-  else if (currentScrollY < lastScrollY.value) {
-    isHeaderVisible.value = false
-  }
-
-  lastScrollY.value = currentScrollY
-}
-
-/*
-|--------------------------------------------------------------------------
-| GLOBAL WISHLIST
-|--------------------------------------------------------------------------
-*/
 interface WishlistItem {
   id: number | string
   name: string
@@ -135,39 +81,16 @@ interface WishlistItem {
 }
 
 const wishlist = useState<WishlistItem[]>('wishlist', () => [])
-
-/*
-|--------------------------------------------------------------------------
-| DYNAMIC COUNTS
-|--------------------------------------------------------------------------
-*/
-const cartCount = computed(() =>
-  cart.value.reduce((total, item) => total + item.quantity, 0)
-)
-
 const wishlistCount = computed(() => wishlist.value.length)
 
-
 onMounted(async () => {
-  lastScrollY.value = window.scrollY
-
-  window.addEventListener('scroll', handleScroll, {
-    passive: true,
-  })
-
   await loadHeaderData()
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll)
+  await getActiveOrder()
 })
 </script>
 
 <template>
-  <header
-    class="fixed top-0 left-0 right-0 z-50 w-full transition-transform duration-300 ease-in-out"
-    :class="isHeaderVisible ? 'translate-y-0' : '-translate-y-full'"
-  >
+  <header class="w-full">
     <!-- Top utility bar -->
     <div class="bg-[#44476f] text-white text-xs md:text-sm">
       <div class="container mx-auto px-4">

@@ -24,6 +24,7 @@ export function useProducts() {
 
         items {
           productId
+          productVariantId
           productName
           slug
 

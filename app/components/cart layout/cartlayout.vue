@@ -204,7 +204,7 @@
                 type="button"
                 class="delete-btn"
                 aria-label="Remove item"
-                @click="removeItem(item.id)"
+                @click="removeCartItem(item.id)"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -308,167 +308,94 @@ const emit = defineEmits<{
   close: []
 }>()
 
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-  originalPrice?: number
-  discount?: number
-}
+const {
+  cartLines,
+  cartCount,
+  cartTotal,
+  adjustQuantity,
+  removeItem,
+} = useCart()
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL CART
-|--------------------------------------------------------------------------
-*/
-const cart = useState<CartItem[]>('cart', () => [])
+// Vendure lines ko UI friendly format mein convert
+const cart = computed(() => {
+  return cartLines.value.map((line: any) => {
+    return {
+      id: line.id,                                    // orderLineId
+      variantId: line.productVariant?.id,
+      name: line.productVariant?.product?.name || line.productVariant?.name,
+      image: line.productVariant?.product?.featuredAsset?.preview || '',
+      price: (line.productVariant?.priceWithTax || 0) / 100,
+      quantity: line.quantity,
+      linePrice: (line.linePriceWithTax || 0) / 100,
+    }
+  })
+})
 
+const totalPrice = computed(() => cartTotal.value)
 
-/*
-|--------------------------------------------------------------------------
-| CART COUNT
-|--------------------------------------------------------------------------
-*/
-const cartCount = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.quantity,
-    0
-  )
-)
+const totalSavings = computed(() => {
+  // Abhi ke liye 0, baad mein original price add kar sakte ho
+  return 0
+})
 
-
-/*
-|--------------------------------------------------------------------------
-| TOTAL PRICE
-|--------------------------------------------------------------------------
-*/
-const totalPrice = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  )
-)
-
-
-/*
-|--------------------------------------------------------------------------
-| TOTAL SAVINGS
-|--------------------------------------------------------------------------
-*/
-const totalSavings = computed(() =>
-  cart.value.reduce((total, item) => {
-    if (!item.originalPrice) return total
-
-    return total + (
-      (item.originalPrice - item.price) * item.quantity
-    )
-  }, 0)
-)
-
-
-/*
-|--------------------------------------------------------------------------
-| SAVINGS PROGRESS
-|--------------------------------------------------------------------------
-*/
 const savingProgress = computed(() => {
   const total = totalPrice.value
 
-  if (total <= 0) {
-    return 0
-  }
-
-  // ₹750 = first milestone
-  if (total <= 750) {
-    return (total / 750) * 25
-  }
-
-  // ₹750 → ₹2000
-  if (total <= 2000) {
-    return 25 + ((total - 750) / (2000 - 750)) * 25
-  }
-
-  // ₹2000 → ₹3000
-  if (total <= 3000) {
-    return 50 + ((total - 2000) / (3000 - 2000)) * 25
-  }
-
-  // ₹3000 → ₹5000
-  if (total <= 5000) {
-    return 75 + ((total - 3000) / (5000 - 3000)) * 25
-  }
-
+  if (total <= 0) return 0
+  if (total <= 750) return (total / 750) * 25
+  if (total <= 2000) return 25 + ((total - 750) / (2000 - 750)) * 25
+  if (total <= 3000) return 50 + ((total - 2000) / (3000 - 2000)) * 25
+  if (total <= 5000) return 75 + ((total - 3000) / (5000 - 3000)) * 25
   return 100
 })
 
-
-/*
-|--------------------------------------------------------------------------
-| CLOSE
-|--------------------------------------------------------------------------
-*/
 const closeCart = () => {
   emit('close')
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| INCREASE QUANTITY
-|--------------------------------------------------------------------------
-*/
-const increaseQuantity = (id: number | string) => {
-  const item = cart.value.find(
-    item => String(item.id) === String(id)
+async function increaseQuantity(orderLineId: string | number) {
+  const line = cartLines.value.find(
+    (l: any) => String(l.id) === String(orderLineId)
   )
+  if (!line) return
 
-  if (item) {
-    item.quantity++
+  try {
+    await adjustQuantity(String(orderLineId), line.quantity + 1)
+  } catch (error) {
+    console.error('Failed to increase quantity:', error)
   }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| DECREASE QUANTITY
-|--------------------------------------------------------------------------
-*/
-const decreaseQuantity = (id: number | string) => {
-  const item = cart.value.find(
-    item => String(item.id) === String(id)
+async function decreaseQuantity(orderLineId: string | number) {
+  const line = cartLines.value.find(
+    (l: any) => String(l.id) === String(orderLineId)
   )
+  if (!line) return
 
-  if (!item) return
-
-  if (item.quantity > 1) {
-    item.quantity--
+  try {
+    if (line.quantity <= 1) {
+      await removeItem(String(orderLineId))
+    } else {
+      await adjustQuantity(String(orderLineId), line.quantity - 1)
+    }
+  } catch (error) {
+    console.error('Failed to decrease quantity:', error)
   }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| REMOVE ITEM
-|--------------------------------------------------------------------------
-*/
-const removeItem = (id: number | string) => {
-  cart.value = cart.value.filter(
-    item => String(item.id) !== String(id)
-  )
+async function removeCartItem(orderLineId: string | number) {
+  try {
+    await removeItem(String(orderLineId))
+  } catch (error) {
+    console.error('Failed to remove item:', error)
+  }
 }
 
-
-/*
-|--------------------------------------------------------------------------
-| BUY NOW
-|--------------------------------------------------------------------------
-*/
 const buyNow = () => {
   if (cart.value.length === 0) return
-
-  console.log('Buy Now clicked', cart.value)
+  // yahan checkout page pe le jao
+  console.log('Buy Now clicked')
+  // navigateTo('/checkout')
 }
 </script>
 

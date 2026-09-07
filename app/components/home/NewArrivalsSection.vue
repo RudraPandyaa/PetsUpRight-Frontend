@@ -79,9 +79,9 @@ onMounted(async () => {
 
       return {
         id: item.productId,
+        variantId: String(item.productVariantId), 
         name: item.productName,
         slug: item.slug,
-
         image: item.productAsset?.preview
           ? item.productAsset.preview + '?preset=medium'
           : '/images/shop/Rectangle-5.png',
