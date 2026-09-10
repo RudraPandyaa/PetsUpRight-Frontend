@@ -126,105 +126,38 @@
         <button
           v-if="cartQty === 0"
           type="button"
-          :disabled="cartLoading || !product.variantId"
+          :disabled="isAdding || !product.variantId"
           @click.stop="addToCart"
-          class="
-            bg-[#1a1a2e]
-            hover:bg-[#44476f]
-            disabled:opacity-60
-            disabled:cursor-not-allowed
-            text-white
-            text-sm
-            font-medium
-            py-2
-            px-4
-            rounded-lg
-            flex
-            items-center
-            justify-center
-            gap-2
-            transition
-          "
+          class="bg-[#1a1a2e] hover:bg-[#44476f] disabled:opacity-60 disabled:cursor-not-allowed text-white text-sm font-medium py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
           :class="isList ? '' : 'w-full'"
         >
-          {{ cartLoading ? 'Adding...' : 'Add to Cart' }}
+          {{ isAdding ? 'Adding...' : 'Add to Cart' }}
         </button>
 
         <!-- QUANTITY CONTROLS -->
         <div
           v-else
-          class="
-            flex
-            items-center
-            justify-between
-            border
-            border-[#1a1a2e]
-            rounded-lg
-            overflow-hidden
-          "
-          :class="
-            isList
-              ? 'min-w-[120px]'
-              : 'w-full'
-          "
+          class="flex items-center justify-between border border-[#1a1a2e] rounded-lg overflow-hidden"
+          :class="isList ? 'min-w-[120px]' : 'w-full'"
         >
-          <!-- Minus -->
           <button
             type="button"
-            :disabled="cartLoading"
+            :disabled="isUpdating"
             @click.stop="changeQty(-1)"
-            class="
-              w-10
-              h-10
-              flex
-              items-center
-              justify-center
-              text-[#1a1a2e]
-              hover:bg-gray-100
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              transition
-              font-medium
-              text-lg
-            "
-            aria-label="Decrease quantity"
+            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-lg"
           >
             −
           </button>
 
-          <!-- Quantity -->
-          <span
-            class="
-              flex-1
-              text-center
-              text-sm
-              font-semibold
-              text-[#1a1a2e]
-            "
-          >
+          <span class="flex-1 text-center text-sm font-semibold text-[#1a1a2e]">
             {{ cartQty }}
           </span>
 
-          <!-- Plus -->
           <button
             type="button"
-            :disabled="cartLoading"
+            :disabled="isUpdating"
             @click.stop="changeQty(1)"
-            class="
-              w-10
-              h-10
-              flex
-              items-center
-              justify-center
-              text-[#1a1a2e]
-              hover:bg-gray-100
-              disabled:opacity-50
-              disabled:cursor-not-allowed
-              transition
-              font-medium
-              text-lg
-            "
-            aria-label="Increase quantity"
+            class="w-10 h-10 flex items-center justify-center text-[#1a1a2e] hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium text-lg"
           >
             +
           </button>
@@ -242,6 +175,7 @@
         <!-- BUY NOW -->
         <button
           type="button"
+          :disabled="isBuying || !product.variantId"
           @click.stop="onBuyNow"
           class="
             border
@@ -262,7 +196,7 @@
           "
           :class="isList ? '' : 'w-full'"
         >
-          Buy Now
+          {{ isBuying ? 'Please wait...' : 'Buy Now' }}
         </button>
       </div>
     </div>
@@ -348,6 +282,7 @@ const {
   removeItem,
 } = useCart()
 
+const { openCart } = useCartDrawer()
 /*
 |--------------------------------------------------------------------------
 | CURRENT PRODUCT ORDER LINE
@@ -357,7 +292,9 @@ const {
 | productVariant.id compare karenge.
 |
 */
-
+const isAdding = ref(false)
+const isBuying = ref(false)
+const isUpdating = ref(false)
 const cartLine = computed(() => {
   return cartLines.value.find(
     (line: any) =>
@@ -365,6 +302,7 @@ const cartLine = computed(() => {
       String(props.product.variantId)
   )
 })
+
 
 /*
 |--------------------------------------------------------------------------
@@ -399,19 +337,19 @@ const productLink = computed(() => {
 */
 
 async function addToCart() {
-  if (!props.product.variantId) {
-    console.error(
-      'Missing product variant id:',
-      props.product
-    )
+  if (!props.product.variantId || isAdding.value) {
     return
   }
 
   try {
+    isAdding.value = true
+
     await addItem(
       String(props.product.variantId),
       1
     )
+
+    openCart()
 
     emit(
       'add-to-cart',
@@ -422,6 +360,8 @@ async function addToCart() {
       'Unable to add product to cart:',
       error
     )
+  } finally {
+    isAdding.value = false
   }
 }
 
@@ -433,47 +373,22 @@ async function addToCart() {
 
 async function changeQty(delta: number) {
   const line = cartLine.value
+  if (!line) return
 
-  if (!line) {
-    return
-  }
-
-  const currentQuantity =
-    Number(line.quantity ?? 0)
-
-  const nextQuantity =
-    currentQuantity + delta
+  const nextQuantity = Number(line.quantity ?? 0) + delta
 
   try {
-    /*
-    |--------------------------------------------------------------------------
-    | Quantity becomes 0 → Remove order line
-    |--------------------------------------------------------------------------
-    */
+    isUpdating.value = true
 
     if (nextQuantity <= 0) {
-      await removeItem(
-        String(line.id)
-      )
-
-      return
+      await removeItem(String(line.id))
+    } else {
+      await adjustQuantity(String(line.id), nextQuantity)
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Otherwise update quantity
-    |--------------------------------------------------------------------------
-    */
-
-    await adjustQuantity(
-      String(line.id),
-      nextQuantity
-    )
   } catch (error) {
-    console.error(
-      'Unable to change cart quantity:',
-      error
-    )
+    console.error('Unable to change cart quantity:', error)
+  } finally {
+    isUpdating.value = false
   }
 }
 
@@ -509,11 +424,30 @@ function toggleWishlist() {
 |--------------------------------------------------------------------------
 */
 
-function onBuyNow() {
-  emit(
-    'buy-now',
-    props.product
-  )
+async function onBuyNow() {
+  if (!props.product.variantId || isBuying.value) {
+    return
+  }
+
+  try {
+    isBuying.value = true
+
+    if (cartQty.value === 0) {
+      await addItem(
+        String(props.product.variantId),
+        1
+      )
+    }
+
+    await navigateTo('/checkout')
+  } catch (error) {
+    console.error(
+      'Unable to buy product:',
+      error
+    )
+  } finally {
+    isBuying.value = false
+  }
 }
 
 </script>

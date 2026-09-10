@@ -10,6 +10,14 @@ const ORDER_FIELDS = gql`
     shippingWithTax
     totalWithTax
 
+    couponCodes
+discounts {
+  adjustmentSource
+  type
+  description
+  amountWithTax
+}
+
     lines {
       id
       quantity
@@ -119,6 +127,8 @@ const REMOVE_ORDER_LINE = gql`
   }
 `
 
+
+
 export function useCart() {
   const { client } = useVendure()
 
@@ -178,14 +188,14 @@ export function useCart() {
     if (result.errorCode) {
       throw new Error(
         result.message ||
-          'Vendure cart operation failed'
+        'Vendure cart operation failed'
       )
     }
 
     if (result.__typename !== 'Order') {
       throw new Error(
         result.message ||
-          `Unexpected cart response: ${result.__typename}`
+        `Unexpected cart response: ${result.__typename}`
       )
     }
 
@@ -226,6 +236,80 @@ export function useCart() {
       cartLoading.value = false
     }
   }
+
+  async function refreshCart() {
+    return await getActiveOrder()
+  }
+
+  function clearCartState() {
+    activeOrder.value = null
+  }
+
+  async function applyCoupon(couponCode: string) {
+  const code = couponCode.trim()
+
+  if (!code) {
+    throw new Error('Coupon code is required')
+  }
+
+  try {
+    cartLoading.value = true
+
+    const data: any = await client.request(
+      APPLY_COUPON_CODE,
+      {
+        couponCode: code,
+      }
+    )
+
+    return handleOrderResult(
+      data?.applyCouponCode
+    )
+  } catch (error) {
+    console.error(
+      'Failed to apply coupon:',
+      error
+    )
+
+    throw error
+  } finally {
+    cartLoading.value = false
+  }
+}
+
+async function removeCoupon(couponCode: string) {
+  const code = couponCode.trim()
+
+  if (!code) {
+    throw new Error('Coupon code is required')
+  }
+
+  try {
+    cartLoading.value = true
+
+    const data: any = await client.request(
+      REMOVE_COUPON_CODE,
+      {
+        couponCode: code,
+      }
+    )
+
+    if (data?.removeCouponCode) {
+      activeOrder.value = data.removeCouponCode
+    }
+
+    return data?.removeCouponCode
+  } catch (error) {
+    console.error(
+      'Failed to remove coupon:',
+      error
+    )
+
+    throw error
+  } finally {
+    cartLoading.value = false
+  }
+}
 
   /*
   |--------------------------------------------------------------------------
@@ -366,6 +450,35 @@ export function useCart() {
     }
   }
 
+  const APPLY_COUPON_CODE = gql`
+  ${ORDER_FIELDS}
+
+  mutation ApplyCouponCode($couponCode: String!) {
+    applyCouponCode(couponCode: $couponCode) {
+      __typename
+
+      ... on Order {
+        ...CartOrderFields
+      }
+
+      ... on ErrorResult {
+        errorCode
+        message
+      }
+    }
+  }
+`
+
+const REMOVE_COUPON_CODE = gql`
+  ${ORDER_FIELDS}
+
+  mutation RemoveCouponCode($couponCode: String!) {
+    removeCouponCode(couponCode: $couponCode) {
+      ...CartOrderFields
+    }
+  }
+`
+
   return {
     activeOrder,
     cartLines,
@@ -374,8 +487,14 @@ export function useCart() {
     cartLoading,
 
     getActiveOrder,
+    refreshCart,
+    clearCartState,
+
     addItem,
     adjustQuantity,
     removeItem,
+
+    applyCoupon,
+    removeCoupon,
   }
 }

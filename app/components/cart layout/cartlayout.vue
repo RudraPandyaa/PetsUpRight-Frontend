@@ -33,7 +33,7 @@
 
 
           <!-- Delivery Location -->
-          <div class="location-bar">
+          <!-- <div class="location-bar">
             <div class="location-left">
               <svg
                 class="location-icon"
@@ -52,7 +52,7 @@
             </div>
 
             <span class="location-arrow">›</span>
-          </div>
+          </div> -->
 
 
           <!-- Savings -->
@@ -127,8 +127,6 @@
               :key="item.id"
               class="product-card"
             >
-
-              <!-- Product image -->
               <div class="product-image-wrapper">
                 <img
                   :src="item.image"
@@ -137,89 +135,89 @@
                 />
               </div>
 
-
-              <!-- Product info -->
               <div class="product-info">
+                <div class="product-top">
+                  <div class="product-copy">
+                    <h3 class="product-name">
+                      {{ item.name }}
+                    </h3>
 
-                <h3 class="product-name">
-                  {{ item.name }}
-                </h3>
-
-                <div class="product-size">
-                  Size: XS
-                </div>
-
-                <div class="price-row">
-                  <span class="current-price">
-                    ₹{{ Math.round(item.price).toLocaleString('en-IN') }}
-                  </span>
-
-                  <span
-                    v-if="item.originalPrice"
-                    class="old-price"
-                  >
-                    ₹{{ Math.round(item.originalPrice).toLocaleString('en-IN') }}
-                  </span>
-
-                  <span
-                    v-if="item.discount"
-                    class="discount"
-                  >
-                    ({{ item.discount }}% OFF)
-                  </span>
-                </div>
-
-
-                <!-- Quantity -->
-                <div class="quantity-control">
+                    <p
+                      v-if="item.variantName"
+                      class="product-variant"
+                    >
+                      {{ item.variantName }}
+                    </p>
+                  </div>
 
                   <button
                     type="button"
-                    class="quantity-btn"
-                    :disabled="item.quantity <= 1"
-                    @click="decreaseQuantity(item.id)"
+                    class="delete-btn"
+                    aria-label="Remove item"
+                    @click="removeItem(item.id)"
                   >
-                    −
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.7"
+                    >
+                      <path d="M4 7h16" />
+                      <path d="M10 11v6" />
+                      <path d="M14 11v6" />
+                      <path d="M6 7l1 13h10l1-13" />
+                      <path d="M9 7V4h6v3" />
+                    </svg>
                   </button>
-
-                  <span class="quantity">
-                    {{ item.quantity }}
-                  </span>
-
-                  <button
-                    type="button"
-                    class="quantity-btn"
-                    @click="increaseQuantity(item.id)"
-                  >
-                    +
-                  </button>
-
                 </div>
 
+                <div class="product-bottom">
+                  <div class="price-row">
+                    <span class="current-price">
+                      ₹{{ Math.round(item.price).toLocaleString('en-IN') }}
+                    </span>
+
+                    <span
+                      v-if="item.originalPrice"
+                      class="old-price"
+                    >
+                      ₹{{ Math.round(item.originalPrice).toLocaleString('en-IN') }}
+                    </span>
+
+                    <span
+                      v-if="item.discount"
+                      class="discount"
+                    >
+                      {{ item.discount }}% off
+                    </span>
+                  </div>
+
+                  <div class="quantity-control">
+                    <button
+                      type="button"
+                      class="quantity-btn"
+                      :disabled="item.quantity <= 1"
+                      aria-label="Decrease quantity"
+                      @click="decreaseQuantity(item.id)"
+                    >
+                      −
+                    </button>
+
+                    <span class="quantity">
+                      {{ item.quantity }}
+                    </span>
+
+                    <button
+                      type="button"
+                      class="quantity-btn"
+                      aria-label="Increase quantity"
+                      @click="increaseQuantity(item.id)"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
               </div>
-
-
-              <!-- Delete -->
-              <button
-                type="button"
-                class="delete-btn"
-                aria-label="Remove item"
-                @click="removeItem(item.id)"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.6"
-                >
-                  <path d="M4 7h16" />
-                  <path d="M10 11v6" />
-                  <path d="M14 11v6" />
-                  <path d="M6 7l1 13h10l1-13" />
-                  <path d="M9 7V4h6v3" />
-                </svg>
-              </button>
-
             </div>
 
           </main>
@@ -298,7 +296,7 @@
 
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 defineProps<{
   isOpen: boolean
@@ -308,22 +306,40 @@ const emit = defineEmits<{
   close: []
 }>()
 
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-  originalPrice?: number
-  discount?: number
-}
+const {
+  cartLines,
+  cartCount,
+  cartTotal,
+  getActiveOrder,
+  adjustQuantity,
+  removeItem: removeOrderItem,
+} = useCart()
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL CART
-|--------------------------------------------------------------------------
-*/
-const cart = useState<CartItem[]>('cart', () => [])
+const cart = computed(() => cartLines.value.map((line: any) => {
+  const quantity = Number(line.quantity ?? 1)
+  const lineTotal = Number(line.linePriceWithTax ?? 0) / 100
+
+  return {
+    id: line.id,
+    orderLineId: line.id,
+    variantId: line.productVariant?.id,
+    name: line.productVariant?.product?.name || line.productVariant?.name || 'Product',
+    variantName:
+      line.productVariant?.name &&
+      line.productVariant?.name !== line.productVariant?.product?.name
+        ? line.productVariant.name
+        : '',
+    image: line.productVariant?.product?.featuredAsset?.preview || '/images/shop/Rectangle-5.png',
+    price: lineTotal / quantity,
+    quantity,
+    originalPrice: undefined,
+    discount: undefined,
+  }
+}))
+
+onMounted(() => {
+  getActiveOrder()
+})
 
 
 /*
@@ -331,25 +347,12 @@ const cart = useState<CartItem[]>('cart', () => [])
 | CART COUNT
 |--------------------------------------------------------------------------
 */
-const cartCount = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.quantity,
-    0
-  )
-)
-
-
 /*
 |--------------------------------------------------------------------------
 | TOTAL PRICE
 |--------------------------------------------------------------------------
 */
-const totalPrice = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  )
-)
+const totalPrice = computed(() => cartTotal.value)
 
 
 /*
@@ -357,15 +360,7 @@ const totalPrice = computed(() =>
 | TOTAL SAVINGS
 |--------------------------------------------------------------------------
 */
-const totalSavings = computed(() =>
-  cart.value.reduce((total, item) => {
-    if (!item.originalPrice) return total
-
-    return total + (
-      (item.originalPrice - item.price) * item.quantity
-    )
-  }, 0)
-)
+const totalSavings = computed(() => 0)
 
 
 /*
@@ -376,39 +371,14 @@ const totalSavings = computed(() =>
 const savingProgress = computed(() => {
   const total = totalPrice.value
 
-  if (total <= 0) {
-    return 0
-  }
-
-  // ₹750 = first milestone
-  if (total <= 750) {
-    return (total / 750) * 25
-  }
-
-  // ₹750 → ₹2000
-  if (total <= 2000) {
-    return 25 + ((total - 750) / (2000 - 750)) * 25
-  }
-
-  // ₹2000 → ₹3000
-  if (total <= 3000) {
-    return 50 + ((total - 2000) / (3000 - 2000)) * 25
-  }
-
-  // ₹3000 → ₹5000
-  if (total <= 5000) {
-    return 75 + ((total - 3000) / (5000 - 3000)) * 25
-  }
-
+  if (total <= 0) return 0
+  if (total <= 750) return (total / 750) * 25
+  if (total <= 2000) return 25 + ((total - 750) / (2000 - 750)) * 25
+  if (total <= 3000) return 50 + ((total - 2000) / (3000 - 2000)) * 25
+  if (total <= 5000) return 75 + ((total - 3000) / (5000 - 3000)) * 25
   return 100
 })
 
-
-/*
-|--------------------------------------------------------------------------
-| CLOSE
-|--------------------------------------------------------------------------
-*/
 const closeCart = () => {
   emit('close')
 }
@@ -419,13 +389,13 @@ const closeCart = () => {
 | INCREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const increaseQuantity = (id: number | string) => {
+const increaseQuantity = async (id: number | string) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
 
   if (item) {
-    item.quantity++
+    await adjustQuantity(String(item.orderLineId), item.quantity + 1)
   }
 }
 
@@ -435,7 +405,7 @@ const increaseQuantity = (id: number | string) => {
 | DECREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const decreaseQuantity = (id: number | string) => {
+const decreaseQuantity = async (id: number | string) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
@@ -443,7 +413,7 @@ const decreaseQuantity = (id: number | string) => {
   if (!item) return
 
   if (item.quantity > 1) {
-    item.quantity--
+    await adjustQuantity(String(item.orderLineId), item.quantity - 1)
   }
 }
 
@@ -453,10 +423,8 @@ const decreaseQuantity = (id: number | string) => {
 | REMOVE ITEM
 |--------------------------------------------------------------------------
 */
-const removeItem = (id: number | string) => {
-  cart.value = cart.value.filter(
-    item => String(item.id) !== String(id)
-  )
+const removeItem = async (id: number | string) => {
+  await removeOrderItem(String(id))
 }
 
 
@@ -468,7 +436,8 @@ const removeItem = (id: number | string) => {
 const buyNow = () => {
   if (cart.value.length === 0) return
 
-  console.log('Buy Now clicked', cart.value)
+  closeCart()
+  navigateTo('/checkout')
 }
 </script>
 
@@ -728,262 +697,208 @@ const buyNow = () => {
 
 .cart-content {
   flex: 1;
-
   min-height: 0;
-
   overflow-y: auto;
-
-  padding: 11px 17px;
+  padding: 12px 16px 18px;
 }
-
 
 .product-card {
   position: relative;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 14px;
 
   width: 100%;
-  height: 100px;
-  min-height: 120px;
-  max-height: 120px;
+  min-height: 116px;
+  margin-bottom: 12px;
+  padding: 12px;
 
-  display: flex;
-  align-items: center;
-
-  padding: 6px 10px;
-
-  border: 1px solid #dcdcdc;
-  border-radius: 8px;
+  border: 1px solid #e3e3e8;
+  border-radius: 10px;
 
   background: #ffffff;
-
-  margin-top: 8px;
-
-  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(34, 34, 48, 0.04);
 }
 
+/* .product-card:hover {
+  border-color: #d5d2df;
+} */
 
 .product-image-wrapper {
-  width: 68px;
-  height: 68px;
-
-  flex: 0 0 68px;
-
+  width: 88px;
+  height: 88px;
+  align-self: center;
   overflow: hidden;
 
-  border-radius: 6px;
-
-  background: #f3f3f3;
-
-  margin: 0 10px 0 2px;
+  border-radius: 8px;
+  background: #f7f6f8;
 }
 
-
 .product-image {
+  display: block;
   width: 100%;
   height: 100%;
-
-  display: block;
-
   object-fit: cover;
 }
 
-
 .product-info {
-  position: relative;
-
-  flex: 1;
   min-width: 0;
-
-  height: 100%;
-
-  padding: 6px 42px 6px 0;
-
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: 12px;
 }
 
+.product-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.product-copy {
+  min-width: 0;
+}
 
 .product-name {
-  margin: 0;
-
-  font-size: 16px;
-  line-height: 18px;
-
-  font-weight: 600;
+  margin: 1px 0 0;
 
   color: #30386b;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 650;
 
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.product-size {
-  margin: 0;
+.product-variant {
+  margin: 5px 0 0;
 
-  font-size: 12px;
-  line-height: 15px;
-
-  color: #777777;
+  color: #85858f;
+  font-size: 11px;
+  line-height: 1.35;
 }
 
-
+.product-bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+}
 
 .price-row {
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: 6px;
-
-  margin: 0;
-
-  height: 20px;
-  min-height: 20px;
-
-  white-space: nowrap;
-  overflow: visible;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
-
 .current-price {
-  font-size: 17px;
-  line-height: 20px;
-  font-weight: 600;
-  color: #202020;
-
-  flex-shrink: 0;
+  color: #20202a;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 700;
 }
 
 .old-price {
-  display: inline-block;
-
-  font-size: 13px;
-  line-height: 18px;
-  font-weight: 400;
-
-  color: #999999;
-
-  text-decoration-line: line-through;
-  text-decoration-thickness: 1px;
-  text-decoration-color: #999999;
-
-  flex-shrink: 0;
+  color: #96969f;
+  font-size: 11px;
+  text-decoration: line-through;
 }
 
 .discount {
-  display: inline-block;
-
-  font-size: 12px;
-  line-height: 18px;
-  font-weight: 500;
-
-  color: #ec5a4c;
-
-  flex-shrink: 0;
+  color: #d85b50;
+  font-size: 10px;
+  font-weight: 600;
 }
-
-
-/* =====================================
-   QUANTITY
-===================================== */
 
 .quantity-control {
-  width: 82px;
-  height: 24px;
+  flex: 0 0 auto;
 
-  display: flex;
-
+  display: grid;
+  grid-template-columns: 28px 30px 28px;
   align-items: center;
-  justify-content: space-between;
 
-  margin: 0;
+  height: 30px;
 
-  padding: 0 7px;
-
-  border: 1px solid #e6d7fa;
-  border-radius: 23px;
-
-  background: #fbf8ff;
-
-  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid #ded9ea;
+  border-radius: 7px;
+  background: #ffffff;
 }
 
-
 .quantity-btn {
-  width: 18px;
-  height: 18px;
+  display: grid;
+  place-items: center;
 
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 28px;
+  height: 100%;
 
-  border: 0;
   padding: 0;
-
+  border: 0;
   background: transparent;
 
-  color: #39305a;
-
-  font-size: 14px;
-  line-height: 18px;
+  color: #44476f;
+  font-size: 16px;
+  line-height: 1;
 
   cursor: pointer;
 }
 
+.quantity-btn:hover:not(:disabled) {
+  background: #f4f1f8;
+}
 
 .quantity-btn:disabled {
-  opacity: 0.35;
-
-  cursor: default;
+  color: #b8b8c0;
+  cursor: not-allowed;
 }
-
 
 .quantity {
+  display: grid;
+  place-items: center;
+
+  height: 100%;
+  border-right: 1px solid #eeeaf3;
+  border-left: 1px solid #eeeaf3;
+
+  color: #30324f;
   font-size: 11px;
-  line-height: 16px;
-
-  color: #514b58;
-
-  font-weight: 500;
+  font-weight: 600;
 }
 
-
-/* =====================================
-   DELETE
-===================================== */
-
 .delete-btn {
-  position: absolute;
+  flex: 0 0 auto;
 
-  right: 8px;
-  top: 8px;
+  display: grid;
+  place-items: center;
 
   width: 28px;
   height: 28px;
 
-  display: flex;
-
-  align-items: center;
-  justify-content: center;
-
   padding: 0;
-
   border: 0;
+  border-radius: 6px;
 
   background: transparent;
-
-  color: #666666;
+  color: #8b8b94;
 
   cursor: pointer;
-
-  z-index: 2;
 }
 
+.delete-btn:hover {
+  background: #f7f4f7;
+  color: #b44747;
+}
 
 .delete-btn svg {
-  width: 19px;
-  height: 19px;
+  width: 17px;
+  height: 17px;
 }
-
 
 /* =====================================
    BOTTOM

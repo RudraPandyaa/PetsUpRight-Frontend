@@ -1,10 +1,22 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue'
 
-const { getCollections } = useCollections()
+const { getShopFacets } = useProducts()
 
 const categories = ref<any[]>([])
 const loading = ref(true)
+
+const categoryImages: Record<string, string> = {
+  'clean-hygiene': '/images/categories/grooming.jpg',
+  'clothing-accessories': '/images/categories/collars.jpg',
+  'feeding-essentials': '/images/categories/treats.jpg',
+  food: '/images/categories/dry-food.jpg',
+  grooming: '/images/categories/grooming.jpg',
+  'health-wellness': '/images/categories/grooming.jpg',
+  housing: '/images/categories/furniture.jpg',
+  toys: '/images/categories/toys.jpg',
+  'walking-essentials': '/images/categories/walk.jpg',
+}
 
 const currentIndex = ref(0)
 const isDragging = ref(false)
@@ -117,31 +129,21 @@ onMounted(async () => {
   window.addEventListener('resize', updateVisibleCount)
 
   try {
-    const items = await getCollections()
+    const facets = await getShopFacets()
+    const categoryFacet = facets.find(
+      (facet: any) => String(facet.code).toLowerCase() === 'category'
+    )
 
-    const hiddenSlugs = [
-      'merchandising',
-      'trending-now',
-      'combo-deals',
-      'offers',
-      'frequently-bought-together',
-    ]
+    categories.value = (categoryFacet?.values ?? []).map((category: any) => {
+      const code = String(category.code).toLowerCase()
 
-    categories.value = items
-      .filter(
-        (c: any) =>
-          !hiddenSlugs.includes(
-            String(c.slug).toLowerCase()
-          )
-      )
-      .map((c: any) => ({
-        id: c.id,
-        name: c.name,
-        image:
-          c.featuredAsset?.preview ||
-          '/images/categories/placeholder.jpg',
-        link: `/shop?collection=${c.slug}`,
-      }))
+      return {
+        id: category.id,
+        name: category.name,
+        image: categoryImages[code] || '/images/categories/toys.jpg',
+        link: `/shop?category=${code}`,
+      }
+    })
   } catch (error) {
     console.error('Failed to fetch collections:', error)
   } finally {
@@ -194,39 +196,42 @@ onBeforeUnmount(() => {
           @mousemove="(e) => onDragMove(e.clientX)"
           @mouseup="onDragEnd"
           @mouseleave="onDragEnd"
-          @touchstart.passive="(e) => onDragStart(e.touches[0].clientX)"
-          @touchmove.passive="(e) => onDragMove(e.touches[0].clientX)"
+          @touchstart.passive="(e) => e.touches[0] && onDragStart(e.touches[0].clientX)"
+          @touchmove.passive="(e) => e.touches[0] && onDragMove(e.touches[0].clientX)"
           @touchend="onDragEnd"
         >
           <div
             v-for="cat in categories"
             :key="cat.id"
             class="shrink-0 px-0"
-            :style="{ width: `${slideWidth}%` }"
+            :style="{ width: `${slideWidth}%`, marginTop:'10px' }"
           >
             <NuxtLink :to="cat.link" class="flex flex-col items-center group">
               <div
-                class="
-                  w-28 h-28
-                  sm:w-32 sm:h-32
-                  md:w-36 md:h-36
-                  lg:w-40 lg:h-40
-                  rounded-full overflow-hidden
-                  shadow-md
-                  ring-2 ring-transparent
-                  group-hover:ring-[#c3b5df]
-                  transition-all duration-300
-                  group-hover:scale-105
-                  mx-auto
-                "
-              >
-                <img
-                  :src="cat.image"
-                  :alt="cat.name"
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
+  class="
+    w-28 h-28
+    sm:w-32 sm:h-32
+    md:w-36 md:h-36
+    lg:w-40 lg:h-40
+    rounded-full overflow-hidden
+    shadow-md
+    ring-2 ring-transparent
+    group-hover:ring-[#c3b5df]
+    transition-all duration-300
+    mx-auto
+  "
+>
+  <img
+    :src="cat.image"
+    :alt="cat.name"
+    class="
+      w-full h-full object-cover
+      transition-transform duration-300
+      group-hover:scale-110
+    "
+    loading="lazy"
+  />
+</div>
               <span class="text-sm md:text-base font-semibold text-[#44476f] mt-3 group-hover:text-[#1a1a2e] transition">
                 {{ cat.name }}
               </span>

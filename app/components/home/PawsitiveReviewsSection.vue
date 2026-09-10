@@ -46,7 +46,10 @@
                 v-for="i in 5"
                 :key="i"
                 class="star"
-                :class="{ filled: i <= Math.floor(review.rating) }"
+                :class="{
+                  filled: i <= Math.floor(Number(review.rating)),
+                  half: Number(review.rating) % 1 !== 0 && i === Math.ceil(Number(review.rating)),
+                }"
               >★</span>
             </div>
 
@@ -82,6 +85,10 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{
+  section?: Record<string, any> | null
+}>()
+
 const viewportRef = ref<HTMLElement | null>(null)
 const currentIndex = ref(0)
 const isDragging = ref(false)
@@ -89,7 +96,7 @@ const dragOffset = ref(0)
 const startX = ref(0)
 const isTransitioning = ref(false)
 
-const reviews = ref([
+const defaultReviews = [
   {
     name: 'Dhruvi Khanna',
     rating: 4,
@@ -120,7 +127,16 @@ const reviews = ref([
     rating: 5,
     text: 'Best pet store experience! The treats are healthy and my dog is obsessed. Fast shipping too.',
   },
-])
+]
+
+const reviews = computed(() => {
+  const cmsReviews = props.section?.publishedReviews
+  return Array.isArray(cmsReviews) && cmsReviews.length ? cmsReviews : defaultReviews
+})
+
+watch(reviews, () => {
+  currentIndex.value = 0
+})
 
 const visibleCount = ref(3)
 const gap = 20 // px – matches CSS gap
@@ -349,6 +365,13 @@ onUnmounted(() => {
 
 .star.filled {
   color: #f5a623;
+}
+
+.star.half {
+  color: transparent;
+  background: linear-gradient(90deg, #f5a623 50%, #d1d5db 50%);
+  background-clip: text;
+  -webkit-background-clip: text;
 }
 
 .review-text {

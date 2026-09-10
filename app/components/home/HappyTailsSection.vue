@@ -26,12 +26,18 @@
           class="video-card"
         >
           <div class="video-thumb">
-            <img :src="video.thumb" :alt="video.title" />
-            <button class="play-btn" @click="playVideo(index)">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="8 5 19 12 8 19" />
-              </svg>
-            </button>
+            <video
+              v-if="video.video"
+              :src="video.video"
+              :poster="video.thumb"
+              :aria-label="video.title"
+              autoplay
+              muted
+              loop
+              playsinline
+              preload="metadata"
+            />
+            <img v-else :src="video.thumb" :alt="video.title" />
           </div>
         </div>
       </div>
@@ -58,10 +64,14 @@
 </template>
 
 <script setup lang="ts">
+const props = defineProps<{
+  section?: Record<string, any> | null
+}>()
+
 const trackRef = ref<HTMLElement | null>(null)
 const currentIndex = ref(0)
 
-const videos = ref([
+const defaultVideos = [
   { title: 'Dog with ball', thumb: '/images/happy-tails/1.jpg' },
   { title: 'Cat with toy', thumb: '/images/happy-tails/2.jpg' },
   { title: 'Man with dog', thumb: '/images/happy-tails/3.jpg' },
@@ -69,7 +79,16 @@ const videos = ref([
   { title: 'Puppy play', thumb: '/images/happy-tails/5.jpg' },
   { title: 'Kitten fun', thumb: '/images/happy-tails/6.jpg' },
   { title: 'Dog park', thumb: '/images/happy-tails/7.jpg' },
-])
+]
+
+const videos = computed(() => {
+  const cmsVideos = props.section?.publishedVideos
+  return Array.isArray(cmsVideos) && cmsVideos.length ? cmsVideos : defaultVideos
+})
+
+watch(videos, () => {
+  currentIndex.value = 0
+})
 
 const visibleCount = 4
 const maxIndex = computed(() => Math.max(0, videos.value.length - visibleCount))
@@ -200,7 +219,8 @@ onUnmounted(() => {
   background: #ede7e7;
 }
 
-.video-thumb img {
+.video-thumb img,
+.video-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
