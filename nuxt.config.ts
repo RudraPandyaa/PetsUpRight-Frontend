@@ -16,6 +16,7 @@ export default defineNuxtConfig({
     public: {
       vendureShopApiUrl: process.env.NUXT_PUBLIC_VENDURE_SHOP_API_URL || 'http://localhost:3000/shop-api',
       vendureChannelToken: process.env.NUXT_PUBLIC_VENDURE_CHANNEL_TOKEN || '',
+      googleClientId: process.env.NUXT_PUBLIC_GOOGLE_CLIENT_ID || '',
     },
   },
 

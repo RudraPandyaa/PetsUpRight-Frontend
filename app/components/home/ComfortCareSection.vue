@@ -54,8 +54,8 @@
     </div>
     <div class="dog-illustration">
       <img
-        src="/images/comfort-care/wagging-dog.svg"
-        alt="Wagging dog"
+        src="/images/comfort-care/Dog.png"
+        alt="Happy golden retriever"
         class="dog-img"
       />
     </div>
@@ -66,8 +66,8 @@
     <!-- Desktop only: wagging dog -->
     <div class="dog-illustration only-desktop">
       <img
-        src="/images/comfort-care/wagging-dog.svg"
-        alt="Wagging dog"
+        src="/images/comfort-care/Dog.png"
+        alt="Happy golden retriever"
         class="dog-img"
       />
     </div>

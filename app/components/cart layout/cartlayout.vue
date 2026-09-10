@@ -298,7 +298,7 @@
 
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 
 defineProps<{
   isOpen: boolean
@@ -308,22 +308,35 @@ const emit = defineEmits<{
   close: []
 }>()
 
-interface CartItem {
-  id: number | string
-  name: string
-  image: string
-  price: number
-  quantity: number
-  originalPrice?: number
-  discount?: number
-}
+const {
+  cartLines,
+  cartCount,
+  cartTotal,
+  getActiveOrder,
+  adjustQuantity,
+  removeItem: removeOrderItem,
+} = useCart()
 
-/*
-|--------------------------------------------------------------------------
-| GLOBAL CART
-|--------------------------------------------------------------------------
-*/
-const cart = useState<CartItem[]>('cart', () => [])
+const cart = computed(() => cartLines.value.map((line: any) => {
+  const quantity = Number(line.quantity ?? 1)
+  const lineTotal = Number(line.linePriceWithTax ?? 0) / 100
+
+  return {
+    id: line.id,
+    orderLineId: line.id,
+    variantId: line.productVariant?.id,
+    name: line.productVariant?.product?.name || line.productVariant?.name || 'Product',
+    image: line.productVariant?.product?.featuredAsset?.preview || '/images/shop/Rectangle-5.png',
+    price: lineTotal / quantity,
+    quantity,
+    originalPrice: undefined,
+    discount: undefined,
+  }
+}))
+
+onMounted(() => {
+  getActiveOrder()
+})
 
 
 /*
@@ -331,25 +344,12 @@ const cart = useState<CartItem[]>('cart', () => [])
 | CART COUNT
 |--------------------------------------------------------------------------
 */
-const cartCount = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.quantity,
-    0
-  )
-)
-
-
 /*
 |--------------------------------------------------------------------------
 | TOTAL PRICE
 |--------------------------------------------------------------------------
 */
-const totalPrice = computed(() =>
-  cart.value.reduce(
-    (total, item) => total + item.price * item.quantity,
-    0
-  )
-)
+const totalPrice = computed(() => cartTotal.value)
 
 
 /*
@@ -357,15 +357,7 @@ const totalPrice = computed(() =>
 | TOTAL SAVINGS
 |--------------------------------------------------------------------------
 */
-const totalSavings = computed(() =>
-  cart.value.reduce((total, item) => {
-    if (!item.originalPrice) return total
-
-    return total + (
-      (item.originalPrice - item.price) * item.quantity
-    )
-  }, 0)
-)
+const totalSavings = computed(() => 0)
 
 
 /*
@@ -419,13 +411,13 @@ const closeCart = () => {
 | INCREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const increaseQuantity = (id: number | string) => {
+const increaseQuantity = async (id: number | string) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
 
   if (item) {
-    item.quantity++
+    await adjustQuantity(String(item.orderLineId), item.quantity + 1)
   }
 }
 
@@ -435,7 +427,7 @@ const increaseQuantity = (id: number | string) => {
 | DECREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const decreaseQuantity = (id: number | string) => {
+const decreaseQuantity = async (id: number | string) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
@@ -443,7 +435,7 @@ const decreaseQuantity = (id: number | string) => {
   if (!item) return
 
   if (item.quantity > 1) {
-    item.quantity--
+    await adjustQuantity(String(item.orderLineId), item.quantity - 1)
   }
 }
 
@@ -453,10 +445,8 @@ const decreaseQuantity = (id: number | string) => {
 | REMOVE ITEM
 |--------------------------------------------------------------------------
 */
-const removeItem = (id: number | string) => {
-  cart.value = cart.value.filter(
-    item => String(item.id) !== String(id)
-  )
+const removeItem = async (id: number | string) => {
+  await removeOrderItem(String(id))
 }
 
 
@@ -468,7 +458,8 @@ const removeItem = (id: number | string) => {
 const buyNow = () => {
   if (cart.value.length === 0) return
 
-  console.log('Buy Now clicked', cart.value)
+  closeCart()
+  navigateTo('/checkout')
 }
 </script>
 

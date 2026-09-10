@@ -13,8 +13,8 @@
 
         <div class="visual-image">
           <img
-            src="/images/comfort-care/wagging-dog.svg"
-            alt="Happy dog"
+            src="/images/comfort-care/Dog.png"
+            alt="Happy golden retriever"
           />
         </div>
       </div>
@@ -173,9 +173,33 @@ const handleLogin = () => {
 
 
 const handleGoogleLogin = () => {
-  console.log('Google login')
-  
-  // Add Google authentication here
+  const config = useRuntimeConfig()
+  const clientId = config.public.googleClientId
+
+  if (!clientId) {
+    console.error('Google login is not configured. Set NUXT_PUBLIC_GOOGLE_CLIENT_ID.')
+    return
+  }
+
+  const params = new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: `${window.location.origin}/auth/google/callback`,
+    response_type: 'code',
+    scope: 'openid email profile',
+    access_type: 'offline',
+    prompt: 'select_account',
+  })
+
+  const width = 500
+  const height = 600
+  const left = window.screenX + (window.outerWidth - width) / 2
+  const top = window.screenY + (window.outerHeight - height) / 2
+
+  window.open(
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`,
+    'google-oauth',
+    `width=${width},height=${height},left=${left},top=${top}`,
+  )
 }
 
 </script>

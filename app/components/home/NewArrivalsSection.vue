@@ -1,5 +1,5 @@
 <template>
-  <section class="new-arrivals container mx-auto px-4">
+  <section id="new-arrivals" class="new-arrivals container mx-auto px-4">
     <!-- Header -->
     <div class="section-header">
       <div class="paw-icon">🐾</div>
@@ -79,6 +79,7 @@ onMounted(async () => {
 
       return {
         id: item.productId,
+        variantId: item.productVariantId,
         name: item.productName,
         slug: item.slug,
 
@@ -136,6 +137,7 @@ function goToShopAll() {
 ================================================= */
 
 .new-arrivals {
+  scroll-margin-top: 140px;
   margin: 0 auto;
   padding-top: 80px;
   padding-bottom: 4rem;

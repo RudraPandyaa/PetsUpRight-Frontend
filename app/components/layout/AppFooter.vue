@@ -27,7 +27,8 @@
         <div>
           <h4 class="text-sm font-semibold mb-4 text-white">Support</h4>
           <ul class="space-y-2 text-sm text-[#c3b5df]">
-            <li><a href="#" class="hover:text-white transition">Contact Us</a></li>
+            <li><NuxtLink to="/about-us" class="hover:text-white transition">About Us</NuxtLink></li>
+            <li><NuxtLink to="/contact-us" class="hover:text-white transition">Contact Us</NuxtLink></li>
             <li><a href="#" class="hover:text-white transition">Shipping Info</a></li>
             <li><a href="#" class="hover:text-white transition">Returns</a></li>
           </ul>

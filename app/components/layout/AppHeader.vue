@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import CartDrawer from '~/components/cart layout/cartlayout.vue'
 
 const isMobileMenuOpen = ref(false)
+const route = useRoute()
 const isDogsOpen = ref(false)
 const isCatsOpen = ref(false)
 const isCartOpen = ref(false)
@@ -15,6 +16,7 @@ const brandOptions = ref<HeaderFacetOption[]>([])
 const isMobileDogsOpen = ref(false)
 const isMobileCatsOpen = ref(false)
 const isMobileBrandsOpen = ref(false)
+const { cartCount, getActiveOrder } = useCart()
 
 interface HeaderFacetOption {
   id: string
@@ -82,6 +84,25 @@ function handleSearch() {
   isMobileMenuOpen.value = false
 }
 
+async function goToNewArrivals() {
+  isMobileMenuOpen.value = false
+
+  if (route.path === '/') {
+    document.getElementById('new-arrivals')?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+    return
+  }
+
+  await navigateTo('/')
+  await nextTick()
+  document.getElementById('new-arrivals')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start',
+  })
+}
+
 /*
 |--------------------------------------------------------------------------
 | GLOBAL CART
@@ -96,8 +117,6 @@ interface CartItem {
   originalPrice?: number
   discount?: number
 }
-
-const cart = useState<CartItem[]>('cart', () => [])
 
 function handleScroll() {
   const currentScrollY = window.scrollY
@@ -141,10 +160,6 @@ const wishlist = useState<WishlistItem[]>('wishlist', () => [])
 | DYNAMIC COUNTS
 |--------------------------------------------------------------------------
 */
-const cartCount = computed(() =>
-  cart.value.reduce((total, item) => total + item.quantity, 0)
-)
-
 const wishlistCount = computed(() => wishlist.value.length)
 
 
@@ -156,6 +171,7 @@ onMounted(async () => {
   })
 
   await loadHeaderData()
+  await getActiveOrder()
 })
 
 onUnmounted(() => {
@@ -323,14 +339,14 @@ onUnmounted(() => {
               </div>
             </div>
 
-            <NuxtLink to="/shop?sort=newest"
+            <button type="button" @click="goToNewArrivals"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               New Arrivals
-            </NuxtLink>
-            <NuxtLink to="/shop?collection=trending-now"
+            </button>
+            <!-- <NuxtLink to="/shop?collection=trending-now"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Trending Now
-            </NuxtLink>
+            </NuxtLink> -->
             <NuxtLink  to="/shop?collection=combo-deals"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Combo Deals
@@ -619,13 +635,13 @@ onUnmounted(() => {
         </div>
 
         <!-- New Arrivals -->
-        <NuxtLink
-          to="/shop?sort=newest"
+        <button
+          type="button"
+          @click="goToNewArrivals"
           class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] hover:bg-[#f5f4f7] transition"
-          @click="isMobileMenuOpen = false"
         >
           New Arrivals
-        </NuxtLink>
+        </button>
 
         <!-- Trending Now -->
         <NuxtLink

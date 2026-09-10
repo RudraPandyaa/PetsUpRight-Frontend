@@ -1,4 +1,27 @@
 <script setup lang="ts">
+const props = defineProps<{
+  bannerImages?: string[]
+}>()
+
+const activeImage = ref(0)
+
+const images = computed(() => props.bannerImages?.length
+  ? props.bannerImages
+  : ['/images/hero-bg.png'])
+
+let sliderTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  if (images.value.length > 1) {
+    sliderTimer = setInterval(() => {
+      activeImage.value = (activeImage.value + 1) % images.value.length
+    }, 2500)
+  }
+})
+
+onUnmounted(() => {
+  if (sliderTimer) clearInterval(sliderTimer)
+})
 const trustBadges = [
   { icon: '/images/icons/quality.png', label: 'Premium', label2: 'Quality' },
   { icon: '/images/icons/trusted.png', label: 'Safe &', label2: 'Trusted' },
@@ -31,9 +54,15 @@ const infoStrip = [
 </script>
 
 <template>
-  <section
-        class="relative overflow-hidden bg-[url('/images/hero-bg.png')] bg-cover bg-[66%_top] bg-no-repeat"
-  >
+  <section class="relative overflow-hidden bg-cover bg-[66%_top] bg-no-repeat">
+    <div
+      v-for="(image, index) in images"
+      :key="image"
+      class="absolute inset-0 bg-cover bg-[66%_top] bg-no-repeat transition-opacity duration-700"
+      :class="index === activeImage ? 'opacity-100' : 'opacity-0'"
+      :style="{ backgroundImage: `url(${image})` }"
+      aria-hidden="true"
+    />
     <div class="container mx-auto px-4 pt-12 pb-16 md:pt-16 md:pb-8 relative z-10">
 
         <div class="grid lg:grid-cols-[55%_45%] gap-6 lg:gap-10 items-center">

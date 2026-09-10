@@ -10,6 +10,9 @@ export function useCollections() {
           id
           name
           slug
+          parent {
+            id
+          }
           featuredAsset {
             preview
           }

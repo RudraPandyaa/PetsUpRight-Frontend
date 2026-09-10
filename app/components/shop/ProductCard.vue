@@ -126,7 +126,7 @@
         <button
           v-if="cartQty === 0"
           type="button"
-          :disabled="cartLoading || !product.variantId"
+          :disabled="isAdding || !product.variantId"
           @click.stop="addToCart"
           class="
             bg-[#1a1a2e]
@@ -147,7 +147,7 @@
           "
           :class="isList ? '' : 'w-full'"
         >
-          {{ cartLoading ? 'Adding...' : 'Add to Cart' }}
+          {{ isAdding ? 'Adding...' : 'Add to Cart' }}
         </button>
 
         <!-- QUANTITY CONTROLS -->
@@ -348,6 +348,8 @@ const {
   removeItem,
 } = useCart()
 
+const isAdding = ref(false)
+
 /*
 |--------------------------------------------------------------------------
 | CURRENT PRODUCT ORDER LINE
@@ -407,6 +409,8 @@ async function addToCart() {
     return
   }
 
+  isAdding.value = true
+
   try {
     await addItem(
       String(props.product.variantId),
@@ -422,6 +426,8 @@ async function addToCart() {
       'Unable to add product to cart:',
       error
     )
+  } finally {
+    isAdding.value = false
   }
 }
 

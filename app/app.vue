@@ -1,8 +1,12 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const isLoginPage = computed(
-  () => route.path === '/login'
+const isAuthPage = computed(
+  () => route.path === '/login' || route.path === '/register' || route.path === '/checkout'
+)
+
+const isHeaderlessPage = computed(
+  () => isAuthPage.value
 )
 </script>
 
@@ -10,13 +14,13 @@ const isLoginPage = computed(
   <div class="min-h-screen flex flex-col">
 
     <LayoutAppHeader
-      v-if="!isLoginPage"
+      v-if="!isHeaderlessPage"
     />
 
     <main
       :class="[
         'flex-1',
-        !isLoginPage
+        !isHeaderlessPage
             ? 'pt-[144px] md:pt-[168px] lg:pt-[116px]'
           : ''
       ]"
@@ -25,7 +29,7 @@ const isLoginPage = computed(
     </main>
 
     <LayoutAppFooter
-      v-if="!isLoginPage"
+      v-if="!isAuthPage"
     />
 
   </div>
