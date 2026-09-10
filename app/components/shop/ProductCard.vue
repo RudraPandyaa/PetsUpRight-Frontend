@@ -196,7 +196,7 @@
           "
           :class="isList ? '' : 'w-full'"
         >
-          {{ isAdding ? 'Please wait...' : 'Buy Now' }}
+          {{ isBuying ? 'Please wait...' : 'Buy Now' }}
         </button>
       </div>
     </div>
@@ -282,8 +282,7 @@ const {
   removeItem,
 } = useCart()
 
-const isAdding = ref(false)
-
+const { openCart } = useCartDrawer()
 /*
 |--------------------------------------------------------------------------
 | CURRENT PRODUCT ORDER LINE
@@ -338,20 +337,24 @@ const productLink = computed(() => {
 */
 
 async function addToCart() {
-  if (!props.product.variantId) {
-    console.error(
-      'Missing product variant id:',
-      props.product
-    )
+  if (!props.product.variantId || isAdding.value) {
     return
   }
 
-  isAdding.value = true
-
   try {
     isAdding.value = true
-    await addItem(String(props.product.variantId), 1)
-    emit('add-to-cart', props.product)
+
+    await addItem(
+      String(props.product.variantId),
+      1
+    )
+
+    openCart()
+
+    emit(
+      'add-to-cart',
+      props.product
+    )
   } catch (error) {
     console.error(
       'Unable to add product to cart:',
@@ -422,14 +425,13 @@ function toggleWishlist() {
 */
 
 async function onBuyNow() {
-  if (!props.product.variantId || isAdding.value) {
+  if (!props.product.variantId || isBuying.value) {
     return
   }
 
   try {
-    isAdding.value = true
+    isBuying.value = true
 
-    // Agar product cart me nahi hai tab add karo
     if (cartQty.value === 0) {
       await addItem(
         String(props.product.variantId),
@@ -444,7 +446,7 @@ async function onBuyNow() {
       error
     )
   } finally {
-    isAdding.value = false
+    isBuying.value = false
   }
 }
 

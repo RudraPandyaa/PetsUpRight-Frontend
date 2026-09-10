@@ -62,7 +62,6 @@
 </template>
 
 <script setup lang="ts">
-const config = useRuntimeConfig()
 const firstName = ref('')
 const lastName = ref('')
 const email = ref('')
@@ -72,51 +71,41 @@ const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
+const { register } = useAuth()
+
 async function handleRegister() {
   errorMessage.value = ''
   successMessage.value = ''
 
-  if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match.'
+  if (
+    password.value !==
+    confirmPassword.value
+  ) {
+    errorMessage.value =
+      'Passwords do not match.'
     return
   }
 
   loading.value = true
 
   try {
-    const response = await $fetch<{ registerCustomerAccount: { __typename: string; message?: string } }>(
-      config.public.vendureShopApiUrl,
-      {
-        method: 'POST',
-        body: {
-          query: `
-            mutation RegisterCustomer($input: RegisterCustomerInput!) {
-              registerCustomerAccount(input: $input) {
-                __typename
-                ... on ErrorResult { errorCode message }
-              }
-            }
-          `,
-          variables: {
-            input: {
-              firstName: firstName.value,
-              lastName: lastName.value,
-              emailAddress: email.value,
-              password: password.value,
-            },
-          },
-        },
-      },
-    )
+    await register({
+      firstName: firstName.value,
+      lastName: lastName.value,
+      emailAddress: email.value,
+      password: password.value,
+    })
 
-    const result = response.registerCustomerAccount
-    if (result.__typename !== 'Success') {
-      throw new Error(result.message || 'Unable to create account.')
-    }
+    successMessage.value =
+      'Account created successfully.'
 
-    successMessage.value = 'Account created. Please check your email to verify it.'
+    setTimeout(() => {
+      navigateTo('/login')
+    }, 1200)
   } catch (error: any) {
-    errorMessage.value = error?.data?.errors?.[0]?.message || error.message || 'Unable to create account.'
+    errorMessage.value =
+      error?.message ||
+      'Unable to create account.'
   } finally {
     loading.value = false
   }

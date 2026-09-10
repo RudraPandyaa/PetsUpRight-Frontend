@@ -21,8 +21,6 @@ const isHeaderlessPage = computed(
       :class="[
         'flex-1',
         !isHeaderlessPage
-            ? 'pt-[144px] md:pt-[168px] lg:pt-[116px]'
-          : ''
       ]"
     >
       <NuxtPage />

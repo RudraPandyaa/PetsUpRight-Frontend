@@ -6,7 +6,6 @@ const isMobileMenuOpen = ref(false)
 const route = useRoute()
 const isDogsOpen = ref(false)
 const isCatsOpen = ref(false)
-const isCartOpen = ref(false)
 const searchQuery = ref('')
 const { getShopFacets } = useProducts()
 const isBrandsOpen = ref(false)
@@ -15,6 +14,16 @@ const isMobileDogsOpen = ref(false)
 const isMobileCatsOpen = ref(false)
 const isMobileBrandsOpen = ref(false)
 const { cartCount, getActiveOrder } = useCart()
+const {
+  isCartOpen,
+  openCart,
+  closeCart,
+} = useCartDrawer()
+
+const {
+  isLoggedIn,
+  loadCurrentCustomer,
+} = useAuth()
 
 interface HeaderFacetOption {
   id: string
@@ -152,8 +161,11 @@ const wishlist = useState<WishlistItem[]>('wishlist', () => [])
 const wishlistCount = computed(() => wishlist.value.length)
 
 onMounted(async () => {
-  await loadHeaderData()
-  await getActiveOrder()
+  await Promise.all([
+    loadHeaderData(),
+    getActiveOrder(),
+    loadCurrentCustomer(),
+  ])
 })
 
 onUnmounted(() => {
@@ -337,7 +349,7 @@ onUnmounted(() => {
             </NuxtLink>
 
             <button type="button" class="relative p-1 text-[#1a1a2e] hover:text-[#44476f] transition" aria-label="Cart"
-              @click.stop="isCartOpen = true">
+              @click.stop="openCart">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -361,14 +373,23 @@ onUnmounted(() => {
               </svg>
             </NuxtLink>
 
-            <NuxtLink to="/login"
+            <NuxtLink v-if="!isLoggedIn" to="/login"
               class="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
+
               Login
+            </NuxtLink>
+
+            <NuxtLink v-else to="/profile" class="hidden sm:flex p-1 text-[#1a1a2e] hover:text-[#44476f] transition"
+              aria-label="Profile">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+                <path
+                  d="M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm0 2c-5.33 0-8 2.67-8 5v1a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-1c0-2.33-2.67-5-8-5Z" />
+              </svg>
             </NuxtLink>
 
             <button class="md:hidden p-1.5 text-[#44476f]" @click="isMobileMenuOpen = !isMobileMenuOpen"
@@ -537,15 +558,27 @@ onUnmounted(() => {
           </NuxtLink>
 
           <!-- Login -->
-          <NuxtLink to="/login"
+          <NuxtLink v-if="!isLoggedIn" to="/login"
             class="px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
             @click="isMobileMenuOpen = false">
             Login
+          </NuxtLink>
+
+          <NuxtLink v-else to="/profile"
+            class="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
+            @click="isMobileMenuOpen = false">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5.121 17.804A9 9 0 1118.879 17.804M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+
+            Profile
           </NuxtLink>
 
         </nav>
       </div>
     </div>
   </header>
-  <CartDrawer :is-open="isCartOpen" @close="isCartOpen = false" />
+  <CartDrawer :is-open="isCartOpen" @close="closeCart" />
 </template>

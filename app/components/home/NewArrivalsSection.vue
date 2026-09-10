@@ -79,11 +79,7 @@ onMounted(async () => {
 
       return {
         id: item.productId,
-<<<<<<< HEAD
         variantId: item.productVariantId,
-=======
-        variantId: String(item.productVariantId), 
->>>>>>> 6781d2d056bb6e0b757c554c8d62e45cfb4484b1
         name: item.productName,
         slug: item.slug,
         image: item.productAsset?.preview
