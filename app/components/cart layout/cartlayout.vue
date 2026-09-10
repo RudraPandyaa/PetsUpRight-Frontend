@@ -204,7 +204,7 @@
                 type="button"
                 class="delete-btn"
                 aria-label="Remove item"
-                @click="removeItem(item.id)"
+                @click="removeCartItem(item.id)"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -368,39 +368,14 @@ const totalSavings = computed(() => 0)
 const savingProgress = computed(() => {
   const total = totalPrice.value
 
-  if (total <= 0) {
-    return 0
-  }
-
-  // ₹750 = first milestone
-  if (total <= 750) {
-    return (total / 750) * 25
-  }
-
-  // ₹750 → ₹2000
-  if (total <= 2000) {
-    return 25 + ((total - 750) / (2000 - 750)) * 25
-  }
-
-  // ₹2000 → ₹3000
-  if (total <= 3000) {
-    return 50 + ((total - 2000) / (3000 - 2000)) * 25
-  }
-
-  // ₹3000 → ₹5000
-  if (total <= 5000) {
-    return 75 + ((total - 3000) / (5000 - 3000)) * 25
-  }
-
+  if (total <= 0) return 0
+  if (total <= 750) return (total / 750) * 25
+  if (total <= 2000) return 25 + ((total - 750) / (2000 - 750)) * 25
+  if (total <= 3000) return 50 + ((total - 2000) / (3000 - 2000)) * 25
+  if (total <= 5000) return 75 + ((total - 3000) / (5000 - 3000)) * 25
   return 100
 })
 
-
-/*
-|--------------------------------------------------------------------------
-| CLOSE
-|--------------------------------------------------------------------------
-*/
 const closeCart = () => {
   emit('close')
 }
