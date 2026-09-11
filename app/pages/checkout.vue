@@ -249,14 +249,36 @@
           <div class="price-breakdown">
 
             <div class="price-row">
-              <span>Subtotal</span>
-
+              <span>Subtotal </span>
 
               <strong>
                 ₹{{
-                  Math.round(
-                    Number(activeOrder?.subTotalWithTax ?? 0) / 100
-                  ).toLocaleString('en-IN')
+                  (
+                    Number(activeOrder?.subTotal ?? 0) / 100
+                  ).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }}
+              </strong>
+            </div>
+
+            <div v-for="tax in (activeOrder?.taxSummary || []).filter(
+              (tax: any) =>
+                !tax.description?.toLowerCase().includes('shipping')
+            )" :key="`${tax.description}-${tax.taxRate}`" class="price-row">
+              <span>
+                Includes GST ({{ tax.taxRate }}%)
+              </span>
+
+              <strong>
+                ₹{{
+                  (
+                    Number(tax.taxTotal ?? 0) / 100
+                  ).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+                })
                 }}
               </strong>
             </div>
@@ -272,18 +294,33 @@
                     Math.abs(
                       Number(discount.amountWithTax ?? 0) / 100
                     )
-                ).toLocaleString('en-IN')
+                  ).toLocaleString('en-IN')
                 }}
               </strong>
             </div>
 
-            <!-- <div class="price-row">
+            <div class="price-row">
               <span>Shipping</span>
 
-              <span class="shipping-text">
-                Enter shipping address
-              </span>
-            </div> -->
+              <strong v-if="
+                Number(activeOrder?.shippingWithTax ?? 0) > 0
+              ">
+                ₹{{
+                  (
+                    Number(
+                      activeOrder?.shippingWithTax ?? 0
+                    ) / 100
+                  ).toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })
+                }}
+              </strong>
+
+              <strong v-else class="shipping-free">
+                FREE
+              </strong>
+            </div>
 
           </div>
 
@@ -604,7 +641,10 @@ async function handleApplyCoupon() {
 
     await applyCoupon(code)
 
-    couponMessage.value = 'Coupon applied successfully.'
+    await syncShippingMethod()
+
+    couponMessage.value =
+      'Coupon applied successfully.'
   } catch (error: any) {
     couponError.value =
       error?.message || 'Unable to apply coupon.'
@@ -621,6 +661,7 @@ async function handleRemoveCoupon(code: string) {
     isApplyingCoupon.value = true
 
     await removeCoupon(code)
+    await syncShippingMethod()
 
     couponCode.value = ''
     couponMessage.value = 'Coupon removed successfully.'
@@ -787,6 +828,14 @@ async function prepareVendureOrder() {
   }
 
   const shippingMethod =
+    shippingMethods.find(
+      (method: any) =>
+        method.code === 'free-delivery'
+    ) ||
+    shippingMethods.find(
+      (method: any) =>
+        method.code === 'standard-delivery'
+    ) ||
     shippingMethods[0]
 
   const shippingResult: any =
@@ -818,6 +867,79 @@ async function prepareVendureOrder() {
   )
 }
 
+async function syncShippingMethod() {
+  if (
+    !form.address ||
+    !form.city ||
+    !form.postalCode ||
+    !form.countryCode
+  ) {
+    return
+  }
+
+  const addressResult: any =
+    await client.request(
+      SET_ORDER_SHIPPING_ADDRESS,
+      {
+        input: {
+          fullName: form.name,
+          streetLine1: form.address,
+          city: form.city,
+          province:
+            form.province || undefined,
+          postalCode: form.postalCode,
+          countryCode: form.countryCode,
+          phoneNumber: form.phone,
+        },
+      }
+    )
+
+  ensureOrderResult(
+    addressResult.setOrderShippingAddress,
+    'Unable to set shipping address.'
+  )
+
+  const shippingResponse: any =
+    await client.request(
+      ELIGIBLE_SHIPPING_METHODS
+    )
+
+  const shippingMethods =
+    shippingResponse.eligibleShippingMethods || []
+
+  if (!shippingMethods.length) {
+    return
+  }
+
+  const shippingMethod =
+    shippingMethods.find(
+      (method: any) =>
+        method.code === 'free-delivery'
+    ) ||
+    shippingMethods.find(
+      (method: any) =>
+        method.code === 'standard-delivery'
+    ) ||
+    shippingMethods[0]
+
+  const shippingResult: any =
+    await client.request(
+      SET_ORDER_SHIPPING_METHOD,
+      {
+        shippingMethodId: [
+          shippingMethod.id,
+        ],
+      }
+    )
+
+  ensureOrderResult(
+    shippingResult.setOrderShippingMethod,
+    'Unable to set shipping method.'
+  )
+
+  await refreshCart()
+}
+
 const {
   isLoggedIn,
   loadCurrentCustomer,
@@ -831,6 +953,7 @@ onMounted(async () => {
     ])
 
     await loadCustomerDetails()
+    await syncShippingMethod()
   } catch (error) {
     console.error(
       'Unable to initialize checkout:',

@@ -15,40 +15,19 @@
       <ProductBreadcrumb :name="product.name" />
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mt-4 items-start">
-        <ProductGallery
-          :images="galleryImages"
-          :name="product.name"
-        />
+        <ProductGallery :images="galleryImages" :name="product.name" />
 
-        <ProductInfo
-          :product="product"
-          :variant="selectedVariant"
-          :quantity="quantity"
-          class="h-full"
-          @update:variant="selectedVariant = $event"
-          @update:quantity="quantity = $event"
-          @add-to-cart="onAddToCart"
-          @buy-now="onBuyNow"
-        />
+        <ProductInfo :product="product" :variant="selectedVariant" :quantity="quantity" class="h-full"
+          @update:variant="selectedVariant = $event" @update:quantity="quantity = $event" @add-to-cart="onAddToCart"
+          @buy-now="onBuyNow" />
       </div>
 
-      <ProductTabs
-        :description="product.description || ''"
-        :highlights="product.highlights || []"
-        :ingredients="product.ingredients || ''"
-        :usage="product.usage || ''"
-        :specs="product.specs || ''"
-        :shipping="product.shipping || ''"
-      />
-      <ProductFrequentlyBought 
-        :exclude-product-id="product.id"
-        @add-bundle="onAddBundle"
-      />
+      <ProductTabs :description="product.description || ''" :highlights="product.highlights || []"
+        :ingredients="product.ingredients || ''" :usage="product.usage || ''" :specs="product.specs || ''"
+        :shipping="product.shipping || ''" />
+      <ProductFrequentlyBought :exclude-product-id="product.id" @add-bundle="onAddBundle" />
       <ProductReviews />
-      <ProductYouMayAlsoLike
-        @add-to-cart="onAddToCart"
-        @buy-now="onBuyNow"
-      />
+      <ProductYouMayAlsoLike @add-to-cart="onAddToCart" @buy-now="onBuyNow" />
       <ProductWhyShop />
       <ProductExpertBanner @talk-expert="onTalkExpert" />
     </template>
@@ -56,7 +35,7 @@
     <!-- Not found -->
     <div v-else class="py-20 text-center text-gray-400">
       Product not found
-    </div>  
+    </div>
   </div>
 </template>
 
@@ -90,12 +69,16 @@ async function loadProduct() {
     selectedVariant.value = data?.variants?.[0] || null
 
     if (data) {
+      const firstVariant = data.variants?.[0]
+
       add({
         id: data.id,
         name: data.name,
         slug: data.slug,
         image: data.featuredAsset?.preview || '',
-        price: Math.round(Number(data.variants?.[0]?.priceWithTax || 0) / 100),
+        price: Math.round(
+          Number(firstVariant?.priceWithTax || 0) / 100
+        ),
       })
     }
   } catch (e) {

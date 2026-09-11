@@ -180,9 +180,9 @@ onUnmounted(() => {
       <div class="container mx-auto px-4">
         <div class="flex items-center justify-between h-9">
           <nav class="hidden sm:flex items-center gap-6">
-            <NuxtLink to="/store-locator" class="hover:text-[#c3b5df] transition">
+            <!-- <NuxtLink to="/store-locator" class="hover:text-[#c3b5df] transition">
               Store Locator
-            </NuxtLink>
+            </NuxtLink> -->
             <NuxtLink to="/track-order" class="hover:text-[#c3b5df] transition">
               Track Order
             </NuxtLink>

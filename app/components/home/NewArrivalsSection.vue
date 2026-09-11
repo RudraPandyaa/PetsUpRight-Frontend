@@ -43,9 +43,12 @@
 <script setup lang="ts">
 import ProductCard from '~/components/shop/ProductCard.vue'
 const { getProducts } = useProducts()
+const { getCmsPageBySlug } = useCms()
 
 const products = ref<any[]>([])
 const loading = ref(true)
+
+const sectionTitle = ref('New Arrivals')
 
 const isMobile = ref(false)
 
@@ -64,9 +67,36 @@ onMounted(async () => {
   window.addEventListener('resize', updateScreenSize)
 
   try {
-    const result = await getProducts({ take: 12 })
+    // 1. Get CMS Home page
+    const cmsPage = await getCmsPageBySlug('home')
 
-    products.value = result.items.map((item: any) => {
+    // 2. Find Products component
+    const productsSection = cmsPage?.sections
+      ?.filter((section: any) => section.type === 'products')
+      ?.sort((a: any, b: any) => a.position - b.position)?.[0]
+
+    // 3. Get only published products
+    const selectedProductIds =
+      productsSection?.data?.publishedProducts ?? []
+
+    // 4. Dynamic title
+    sectionTitle.value =
+      productsSection?.data?.publishedTitle ||
+      'New Arrivals'
+
+    // Nothing published
+    if (!selectedProductIds.length) {
+      products.value = []
+      return
+    }
+
+    // 5. Fetch products from Vendure
+    const result = await getProducts({
+      take: 100,
+    })
+
+    // 6. Map products for ProductCard
+    const mappedProducts = result.items.map((item: any) => {
       const priceObj = item.priceWithTax || {}
 
       let priceValue = 0
@@ -82,16 +112,35 @@ onMounted(async () => {
         variantId: item.productVariantId,
         name: item.productName,
         slug: item.slug,
+
         image: item.productAsset?.preview
           ? item.productAsset.preview + '?preset=medium'
           : '/images/shop/Rectangle-5.png',
 
         price: Math.round(priceValue / 100),
+
         rating: 4.9,
       }
     })
+
+    // 7. Keep only CMS-selected products
+    // and preserve CMS selection order
+    products.value = selectedProductIds
+      .map((productId: string) =>
+        mappedProducts.find(
+          (product: any) =>
+            String(product.id) === String(productId)
+        )
+      )
+      .filter(Boolean)
+
   } catch (error) {
-    console.error('Failed to fetch products:', error)
+    console.error(
+      'Failed to load New Arrivals:',
+      error
+    )
+
+    products.value = []
   } finally {
     loading.value = false
   }

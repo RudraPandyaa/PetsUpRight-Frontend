@@ -8,13 +8,7 @@
 
       <!-- Products -->
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-5">
-        <ProductCard
-          v-for="product in recentProducts"
-          :key="product.id"
-          :product="product"
-          @add-to-cart="onAddToCart"
-          @buy-now="onBuyNow"
-        />
+        <ProductCard v-for="product in recentProducts" :key="product.id" :product="product" view-mode="grid" />
       </div>
     </div>
   </section>
@@ -24,25 +18,81 @@
 import ProductCard from '~/components/shop/ProductCard.vue'
 
 const { getAll } = useRecentlyViewed()
+const { getProductBySlug } = useProducts()
 
 const recentProducts = ref<any[]>([])
+const loading = ref(true)
 
-onMounted(() => {
-  recentProducts.value = getAll().map((p) => ({
-    id: p.id,
-    name: p.name,
-    slug: p.slug,
-    image: p.image,
-    price: p.price,
-    rating: 4.9,
-  }))
+onMounted(async () => {
+  try {
+    const storedProducts = getAll()
+
+    const products = await Promise.all(
+      storedProducts.map(async (stored: any) => {
+        try {
+          const product = await getProductBySlug(
+            stored.slug
+          )
+
+          if (!product) {
+            return null
+          }
+
+          const firstVariant =
+            product.variants?.[0]
+
+          if (!firstVariant?.id) {
+            return null
+          }
+
+          return {
+            id: product.id,
+
+            variantId: String(
+              firstVariant.id
+            ),
+
+            name: product.name,
+
+            slug: product.slug,
+
+            image:
+              product.featuredAsset?.preview
+                ? `${product.featuredAsset.preview}?preset=medium`
+                : '/images/shop/Rectangle-5.png',
+
+            price: Math.round(
+              Number(
+                firstVariant.priceWithTax ?? 0
+              ) / 100
+            ),
+
+            rating: 4.9,
+          }
+        } catch (error) {
+          console.error(
+            'Failed to load recently viewed product:',
+            stored.slug,
+            error
+          )
+
+          return null
+        }
+      })
+    )
+
+    recentProducts.value =
+      products.filter(Boolean)
+
+  } catch (error) {
+    console.error(
+      'Failed to load recently viewed:',
+      error
+    )
+
+    recentProducts.value = []
+  } finally {
+    loading.value = false
+  }
 })
-
-function onAddToCart(product: any) {
-  console.log('Add to cart (recent):', product.name)
-}
-
-function onBuyNow(product: any) {
-  if (product.slug) navigateTo(`/product/${product.slug}`)
-}
 </script>

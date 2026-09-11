@@ -1,11 +1,19 @@
 <template>
   <main class="order-page">
     <div class="order-container">
-      <NuxtLink to="/orders" class="back-link">
-        <span aria-hidden="true">←</span>
-        Back to orders
-      </NuxtLink>
+      <div class="order-heading">
+        <div>
+          <h1>Order Details</h1>
 
+          <p class="heading-copy">
+            View your order information, payment and delivery details.
+          </p>
+        </div>
+
+        <NuxtLink to="/orders" class="back-button">
+          ← Back to Orders
+        </NuxtLink>
+      </div>
       <div v-if="loading" class="state-card">
         Loading order details...
       </div>
@@ -35,51 +43,13 @@
               <template v-if="order.orderPlacedAt">
                 · Placed on {{ formatDate(order.orderPlacedAt) }}
               </template>
-            </p>
-          </div>
+</p>
+</div>
 
-          <span class="status-badge" :class="statusClass(order.state)">
-            {{ statusLabel(order.state) }}
-          </span>
-        </header> -->
-
-        <section class="order-card progress-card">
-          <div class="section-heading progress-heading">
-            <div>
-              <h2>Order Status</h2>
-              <p>{{ statusDescription(order.state) }}</p>
-            </div>
-
-            <div v-if="primaryFulfillment?.trackingCode" class="tracking-number">
-              <span>Tracking</span>
-              <strong>{{ primaryFulfillment.trackingCode }}</strong>
-            </div>
-          </div>
-
-          <div class="status-progress">
-            <div
-              v-for="(step, index) in progressSteps"
-              :key="step.key"
-              class="progress-step"
-              :class="{
-                completed: index < activeStep,
-                active: index === activeStep,
-              }"
-            >
-              <div class="step-indicator">
-                <svg v-if="index < activeStep" viewBox="0 0 24 24" aria-hidden="true">
-                  <path d="m5 12 4 4L19 6" />
-                </svg>
-                <span v-else>{{ index + 1 }}</span>
-              </div>
-
-              <div class="step-copy">
-                <strong>{{ step.label }}</strong>
-                <small>{{ step.copy }}</small>
-              </div>
-            </div>
-          </div>
-        </section>
+<span class="status-badge" :class="statusClass(order.state)">
+  {{ statusLabel(order.state) }}
+</span>
+</header> -->
 
         <div class="order-layout">
           <div class="order-main-column">
@@ -96,46 +66,34 @@
 
               <div class="order-items">
                 <article v-for="line in order.lines" :key="line.id" class="order-item">
-                  <NuxtLink
-                    v-if="line.productVariant?.product?.slug"
-                    :to="`/product/${line.productVariant.product.slug}`"
-                    class="product-image-wrap"
-                  >
-                    <img
-                      v-if="line.featuredAsset?.preview"
-                      :src="line.featuredAsset.preview"
-                      :alt="line.productVariant?.name || 'Order item'"
-                      class="product-image"
-                    />
+                  <NuxtLink v-if="line.productVariant?.product?.slug"
+                    :to="`/product/${line.productVariant.product.slug}`" class="product-image-wrap">
+                    <img v-if="line.featuredAsset?.preview" :src="line.featuredAsset.preview"
+                      :alt="line.productVariant?.name || 'Order item'" class="product-image" />
                     <div v-else class="product-image-placeholder">
                       <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path
+                          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
                         <path d="m3.3 7 8.7 5 8.7-5" />
                       </svg>
                     </div>
                   </NuxtLink>
 
                   <div v-else class="product-image-wrap">
-                    <img
-                      v-if="line.featuredAsset?.preview"
-                      :src="line.featuredAsset.preview"
-                      :alt="line.productVariant?.name || 'Order item'"
-                      class="product-image"
-                    />
+                    <img v-if="line.featuredAsset?.preview" :src="line.featuredAsset.preview"
+                      :alt="line.productVariant?.name || 'Order item'" class="product-image" />
                     <div v-else class="product-image-placeholder">
                       <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                        <path
+                          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
                         <path d="m3.3 7 8.7 5 8.7-5" />
                       </svg>
                     </div>
                   </div>
 
                   <div class="product-copy">
-                    <NuxtLink
-                      v-if="line.productVariant?.product?.slug"
-                      :to="`/product/${line.productVariant.product.slug}`"
-                      class="product-name"
-                    >
+                    <NuxtLink v-if="line.productVariant?.product?.slug"
+                      :to="`/product/${line.productVariant.product.slug}`" class="product-name">
                       {{ line.productVariant?.name || 'Product' }}
                     </NuxtLink>
                     <h3 v-else class="product-name static-name">
@@ -152,9 +110,21 @@
                     </div>
                   </div>
 
-                  <strong class="line-total">
-                    {{ formatMoney(line.linePriceWithTax) }}
-                  </strong>
+                  <div class="product-right-section">
+                    <strong class="line-total">
+                      {{ formatMoney(line.linePriceWithTax) }}
+                    </strong>
+
+                    <div v-if="canReturnOrReplace" class="product-actions">
+                      <button type="button" class="return-button" @click="handleReturn(line)">
+                        Return
+                      </button>
+
+                      <button type="button" class="replace-button" @click="handleReplace(line)">
+                        Replace
+                      </button>
+                    </div>
+                  </div>
                 </article>
               </div>
             </section>
@@ -202,20 +172,49 @@
                   </div>
                   <div>
                     <h3>Billing Address</h3>
-                    <template v-if="order.billingAddress">
-                      <strong>{{ order.billingAddress.fullName }}</strong>
-                      <p v-if="order.billingAddress.company">{{ order.billingAddress.company }}</p>
-                      <p>{{ order.billingAddress.streetLine1 }}</p>
-                      <p v-if="order.billingAddress.streetLine2">{{ order.billingAddress.streetLine2 }}</p>
-                      <p>
-                        {{ joinAddressParts(order.billingAddress.city, order.billingAddress.province) }}
+                    <template v-if="defaultBillingAddress">
+                      <strong>
+                        {{ defaultBillingAddress.fullName }}
+                      </strong>
+
+                      <p v-if="defaultBillingAddress.company">
+                        {{ defaultBillingAddress.company }}
                       </p>
-                      <p>{{ joinAddressParts(order.billingAddress.postalCode, order.billingAddress.country) }}</p>
-                      <p v-if="order.billingAddress.phoneNumber" class="info-phone">
-                        {{ order.billingAddress.phoneNumber }}
+
+                      <p>
+                        {{ defaultBillingAddress.streetLine1 }}
+                      </p>
+
+                      <p v-if="defaultBillingAddress.streetLine2">
+                        {{ defaultBillingAddress.streetLine2 }}
+                      </p>
+
+                      <p>
+                        {{
+                          joinAddressParts(
+                            defaultBillingAddress.city,
+                            defaultBillingAddress.province
+                          )
+                        }}
+                      </p>
+
+                      <p>
+                        {{
+                          joinAddressParts(
+                            defaultBillingAddress.postalCode,
+                            defaultBillingAddress.country?.name
+                          )
+                        }}
+                      </p>
+
+                      <p v-if="defaultBillingAddress.phoneNumber" class="info-phone">
+                        {{ defaultBillingAddress.phoneNumber }}
                       </p>
                     </template>
-                    <p v-else>No billing address available.</p>
+
+                    <p v-else>
+                      No default billing address available.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -234,9 +233,16 @@
                   <strong>{{ formatMoney(order.subTotalWithTax) }}</strong>
                 </div>
 
+                <div v-if="gstTotal > 0" class="summary-row tax-row">
+                  <span>Included GST (18%)</span>
+                  <strong>{{ formatMoney(gstTotal) }}</strong>
+                </div>
+
                 <div class="summary-row">
                   <span>Shipping</span>
-                  <strong>{{ order.shippingWithTax > 0 ? formatMoney(order.shippingWithTax) : 'Free' }}</strong>
+                  <strong>
+                    {{ order.shippingWithTax > 0 ? formatMoney(order.shippingWithTax) : 'Free' }}
+                  </strong>
                 </div>
 
                 <div v-if="discountTotal > 0" class="summary-row discount-row">
@@ -314,6 +320,10 @@
               </div>
             </section> -->
 
+            <NuxtLink :to="`/track-order?code=${encodeURIComponent(order.code)}`" class="primary-track-action">
+              Track Order Status
+            </NuxtLink>
+
             <NuxtLink to="/shop" class="secondary-action">
               Continue Shopping
             </NuxtLink>
@@ -330,6 +340,7 @@ const { client } = useVendure()
 
 const loading = ref(true)
 const order = ref<any | null>(null)
+const defaultBillingAddress = ref<any | null>(null)
 const errorMessage = ref('')
 
 const ORDER_BY_CODE = `
@@ -345,6 +356,13 @@ const ORDER_BY_CODE = `
       shippingWithTax
       totalWithTax
       currencyCode
+
+      taxSummary {
+  description
+  taxRate
+  taxTotal
+}
+
       couponCodes
       discounts {
         adjustmentSource
@@ -423,39 +441,36 @@ const ORDER_BY_CODE = `
   }
 `
 
-const progressSteps = [
-  {
-    key: 'placed',
-    label: 'Order Placed',
-    copy: 'We received your order.',
-  },
-  {
-    key: 'confirmed',
-    label: 'Confirmed',
-    copy: 'Payment and order confirmed.',
-  },
-  {
-    key: 'shipped',
-    label: 'Shipped',
-    copy: 'Your package is on the way.',
-  },
-  {
-    key: 'delivered',
-    label: 'Delivered',
-    copy: 'Order delivered successfully.',
-  },
-]
+const CUSTOMER_ADDRESSES = `
+  query ActiveCustomerAddresses {
+    activeCustomer {
+      id
+      addresses {
+        id
+        fullName
+        company
+        streetLine1
+        streetLine2
+        city
+        province
+        postalCode
+        country {
+          code
+          name
+        }
+        phoneNumber
+        defaultBillingAddress
+        defaultShippingAddress
+      }
+    }
+  }
+`
 
 const primaryPayment = computed(() => order.value?.payments?.[0] || null)
-const primaryFulfillment = computed(() => order.value?.fulfillments?.[0] || null)
-
-const shippingMethodName = computed(() => {
-  return (
-    order.value?.shippingLines?.[0]?.shippingMethod?.name ||
-    primaryFulfillment.value?.method ||
-    'Standard Delivery'
-  )
+const canReturnOrReplace = computed(() => {
+  return normalizeState(order.value?.state) === 'delivered'
 })
+
 
 const discountTotal = computed(() => {
   const discounts = order.value?.discounts || []
@@ -465,37 +480,23 @@ const discountTotal = computed(() => {
   }, 0)
 })
 
-const activeStep = computed(() => {
-  const orderState = normalizeState(order.value?.state)
-  const fulfillmentState = normalizeState(primaryFulfillment.value?.state)
+const gstTotal = computed(() => {
+  const taxes = order.value?.taxSummary || []
 
-  if (
-    fulfillmentState.includes('delivered') ||
-    fulfillmentState.includes('completed') ||
-    orderState.includes('delivered')
-  ) {
-    return 3
-  }
+  const gstTaxes = taxes.filter(
+    (tax: any) =>
+      !String(tax.description || '')
+        .toLowerCase()
+        .includes('shipping')
+  )
 
-  if (
-    fulfillmentState.includes('shipped') ||
-    fulfillmentState.includes('intransit') ||
-    orderState.includes('shipped')
-  ) {
-    return 2
-  }
-
-  if (
-    orderState.includes('paymentsettled') ||
-    orderState.includes('partiallyshipped') ||
-    orderState.includes('fulfilled') ||
-    primaryPayment.value?.state === 'Settled'
-  ) {
-    return 1
-  }
-
-  return 0
+  return gstTaxes.reduce(
+    (total: number, tax: any) =>
+      total + Number(tax.taxTotal || 0),
+    0
+  )
 })
+
 
 watch(
   () => route.params.code,
@@ -519,12 +520,22 @@ async function loadOrder() {
   try {
     const response = await client.request<any>(ORDER_BY_CODE, { code })
 
-    if (!response.orderByCode) {
-      errorMessage.value = 'We could not find this order or you no longer have access to it.'
+    const fetchedOrder = response.orderByCode
+
+    if (!fetchedOrder) {
+      errorMessage.value =
+        'We could not find this order or you no longer have access to it.'
       return
     }
 
-    order.value = response.orderByCode
+    if (!fetchedOrder.orderPlacedAt) {
+      errorMessage.value =
+        'This order has not been placed yet.'
+      return
+    }
+
+    order.value = fetchedOrder
+    await loadDefaultBillingAddress()
   } catch (error: any) {
     console.error('Unable to load order:', error)
     errorMessage.value =
@@ -533,6 +544,31 @@ async function loadOrder() {
       'Unable to load this order right now.'
   } finally {
     loading.value = false
+  }
+}
+
+async function loadDefaultBillingAddress() {
+  try {
+    const response =
+      await client.request<any>(
+        CUSTOMER_ADDRESSES
+      )
+
+    const addresses =
+      response.activeCustomer?.addresses || []
+
+    defaultBillingAddress.value =
+      addresses.find(
+        (address: any) =>
+          address.defaultBillingAddress
+      ) || null
+  } catch (error) {
+    console.error(
+      'Unable to load billing address:',
+      error
+    )
+
+    defaultBillingAddress.value = null
   }
 }
 
@@ -591,31 +627,6 @@ function statusLabel(value: string | null | undefined) {
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
 
-function statusDescription(value: string) {
-  const state = normalizeState(value)
-
-  if (state.includes('cancel')) {
-    return 'This order has been cancelled.'
-  }
-
-  if (state.includes('deliver')) {
-    return 'Your order has been delivered. We hope you love it.'
-  }
-
-  if (state.includes('ship')) {
-    return 'Your order has left our facility and is on its way to you.'
-  }
-
-  if (state.includes('paymentsettled') || state.includes('fulfilled')) {
-    return 'Your order is confirmed and is being prepared for delivery.'
-  }
-
-  if (state.includes('arrangingpayment')) {
-    return 'Your order is waiting for payment confirmation.'
-  }
-
-  return 'We have received your order and will update its status here.'
-}
 
 function statusClass(value: string | null | undefined) {
   const state = normalizeState(value)
@@ -646,6 +657,32 @@ function paymentMethodLabel(method: string) {
     .replace(/[-_]/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase())
 }
+
+function handleReturn(line: any) {
+  console.log('Return product:', line)
+
+  navigateTo({
+    path: '/returns/new',
+    query: {
+      order: order.value?.code,
+      line: line.id,
+      type: 'return',
+    },
+  })
+}
+
+function handleReplace(line: any) {
+  console.log('Replace product:', line)
+
+  navigateTo({
+    path: '/returns/new',
+    query: {
+      order: order.value?.code,
+      line: line.id,
+      type: 'replace',
+    },
+  })
+}
 </script>
 
 <style scoped>
@@ -662,25 +699,27 @@ function paymentMethodLabel(method: string) {
   margin: 0 auto;
 }
 
-.back-link {
+.back-button {
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  color: #6b6b7c;
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.back-link span {
-  color: #8465c8;
-  font-size: 17px;
-}
-
-.back-link:hover {
+  justify-content: center;
+  padding: 0 18px;
+  border: 1px solid #d9d9e2;
+  border-radius: 7px;
+  background: #ffffff;
   color: #44476f;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.back-button:hover {
+  border-color: #b9afd1;
+  background: #f8f6fb;
 }
 
 .order-heading {
@@ -828,111 +867,19 @@ function paymentMethodLabel(method: string) {
   line-height: 1.5;
 }
 
-.progress-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-}
 
-.tracking-number {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 3px;
-}
 
-.tracking-number span {
-  color: #9292a0;
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
 
-.tracking-number strong {
-  color: #44476f;
-  font-size: 13px;
-}
 
-.status-progress {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
 
-.status-progress::before {
-  content: '';
-  position: absolute;
-  top: 18px;
-  left: 9%;
-  right: 9%;
-  height: 2px;
-  background: #ebe7f1;
-}
 
-.progress-step {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-}
 
-.step-indicator {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  margin-bottom: 10px;
-  border: 2px solid #e1dce9;
-  border-radius: 50%;
-  background: #ffffff;
-  color: #9a98a6;
-  font-size: 12px;
-  font-weight: 800;
-}
 
-.progress-step.completed .step-indicator,
-.progress-step.active .step-indicator {
-  border-color: #8465c8;
-  background: #8465c8;
-  color: #ffffff;
-}
 
-.progress-step.completed .step-indicator svg {
-  width: 18px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
 
-.step-copy {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
 
-.step-copy strong {
-  color: #555568;
-  font-size: 12px;
-}
 
-.progress-step.active .step-copy strong,
-.progress-step.completed .step-copy strong {
-  color: #44476f;
-}
 
-.step-copy small {
-  color: #9896a3;
-  font-size: 10px;
-  line-height: 1.4;
-}
 
 .order-layout {
   display: grid;
@@ -1044,6 +991,51 @@ function paymentMethodLabel(method: string) {
   color: #44476f;
   font-size: 14px;
   white-space: nowrap;
+}
+.product-right-section {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.product-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.return-button,
+.replace-button {
+  min-height: 32px;
+  padding: 0 13px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.return-button {
+  border: 1px solid #44476f;
+  background: #ffffff;
+  color: #44476f;
+}
+
+.return-button:hover {
+  background: #f4f3f9;
+}
+
+.replace-button {
+  border: 1px solid #44476f;
+  background: #44476f;
+  color: #ffffff;
+}
+
+.replace-button:hover {
+  background: #36395e;
 }
 
 .information-grid {
@@ -1207,7 +1199,7 @@ function paymentMethodLabel(method: string) {
   border-top: 1px solid #efecf4;
 }
 
-.compact-details > div {
+.compact-details>div {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1232,6 +1224,7 @@ function paymentMethodLabel(method: string) {
 }
 
 .primary-button,
+.primary-track-action,
 .secondary-action {
   min-height: 44px;
   box-sizing: border-box;
@@ -1257,6 +1250,22 @@ function paymentMethodLabel(method: string) {
   background: #383b61;
 }
 
+.primary-track-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 12px;
+  border: 1px solid #44476f;
+  background: #44476f;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.primary-track-action:hover {
+  background: #383b61;
+}
+
 .secondary-action {
   display: flex;
   align-items: center;
@@ -1274,6 +1283,7 @@ function paymentMethodLabel(method: string) {
 }
 
 .primary-button:active,
+.primary-track-action:active,
 .secondary-action:active {
   transform: translateY(1px);
 }
@@ -1308,54 +1318,15 @@ function paymentMethodLabel(method: string) {
     padding: 36px 0 60px;
   }
 
-  .order-heading,
-  .progress-heading {
+  .order-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .tracking-number {
-    align-items: flex-start;
   }
 
   .order-card {
     padding: 22px 18px;
   }
 
-  .status-progress {
-    grid-template-columns: 1fr;
-    gap: 0;
-  }
-
-  .status-progress::before {
-    top: 18px;
-    bottom: 18px;
-    left: 17px;
-    right: auto;
-    width: 2px;
-    height: auto;
-  }
-
-  .progress-step {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 12px;
-    padding-bottom: 20px;
-    text-align: left;
-  }
-
-  .progress-step:last-child {
-    padding-bottom: 0;
-  }
-
-  .step-indicator {
-    flex: 0 0 auto;
-    margin-bottom: 0;
-  }
-
-  .step-copy {
-    padding-top: 3px;
-  }
 
   .order-item {
     grid-template-columns: 74px minmax(0, 1fr);
@@ -1409,4 +1380,5 @@ function paymentMethodLabel(method: string) {
     flex-direction: column;
   }
 }
+
 </style>
