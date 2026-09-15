@@ -1,12 +1,20 @@
 <script setup lang="ts">
 const route = useRoute()
 
-const isAuthPage = computed(
-  () => route.path === '/login' || route.path === '/register' || route.path === '/checkout'
+const isHeaderlessPage = computed(
+  () =>
+    route.path === '/login' ||
+    route.path === '/register' ||
+    route.path === '/checkout' ||
+    route.path === '/verify'
 )
 
-const isHeaderlessPage = computed(
-  () => isAuthPage.value
+const isAuthPage = computed(
+  () =>
+    route.path === '/login' ||
+    route.path === '/register' ||
+    route.path === '/checkout' ||
+    route.path === '/verify'
 )
 </script>
 
@@ -17,12 +25,7 @@ const isHeaderlessPage = computed(
       v-if="!isHeaderlessPage"
     />
 
-    <main
-      :class="[
-        'flex-1',
-        !isHeaderlessPage
-      ]"
-    >
+    <main class="flex-1">
       <NuxtPage />
     </main>
 
