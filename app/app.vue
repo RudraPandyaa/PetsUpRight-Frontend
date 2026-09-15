@@ -6,7 +6,9 @@ const isHeaderlessPage = computed(
     route.path === '/login' ||
     route.path === '/register' ||
     route.path === '/checkout' ||
-    route.path === '/verify'
+    route.path === '/verify' ||
+    route.path === '/forgot-password' ||
+    route.path === '/reset-password'
 )
 
 const isAuthPage = computed(
@@ -14,7 +16,9 @@ const isAuthPage = computed(
     route.path === '/login' ||
     route.path === '/register' ||
     route.path === '/checkout' ||
-    route.path === '/verify'
+    route.path === '/verify'  ||
+    route.path === '/forgot-password' ||
+    route.path === '/reset-password'
 )
 </script>
 

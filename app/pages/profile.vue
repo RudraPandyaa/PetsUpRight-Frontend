@@ -43,7 +43,7 @@
                 <span>Email Address</span>
                 <input v-model="personalForm.emailAddress" type="email" disabled />
                 <small>
-                  Your account email cannot be changed from this page.
+                  Your account email cannot be changed
                 </small>
               </label>
 
@@ -64,6 +64,52 @@
 
               <button type="submit" class="primary-button" :disabled="savingPersonal">
                 {{ savingPersonal ? 'Saving...' : 'Save Changes' }}
+              </button>
+            </div>
+          </form>
+        </section>
+        <section class="profile-card">
+          <div class="section-heading">
+            <div>
+              <h2>Change Password</h2>
+              <p>Update your account password to keep your account secure.</p>
+            </div>
+          </div>
+
+          <form class="password-form" @submit.prevent="changePassword">
+            <div class="password-field">
+              <label>
+                <span>Current Password</span>
+                <input v-model="passwordForm.currentPassword" type="password" placeholder="Enter current password"
+                  autocomplete="current-password" required />
+              </label>
+            </div>
+
+            <div class="field-grid">
+              <label>
+                <span>New Password</span>
+                <input v-model="passwordForm.newPassword" type="password" placeholder="Enter new password"
+                  autocomplete="new-password" required />
+              </label>
+
+              <label>
+                <span>Confirm New Password</span>
+                <input v-model="passwordForm.confirmPassword" type="password" placeholder="Confirm new password"
+                  autocomplete="new-password" required />
+              </label>
+            </div>
+
+            <p v-if="passwordError" class="error-message">
+              {{ passwordError }}
+            </p>
+
+            <p v-if="passwordMessage" class="success-message">
+              {{ passwordMessage }}
+            </p>
+
+            <div class="form-footer">
+              <button type="submit" class="primary-button" :disabled="changingPassword">
+                {{ changingPassword ? 'Updating...' : 'Update Password' }}
               </button>
             </div>
           </form>
@@ -389,6 +435,100 @@ const addressForm = reactive({
   defaultShippingAddress: false,
   defaultBillingAddress: false,
 })
+const changingPassword = ref(false)
+const passwordMessage = ref('')
+const passwordError = ref('')
+
+const passwordForm = reactive({
+  currentPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+
+const UPDATE_CUSTOMER_PASSWORD = `
+  mutation UpdateCustomerPassword(
+    $currentPassword: String!
+    $newPassword: String!
+  ) {
+    updateCustomerPassword(
+      currentPassword: $currentPassword
+      newPassword: $newPassword
+    ) {
+      ... on Success {
+        success
+      }
+
+      ... on InvalidCredentialsError {
+        errorCode
+        message
+      }
+
+      ... on PasswordValidationError {
+        errorCode
+        message
+        validationErrorMessage
+      }
+
+      ... on NativeAuthStrategyError {
+        errorCode
+        message
+      }
+    }
+  }
+`
+async function changePassword() {
+  passwordMessage.value = ''
+  passwordError.value = ''
+
+  if (
+    passwordForm.newPassword !==
+    passwordForm.confirmPassword
+  ) {
+    passwordError.value =
+      'New password and confirmation password do not match.'
+    return
+  }
+
+  changingPassword.value = true
+
+  try {
+    const response = await client.request<any>(
+      UPDATE_CUSTOMER_PASSWORD,
+      {
+        currentPassword:
+          passwordForm.currentPassword,
+
+        newPassword:
+          passwordForm.newPassword,
+      },
+    )
+
+    const result =
+      response.updateCustomerPassword
+
+    if (result.success) {
+      passwordMessage.value =
+        'Your password has been updated successfully.'
+
+      passwordForm.currentPassword = ''
+      passwordForm.newPassword = ''
+      passwordForm.confirmPassword = ''
+
+      return
+    }
+
+    passwordError.value =
+      result.validationErrorMessage ||
+      result.message ||
+      'Unable to update your password.'
+  } catch (error: any) {
+    passwordError.value =
+      getGraphQLError(error) ||
+      'Unable to update your password.'
+  } finally {
+    changingPassword.value = false
+  }
+}
 
 const ACTIVE_CUSTOMER = `
   query ActiveCustomerProfile {
@@ -870,6 +1010,30 @@ function getGraphQLError(error: any) {
   line-height: 1.4;
 }
 
+.password-form {
+  width: 100%;
+}
+
+.password-field {
+  margin-bottom: 26px;
+}
+
+.password-field label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.password-field label span {
+  color: #555568;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.password-form .field-grid {
+  gap: 22px;
+}
+
 input,
 select {
   width: 100%;
@@ -1212,6 +1376,7 @@ input:disabled {
   gap: 10px;
   margin-top: 26px;
 }
+
 /* Account Quick Links */
 
 .account-links {
@@ -1312,27 +1477,28 @@ input:disabled {
 @media (max-width: 760px) {
 
   .account-links-grid {
-  grid-template-columns: 1fr;
-}
+    grid-template-columns: 1fr;
+  }
 
-.wishlist-link-card {
-  grid-column: auto;
-}
+  .wishlist-link-card {
+    grid-column: auto;
+  }
 
-.account-link-card {
-  min-height: 95px;
-  padding: 18px;
-}
+  .account-link-card {
+    min-height: 95px;
+    padding: 18px;
+  }
 
-.account-link-icon {
-  width: 48px;
-  height: 48px;
-}
+  .account-link-icon {
+    width: 48px;
+    height: 48px;
+  }
 
-.account-link-icon svg {
-  width: 23px;
-  height: 23px;
-}
+  .account-link-icon svg {
+    width: 23px;
+    height: 23px;
+  }
+
   .profile-page {
     padding: 36px 0 60px;
   }
