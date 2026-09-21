@@ -7,15 +7,16 @@ const categories = ref<any[]>([])
 const loading = ref(true)
 
 const categoryImages: Record<string, string> = {
-  'clean-hygiene': '/images/categories/grooming.jpg',
-  'clothing-accessories': '/images/categories/collars.jpg',
-  'feeding-essentials': '/images/categories/treats.jpg',
-  food: '/images/categories/dry-food.jpg',
-  grooming: '/images/categories/grooming.jpg',
-  'health-wellness': '/images/categories/grooming.jpg',
-  housing: '/images/categories/furniture.jpg',
-  toys: '/images/categories/toys.jpg',
-  'walking-essentials': '/images/categories/walk.jpg',
+  dog: '/images/pet type images/Dog.png',
+  cat: '/images/pet type images/Cat.jpg',
+  bird: '/images/pet type images/Bird.jpg',
+  fish: '/images/pet type images/fish.jpg',
+  'guinea-pig': '/images/pet type images/guinea pig.jpg',
+  'guinea pig': '/images/pet type images/guinea pig.jpg',
+  hamster: '/images/pet type images/hamster.webp',
+  horse: '/images/pet type images/horse.jpg',
+  rabbit: '/images/pet type images/rabbit.jpg',
+  turtle: '/images/pet type images/turtle.jpg',
 }
 
 const currentIndex = ref(0)
@@ -131,7 +132,7 @@ onMounted(async () => {
   try {
     const facets = await getShopFacets()
     const categoryFacet = facets.find(
-      (facet: any) => String(facet.code).toLowerCase() === 'category'
+      (facet: any) => String(facet.code).toLowerCase() === 'pet-type' || String(facet.name).toLowerCase() === 'pet type'
     )
 
     categories.value = (categoryFacet?.values ?? []).map((category: any) => {
@@ -140,8 +141,8 @@ onMounted(async () => {
       return {
         id: category.id,
         name: category.name,
-        image: categoryImages[code] || '/images/categories/toys.jpg',
-        link: `/shop?category=${code}`,
+        image: categoryImages[code] || '/images/black-dog.jpg',
+        link: `/shop?pet-type=${code}`,
       }
     })
   } catch (error) {
@@ -165,7 +166,7 @@ onBeforeUnmount(() => {
       <div class="text-center mb-10 md:mb-12">
         <div class="paw-icon">🐾</div>
         <h2 class="title">
-          CATEGORIES
+          SHOP BY PET
         </h2>
         <p class="text-[20px] text-[#1a1a2e]/55 mt-2 max-w-[560px] mx-auto">
           From nutritious treats to fun toys and everyday must-haves.

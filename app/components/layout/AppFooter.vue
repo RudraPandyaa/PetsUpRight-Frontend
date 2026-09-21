@@ -4,10 +4,10 @@
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
         
         <!-- Brand -->
-        <div>
-          <h3 class="text-xl font-bold mb-3">
-            Pets<span class="text-[#c3b5df]">U</span>pright
-          </h3>
+        <div class="flex flex-col items-center text-center">
+          <NuxtLink to="/" class="inline-block mb-3">
+            <img src="/images/pets-upright-logo-circle.png" alt="PetsUpright Logo" class="h-40 w-auto" />
+          </NuxtLink>
           <p class="text-sm text-[#c3b5df] leading-relaxed">
             The right way to pet.
           </p>
@@ -29,8 +29,6 @@
           <ul class="space-y-2 text-sm text-[#c3b5df]">
             <li><NuxtLink to="/about-us" class="hover:text-white transition">About Us</NuxtLink></li>
             <li><NuxtLink to="/contact-us" class="hover:text-white transition">Contact Us</NuxtLink></li>
-            <li><a href="#" class="hover:text-white transition">Shipping Info</a></li>
-            <li><a href="#" class="hover:text-white transition">Returns</a></li>
           </ul>
         </div>
 

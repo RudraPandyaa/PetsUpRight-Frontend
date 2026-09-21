@@ -55,6 +55,11 @@ const infoStrip = [
 
 <template>
   <section class="relative overflow-hidden bg-cover bg-[66%_top] bg-no-repeat">
+    <img 
+      src="/images/pets-upright-logo-circle.png" 
+      alt="PetsUpright Logo" 
+      class="absolute top-4 right-4 md:top-8 md:right-8 w-24 md:w-40 lg:w-56 z-20" 
+    />
     <div
       v-for="(image, index) in images"
       :key="image"
