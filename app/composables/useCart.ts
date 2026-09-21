@@ -6,9 +6,22 @@ const ORDER_FIELDS = gql`
     code
     state
     totalQuantity
+
+    subTotal
     subTotalWithTax
+
+    shipping
     shippingWithTax
+
+    total
     totalWithTax
+
+    taxSummary {
+      description
+      taxRate
+      taxBase
+      taxTotal
+    }
 
     couponCodes
 discounts {

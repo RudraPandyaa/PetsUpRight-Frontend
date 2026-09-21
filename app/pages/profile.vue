@@ -3,7 +3,6 @@
     <div class="profile-container">
       <div class="profile-heading">
         <div>
-          <p class="eyebrow">MY ACCOUNT</p>
           <h1>Profile</h1>
           <p class="heading-copy">
             Manage your personal details and saved delivery addresses.

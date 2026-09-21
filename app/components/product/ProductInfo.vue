@@ -18,37 +18,22 @@
       <span class="price">₹{{ displayPrice }}</span>
     </div>
 
-    <!-- Flavor -->
-    <div class="option-block">
-      <p class="option-label">Select Flavor</p>
-      <div class="option-pills">
-        <button
-          v-for="f in flavors"
-          :key="f"
-          type="button"
-          class="pill"
-          :class="{ active: selectedFlavor === f }"
-          @click="selectedFlavor = f"
-        >
-          {{ f }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Size -->
-    <div class="option-block">
-      <p class="option-label">Select Size</p>
-      <div class="option-pills">
-        <button
-          v-for="s in sizes"
-          :key="s"
-          type="button"
-          class="pill"
-          :class="{ active: selectedSize === s }"
-          @click="selectedSize = s"
-        >
-          {{ s }}
-        </button>
+    <!-- Dynamic Options -->
+    <div v-if="activeOptionGroups.length">
+      <div v-for="group in activeOptionGroups" :key="group.id" class="option-block">
+        <p class="option-label">Select {{ group.name }}</p>
+        <div class="option-pills">
+          <button
+            v-for="opt in group.options"
+            :key="opt.id"
+            type="button"
+            class="pill"
+            :class="{ active: selectedOptions[group.id] === opt.id }"
+            @click="selectOption(group.id, opt.id)"
+          >
+            {{ opt.name }}
+          </button>
+        </div>
       </div>
     </div>
 
@@ -66,11 +51,11 @@
       <button
         type="button"
         class="btn-wish"
-        :class="{ active: wishlisted }"
-        @click="wishlisted = !wishlisted"
+        :class="{ active: isWishlisted }"
+        @click="toggleWishlist"
         aria-label="Wishlist"
       >
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+        <svg viewBox="0 0 24 24" width="18" height="18" :fill="isWishlisted ? '#c3b5df' : 'none'" :stroke="isWishlisted ? '#c3b5df' : 'currentColor'" stroke-width="2">
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
         </svg>
       </button>
@@ -142,6 +127,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, computed } from 'vue'
+
 const props = defineProps<{
   product: any
   variant?: any
@@ -154,17 +141,87 @@ const emit = defineEmits<{
   (e: 'add-to-cart'): void
   (e: 'buy-now'): void
 }>()
+
 const displayPrice = computed(() => {
   const raw = props.variant?.priceWithTax ?? 0
   return Math.round(Number(raw) / 100)
 })
 const pincode = ref('')
-const wishlisted = ref(false)
-const selectedFlavor = ref('Salmon')
-const selectedSize = ref('3kg')
 
-const flavors = ['Salmon', 'Chicken', 'Lamb']
-const sizes = ['500g', '1kg', '3kg', '10kg']
+const wishlistProducts = useState<any[]>('wishlist', () => [])
+
+const isWishlisted = computed(() => {
+  return wishlistProducts.value.some((p: any) => String(p.id) === String(props.product?.id))
+})
+
+function toggleWishlist() {
+  if (isWishlisted.value) {
+    wishlistProducts.value = wishlistProducts.value.filter(
+      (p: any) => String(p.id) !== String(props.product?.id)
+    )
+  } else {
+    wishlistProducts.value.push({
+      id: props.product?.id,
+      name: props.product?.name,
+      price: Math.round(Number(props.variant?.priceWithTax || 0) / 100),
+      originalPrice: Math.round(Number(props.variant?.priceWithTax || 0) / 100),
+      discount: 0,
+      reviews: 0,
+      image: props.product?.featuredAsset?.preview || '',
+    })
+  }
+}
+
+const selectedOptions = ref<Record<string, string>>({})
+
+const activeOptionIds = computed(() => {
+  const ids = new Set<string>()
+  if (props.product?.variants) {
+    props.product.variants.forEach((v: any) => {
+      if (v.options) {
+        v.options.forEach((opt: any) => ids.add(opt.id))
+      }
+    })
+  }
+  return ids
+})
+
+const activeOptionGroups = computed(() => {
+  if (!props.product?.optionGroups) return []
+  return props.product.optionGroups.map((group: any) => ({
+    ...group,
+    options: group.options.filter((opt: any) => activeOptionIds.value.has(opt.id))
+  })).filter((group: any) => group.options.length > 0)
+})
+
+watch(
+  () => props.variant,
+  (v) => {
+    if (v && v.options) {
+      const newSelections: Record<string, string> = {}
+      v.options.forEach((opt: any) => {
+        newSelections[opt.groupId] = opt.id
+      })
+      selectedOptions.value = newSelections
+    }
+  },
+  { immediate: true }
+)
+
+function selectOption(groupId: string, optionId: string) {
+  selectedOptions.value = { ...selectedOptions.value, [groupId]: optionId }
+
+  const matchingVariant = props.product?.variants?.find((v: any) => {
+    if (!v.options) return false
+    return v.options.every(
+      (opt: any) => selectedOptions.value[opt.groupId] === opt.id
+    ) && v.options.length === Object.keys(selectedOptions.value).length
+  })
+
+  if (matchingVariant) {
+    emit('update:variant', matchingVariant)
+  }
+}
 
 function changeQty(delta: number) {
   emit('update:quantity', Math.max(1, props.quantity + delta))

@@ -14,48 +14,91 @@
           :alt="name"
           class="main-img"
         />
-        <div v-else class="no-image">
-          <img src="/images/shop/Rectangle-5.png" :alt="name" class="main-img" />
+        <div v-else class="no-image h-full flex items-center justify-center bg-gray-100 text-gray-400 font-semibold text-lg">
+          No image available
         </div>
       </div>
     </div>
 
-    <!-- Thumbnails -->
-    <div class="thumbs">
-      <button
-        v-for="(img, i) in displayImages"
-        :key="i"
-        type="button"
-        class="thumb"
-        :class="{ active: activeImage === img }"
-        @click="activeImage = img"
+    <!-- Thumbnails Carousel -->
+    <div v-if="displayImages.length > 1" class="thumbs-carousel-wrapper mt-3 flex items-center justify-between gap-2">
+      <button 
+        v-if="displayImages.length > 3" 
+        type="button" 
+        class="nav-btn prev-btn" 
+        @click="prevSlide"
+        :disabled="startIndex === 0"
       >
-        <img :src="img + '?preset=thumb'" :alt="`${name} ${i + 1}`" />
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="thumbs flex-1" :style="{ gridTemplateColumns: `repeat(${Math.min(3, displayImages.length)}, 1fr)` }">
+        <button
+          v-for="(img, i) in visibleThumbnails"
+          :key="startIndex + i"
+          type="button"
+          class="thumb"
+          :class="{ active: activeImage === img }"
+          @click="activeImage = img"
+        >
+          <img :src="img + '?preset=thumb'" :alt="`${name} ${startIndex + i + 1}`" />
+        </button>
+      </div>
+
+      <button 
+        v-if="displayImages.length > 3" 
+        type="button" 
+        class="nav-btn next-btn" 
+        @click="nextSlide"
+        :disabled="startIndex >= displayImages.length - 3"
+      >
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
       </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, watch } from 'vue'
+
 const props = defineProps<{
   images: string[]
   name: string
   discount?: number
 }>()
+
 const displayImages = computed(() => {
-  const imgs = props.images?.length ? [...props.images] : []
-  // kam se kam 3 slots (duplicate last / placeholder)
-  while (imgs.length < 3) {
-    imgs.push(imgs[0] || '/images/shop/Rectangle-5.png')
-  }
-  return imgs.slice(0, 3)
+  return props.images?.length ? [...props.images] : []
 })
+
 const activeImage = ref('')
+const startIndex = ref(0)
+
+const visibleThumbnails = computed(() => {
+  return displayImages.value.slice(startIndex.value, startIndex.value + 3)
+})
+
+function prevSlide() {
+  if (startIndex.value > 0) {
+    startIndex.value--
+  }
+}
+
+function nextSlide() {
+  if (startIndex.value < displayImages.value.length - 3) {
+    startIndex.value++
+  }
+}
 
 watch(
   () => props.images,
   (imgs) => {
     activeImage.value = imgs?.[0] || ''
+    startIndex.value = 0
   },
   { immediate: true }
 )
@@ -109,11 +152,40 @@ watch(
   font-size: 0.9rem;
 }
 
+.thumbs-carousel-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.nav-btn {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #4b5563;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.nav-btn:hover:not(:disabled) {
+  background: #e5e7eb;
+}
+
+.nav-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .thumbs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
   gap: 0.75rem;
-  margin-top: 0.85rem;
 }
 
 .thumbs::-webkit-scrollbar {
@@ -142,25 +214,10 @@ watch(
   object-fit: cover;
   display: block;
 }
+
 @media (max-width: 640px) {
   .main-frame {
     aspect-ratio: 1 / 1;
-  }
-
-  .thumbs {
-    display: flex;
-    justify-content: space-between; /* 1 left, 2 center, 3 right */
-    align-items: center;
-    gap: 0;              /* space-between khud gap dega */
-    margin-top: 0.6rem;
-    width: 100%;
-  }
-
-  .thumb {
-    width: 150px;
-    height: 88px;
-    flex: 0 0 88px;
-    border-radius: 10px;
   }
 }
 </style>

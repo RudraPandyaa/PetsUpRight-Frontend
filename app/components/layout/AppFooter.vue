@@ -56,8 +56,19 @@
           © {{ new Date().getFullYear() }} PetsUpright. All rights reserved.
         </p>
         <div class="flex gap-4 text-xs text-[#c3b5df]">
-          <a href="#" class="hover:text-white">Privacy Policy</a>
-          <a href="#" class="hover:text-white">Terms of Service</a>
+          <NuxtLink
+            to="/privacy-policy"
+            class="hover:text-white transition"
+          >
+            Privacy Policy
+          </NuxtLink>
+
+          <NuxtLink
+            to="/terms-of-use"
+            class="hover:text-white transition"
+          >
+            Terms of Use
+          </NuxtLink>
         </div>
       </div>
     </div>

@@ -4,27 +4,41 @@ const MAX_ITEMS = 8
 export function useRecentlyViewed() {
   function getAll(): any[] {
     if (!process.client) return []
+
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')
+      return JSON.parse(
+        localStorage.getItem(STORAGE_KEY) || '[]'
+      )
     } catch {
       return []
     }
   }
 
   function add(product: {
-    id: string | number
-    name: string
-    slug: string
-    image: string
-    price: number
-  }) {
+  id: string | number
+  name: string
+  slug: string
+  image: string
+  price: number
+}) {
     if (!process.client) return
 
-    let list = getAll().filter((p) => p.id !== product.id)
+    let list = getAll().filter(
+      (p) => String(p.id) !== String(product.id)
+    )
+
     list.unshift(product)
+
     list = list.slice(0, MAX_ITEMS)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list))
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(list)
+    )
   }
 
-  return { getAll, add }
+  return {
+    getAll,
+    add,
+  }
 }

@@ -15,40 +15,19 @@
       <ProductBreadcrumb :name="product.name" />
 
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mt-4 items-start">
-        <ProductGallery
-          :images="galleryImages"
-          :name="product.name"
-        />
+        <ProductGallery :images="galleryImages" :name="product.name" />
 
-        <ProductInfo
-          :product="product"
-          :variant="selectedVariant"
-          :quantity="quantity"
-          class="h-full"
-          @update:variant="selectedVariant = $event"
-          @update:quantity="quantity = $event"
-          @add-to-cart="onAddToCart"
-          @buy-now="onBuyNow"
-        />
+        <ProductInfo :product="product" :variant="selectedVariant" :quantity="quantity" class="h-full"
+          @update:variant="selectedVariant = $event" @update:quantity="quantity = $event" @add-to-cart="onAddToCart"
+          @buy-now="onBuyNow" />
       </div>
 
-      <ProductTabs
-        :description="product.description || ''"
-        :highlights="product.highlights || []"
-        :ingredients="product.ingredients || ''"
-        :usage="product.usage || ''"
-        :specs="product.specs || ''"
-        :shipping="product.shipping || ''"
-      />
-      <ProductFrequentlyBought 
-        :exclude-product-id="product.id"
-        @add-bundle="onAddBundle"
-      />
+      <ProductTabs :description="product.description || ''" :highlights="product.highlights || []"
+        :ingredients="product.ingredients || ''" :usage="product.usage || ''" :specs="product.specs || ''"
+        :shipping="product.shipping || ''" />
+      <ProductFrequentlyBought :exclude-product-id="product.id" @add-bundle="onAddBundle" />
       <ProductReviews />
-      <ProductYouMayAlsoLike
-        @add-to-cart="onAddToCart"
-        @buy-now="onBuyNow"
-      />
+      <ProductYouMayAlsoLike @add-to-cart="onAddToCart" @buy-now="onBuyNow" />
       <ProductWhyShop />
       <ProductExpertBanner @talk-expert="onTalkExpert" />
     </template>
@@ -56,7 +35,7 @@
     <!-- Not found -->
     <div v-else class="py-20 text-center text-gray-400">
       Product not found
-    </div>  
+    </div>
   </div>
 </template>
 
@@ -73,13 +52,24 @@ const loading = ref(true)
 const slug = computed(() => route.params.slug as string)
 
 const galleryImages = computed(() => {
-  if (!product.value) return ['/images/shop/Rectangle-5.png']
+  if (!product.value) return []
   const list = (product.value.assets || [])
     .map((a: any) => a.preview)
     .filter(Boolean)
+  
   const featured = product.value.featuredAsset?.preview
   if (featured && !list.includes(featured)) list.unshift(featured)
-  return list.length ? list : ['/images/shop/Rectangle-5.png']
+  
+  if (selectedVariant.value?.featuredAsset?.preview) {
+    const variantPreview = selectedVariant.value.featuredAsset.preview
+    const idx = list.indexOf(variantPreview)
+    if (idx > -1) {
+      list.splice(idx, 1)
+    }
+    list.unshift(variantPreview)
+  }
+
+  return list
 })
 
 async function loadProduct() {
@@ -90,12 +80,16 @@ async function loadProduct() {
     selectedVariant.value = data?.variants?.[0] || null
 
     if (data) {
+      const firstVariant = data.variants?.[0]
+
       add({
         id: data.id,
         name: data.name,
         slug: data.slug,
         image: data.featuredAsset?.preview || '',
-        price: Math.round(Number(data.variants?.[0]?.priceWithTax || 0) / 100),
+        price: Math.round(
+          Number(firstVariant?.priceWithTax || 0) / 100
+        ),
       })
     }
   } catch (e) {
@@ -109,12 +103,28 @@ async function loadProduct() {
 onMounted(loadProduct)
 watch(slug, loadProduct)
 
-function onAddToCart() {
-  console.log('ADD', selectedVariant.value?.id, quantity.value)
+const { addItem } = useCart()
+const { openCart } = useCartDrawer()
+const router = useRouter()
+
+async function onAddToCart() {
+  if (!selectedVariant.value?.id) return
+  try {
+    await addItem(selectedVariant.value.id, quantity.value)
+    openCart()
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-function onBuyNow() {
-  console.log('BUY', selectedVariant.value?.id, quantity.value)
+async function onBuyNow() {
+  if (!selectedVariant.value?.id) return
+  try {
+    await addItem(selectedVariant.value.id, quantity.value)
+    router.push('/checkout')
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 function onAddBundle() {

@@ -5,7 +5,6 @@
       <!-- Heading -->
       <div class="orders-heading">
         <div>
-          <p class="eyebrow">MY ACCOUNT</p>
           <h1>My Orders</h1>
           <p class="heading-copy">
             View your purchases, check order status and track deliveries.
@@ -31,35 +30,23 @@
               <path d="m21 21-4.35-4.35" />
             </svg>
 
-            <input
-              v-model.trim="searchQuery"
-              type="text"
-              placeholder="Search orders by product or order number"
-            />
+            <input v-model.trim="searchQuery" type="text" placeholder="Search orders by product or order number" />
           </div>
 
           <div class="filter-row">
-            <button
-              v-for="filter in filters"
-              :key="filter.value"
-              type="button"
-              class="filter-button"
-              :class="{ active: selectedFilter === filter.value }"
-              @click="selectedFilter = filter.value"
-            >
+            <button v-for="filter in filters" :key="filter.value" type="button" class="filter-button"
+              :class="{ active: selectedFilter === filter.value }" @click="selectedFilter = filter.value">
               {{ filter.label }}
             </button>
           </div>
         </section>
 
         <!-- No Orders -->
-        <section
-          v-if="!orders.length"
-          class="empty-orders"
-        >
+        <section v-if="!orders.length" class="empty-orders">
           <div class="empty-orders-icon">
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+              <path
+                d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
               <path d="m3.3 7 8.7 5 8.7-5" />
               <path d="M12 22V12" />
             </svg>
@@ -78,32 +65,21 @@
         </section>
 
         <!-- No Search Results -->
-        <section
-          v-else-if="!filteredOrders.length"
-          class="empty-orders"
-        >
+        <section v-else-if="!filteredOrders.length" class="empty-orders">
           <h2>No matching orders</h2>
 
           <p>
             Try changing your search or selected filter.
           </p>
 
-          <button
-            type="button"
-            class="secondary-button"
-            @click="clearFilters"
-          >
+          <button type="button" class="secondary-button" @click="clearFilters">
             Clear Filters
           </button>
         </section>
 
         <!-- Orders -->
         <div v-else class="orders-list">
-          <article
-            v-for="order in filteredOrders"
-            :key="order.id"
-            class="order-card"
-          >
+          <article v-for="order in filteredOrders" :key="order.id" class="order-card">
             <!-- Order Header -->
             <div class="order-card-header">
               <div class="order-meta-group">
@@ -124,10 +100,7 @@
                   </strong>
                 </div>
 
-                <div
-                  v-if="order.shippingAddress?.fullName"
-                  class="order-meta ship-to-meta"
-                >
+                <div v-if="order.shippingAddress?.fullName" class="order-meta ship-to-meta">
                   <span>SHIP TO</span>
                   <strong>
                     {{ order.shippingAddress.fullName }}
@@ -138,9 +111,7 @@
               <div class="order-number">
                 <span>ORDER # {{ order.code }}</span>
 
-                <NuxtLink
-                  :to="`/orders/${order.code}`"
-                >
+                <NuxtLink :to="`/orders/${order.code}`">
                   View order details
                 </NuxtLink>
               </div>
@@ -148,131 +119,116 @@
 
             <!-- Content -->
             <div class="order-card-body">
-              <!-- Status -->
-              <div class="order-status-row">
-                <div>
-                  <div
-                    class="status-badge"
-                    :class="getStatusClass(order)"
-                  >
-                    {{ getStatusLabel(order) }}
+              <div class="order-content-layout">
+
+                <!-- LEFT SIDE -->
+                <div class="order-content-main">
+
+                  <!-- Status -->
+                  <div class="order-status-section">
+                    <div class="status-badge" :class="getStatusClass(order)">
+                      {{ getStatusLabel(order) }}
+                    </div>
+
+                    <h2>
+                      {{ getStatusHeading(order) }}
+                    </h2>
+
+                    <p>
+                      {{ getStatusDescription(order) }}
+                    </p>
                   </div>
 
-                  <h2>
-                    {{ getStatusHeading(order) }}
-                  </h2>
+                  <!-- Products -->
+                  <div class="order-products">
+                    <div v-for="line in order.lines" :key="line.id" class="order-product">
+                      <div class="product-image">
+                        <img v-if="line.featuredAsset?.preview" :src="line.featuredAsset.preview"
+                          :alt="line.productVariant.name" />
 
-                  <p>
-                    {{ getStatusDescription(order) }}
-                  </p>
-                </div>
+                        <div v-else class="image-placeholder">
+                          <svg viewBox="0 0 24 24">
+                            <path
+                              d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+                            <path d="m3.3 7 8.7 5 8.7-5" />
+                            <path d="M12 22V12" />
+                          </svg>
+                        </div>
+                      </div>
 
-                <div class="order-main-actions">
-                  <NuxtLink
-                    v-if="canTrack(order)"
-                    :to="`/track-order?order=${order.code}`"
-                    class="primary-button track-button"
-                  >
-                    <svg viewBox="0 0 24 24">
-                      <path d="M10 17h4V5H2v12h3" />
-                      <path d="M14 9h4l4 4v4h-3" />
-                      <circle cx="7.5" cy="17.5" r="2.5" />
-                      <circle cx="16.5" cy="17.5" r="2.5" />
-                    </svg>
+                      <div class="product-info">
+                        <NuxtLink :to="getProductLink(line)" class="product-name">
+                          {{ line.productVariant.name }}
+                        </NuxtLink>
 
-                    Track Order
-                  </NuxtLink>
+                        <p class="product-quantity">
+                          Qty: {{ line.quantity }}
+                        </p>
 
-                  
-                </div>
-              </div>
-
-              <!-- Products -->
-              <div class="order-products">
-                <div
-                  v-for="line in order.lines"
-                  :key="line.id"
-                  class="order-product"
-                >
-                  <div class="product-image">
-                    <img
-                      v-if="line.featuredAsset?.preview"
-                      :src="line.featuredAsset.preview"
-                      :alt="line.productVariant.name"
-                    />
-
-                    <div v-else class="image-placeholder">
-                      <svg viewBox="0 0 24 24">
-                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                        <path d="m3.3 7 8.7 5 8.7-5" />
-                        <path d="M12 22V12" />
-                      </svg>
+                        <strong class="product-price">
+                          {{
+                            formatMoney(
+                              line.discountedLinePriceWithTax,
+                              order.currencyCode
+                            )
+                          }}
+                        </strong>
+                      </div>
                     </div>
                   </div>
 
-                  <div class="product-info">
-                    <NuxtLink
-                      :to="getProductLink(line)"
-                      class="product-name"
-                    >
-                      {{ line.productVariant.name }}
-                    </NuxtLink>
+                </div>
 
-                    <p class="product-sku">
-                      SKU: {{ line.productVariant.sku }}
-                    </p>
+                <!-- RIGHT SIDE -->
+                <aside class="order-side-panel">
 
-                    <p class="product-quantity">
-                      Quantity: {{ line.quantity }}
-                    </p>
+                  <div class="side-summary">
+                    <span class="side-label">Order Total</span>
 
-                    <strong class="product-price">
+                    <strong class="side-total">
                       {{
                         formatMoney(
-                          line.discountedLinePriceWithTax,
+                          order.totalWithTax,
                           order.currencyCode
                         )
                       }}
                     </strong>
                   </div>
 
-                  <div class="product-actions">
-                    <NuxtLink
-                      :to="getProductLink(line)"
-                      class="small-action-button"
-                    >
-                      View Product
-                    </NuxtLink>
-                  </div>
-                </div>
-              </div>
+                  <div class="side-divider"></div>
 
-              <!-- Footer -->
-              <div class="order-footer">
-                <div class="shipping-info">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 21s7-5.1 7-12A7 7 0 1 0 5 9c0 6.9 7 12 7 12Z" />
-                    <circle cx="12" cy="9" r="2.5" />
-                  </svg>
-
-                  <div>
-                    <span>Delivering to</span>
+                  <div class="side-info-block">
+                    <span class="side-label">Delivering to</span>
 
                     <p>
                       {{ formatAddress(order.shippingAddress) }}
                     </p>
                   </div>
-                </div>
 
-                <div
-                  v-if="getTrackingCode(order)"
-                  class="tracking-number"
-                >
-                  <span>Tracking ID</span>
-                  <strong>
-                    {{ getTrackingCode(order) }}
-                  </strong>
-                </div>
+                  <template v-if="getTrackingCode(order)">
+                    <div class="side-divider"></div>
+
+                    <div class="side-info-block">
+                      <span class="side-label">Tracking ID</span>
+
+                      <strong>
+                        {{ getTrackingCode(order) }}
+                      </strong>
+                    </div>
+                  </template>
+
+                  <div class="side-actions">
+                    <NuxtLink :to="`/orders/${order.code}`" class="view-order-button">
+                      View Order Details
+                    </NuxtLink>
+                  </div>
+
+                  <button v-if="canCancelOrder(order)" type="button" class="cancel-order-button"
+                    @click="handleCancelOrder(order)">
+                    Cancel Order
+                  </button>
+                </aside>
+
               </div>
             </div>
           </article>
@@ -397,8 +353,12 @@ async function loadOrders() {
       return
     }
 
-    orders.value =
+    const allOrders =
       response.activeCustomer.orders?.items || []
+
+    orders.value = allOrders.filter(
+      (order: any) => Boolean(order.orderPlacedAt)
+    )
   } catch (error) {
     console.error(
       'Unable to load customer orders:',
@@ -476,6 +436,20 @@ function getOrderCategory(order: any) {
   return 'progress'
 }
 
+function canCancelOrder(order: any) {
+  const category = getOrderCategory(order)
+
+  return (
+    Boolean(order.orderPlacedAt) &&
+    category !== 'delivered' &&
+    category !== 'cancelled'
+  )
+}
+
+function handleCancelOrder(order: any) {
+  console.log('Cancel order:', order.id)
+}
+
 function getStatusLabel(order: any) {
   const category = getOrderCategory(order)
 
@@ -498,12 +472,8 @@ function getStatusLabel(order: any) {
     return 'Shipped'
   }
 
-  if (
-    order.state
-      ?.toLowerCase()
-      .includes('payment')
-  ) {
-    return 'Order Confirmed'
+  if (order.orderPlacedAt) {
+    return 'Order Placed'
   }
 
   return 'Processing'
@@ -522,8 +492,8 @@ function getStatusHeading(order: any) {
     case 'Cancelled':
       return 'This order was cancelled'
 
-    case 'Order Confirmed':
-      return 'Your order has been confirmed'
+    case 'Order Placed':
+      return 'Your order has been placed'
 
     default:
       return 'We are preparing your order'
@@ -543,8 +513,8 @@ function getStatusDescription(order: any) {
     case 'Cancelled':
       return 'No further action is required for this order.'
 
-    case 'Order Confirmed':
-      return 'Payment received. We will notify you when your order ships.'
+    case 'Order Placed':
+      return 'Payment received. We are preparing your order for shipment.'
 
     default:
       return 'Your items are being prepared for dispatch.'
@@ -643,6 +613,32 @@ function clearFilters() {
 </script>
 
 <style scoped>
+.cancel-order-button {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin: 18px;
+  border: 1px solid #d9534f;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #d9534f;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.cancel-order-button:hover {
+  background: #f1eeee;
+  color: #d9534f;
+}
+
 .orders-page {
   min-height: 100vh;
   padding: 64px 0 90px;
@@ -928,14 +924,19 @@ function clearFilters() {
 /* Body */
 
 .order-card-body {
-  padding: 26px;
+  padding: 24px;
 }
 
-.order-status-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 24px;
-  margin-bottom: 26px;
+.order-content-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 28px;
+  align-items: start;
+}
+
+.order-status-section {
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ece8f1;
 }
 
 .status-badge {
@@ -963,14 +964,14 @@ function clearFilters() {
   color: #b54848;
 }
 
-.order-status-row h2 {
+.order-status-section h2 {
   margin: 10px 0 5px;
   color: #30324f;
   font-size: 19px;
   font-weight: 750;
 }
 
-.order-status-row p {
+.order-status-section p {
   margin: 0;
   color: #797987;
   font-size: 13px;
@@ -1039,26 +1040,31 @@ function clearFilters() {
 /* Products */
 
 .order-products {
-  border-top: 1px solid #ece8f1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .order-product {
-  display: grid;
-  grid-template-columns:
-    105px minmax(0, 1fr) auto;
-  gap: 20px;
+  min-width: 0;
+  display: flex;
   align-items: center;
-  padding: 22px 0;
-  border-bottom: 1px solid #ece8f1;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid #ece8f1;
+  border-radius: 10px;
+  background: #fbfafd;
 }
 
 .product-image {
-  width: 105px;
-  height: 105px;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 72px;
   overflow: hidden;
   border: 1px solid #eeeaf5;
-  border-radius: 12px;
-  background: #faf9fc;
+  border-radius: 9px;
+  background: #ffffff;
 }
 
 .product-image img {
@@ -1076,21 +1082,26 @@ function clearFilters() {
 }
 
 .image-placeholder svg {
-  width: 34px;
-  height: 34px;
+  width: 28px;
+  height: 28px;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+}
+
+.product-info {
+  min-width: 0;
 }
 
 .product-name {
+  display: block;
+  overflow: hidden;
   color: #44476f;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 750;
   line-height: 1.4;
   text-decoration: none;
+  text-overflow: ellipsis;
 }
 
 .product-name:hover {
@@ -1104,11 +1115,104 @@ function clearFilters() {
   font-size: 11px;
 }
 
+
 .product-price {
   display: block;
-  margin-top: 9px;
+  margin-top: 6px;
   color: #30324f;
-  font-size: 14px;
+  font-size: 12px;
+}
+
+.order-side-panel {
+  padding: 18px;
+  border: 1px solid #ece8f1;
+  border-radius: 12px;
+  background: #faf9fc;
+}
+
+.side-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.view-order-button {
+  width: 100%;
+  min-height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+
+.view-order-button {
+  border: 1px solid #44476f;
+  background: #44476f;
+  color: #ffffff;
+}
+
+.view-order-button:hover {
+  background: #383b61;
+}
+
+.cancel-order-button {
+  margin: 8px 0 0;
+  border: 1px solid #d9534f;
+  background: #ffffff;
+  color: #d9534f;
+}
+
+.cancel-order-button:hover {
+  background: #fff5f5;
+}
+
+
+
+.side-summary,
+.side-info-block {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.side-label {
+  color: #8b8997;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.side-total {
+  color: #30324f;
+  font-size: 18px;
+}
+
+.side-info-block p {
+  margin: 0;
+  color: #626273;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.side-info-block strong {
+  color: #44476f;
+  font-size: 11px;
+}
+
+.side-divider {
+  height: 1px;
+  margin: 15px 0;
+  background: #e8e4ed;
 }
 
 .small-action-button {
@@ -1179,6 +1283,57 @@ function clearFilters() {
 
 /* Responsive */
 
+@media (max-width: 900px) {
+  .order-content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .order-side-panel {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .side-divider {
+    display: none;
+  }
+
+  .side-actions {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    margin-top: 0;
+  }
+
+  .side-actions > * {
+    flex: 1;
+  }
+}
+
+@media (max-width: 650px) {
+  .order-products {
+    grid-template-columns: 1fr;
+  }
+
+  .order-side-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .side-divider {
+    display: block;
+  }
+
+  .side-actions {
+    flex-direction: column;
+  }
+
+  .product-image {
+    flex: 0 0 65px;
+    width: 65px;
+    height: 65px;
+  }
+}
+
 @media (max-width: 820px) {
   .orders-heading {
     align-items: flex-start;
@@ -1204,7 +1359,8 @@ function clearFilters() {
     flex-direction: row;
   }
 
-  .order-main-actions a {
+  .order-main-actions a,
+  .order-main-actions button {
     flex: 1;
   }
 
@@ -1237,10 +1393,8 @@ function clearFilters() {
   }
 
   .orders-container {
-    width: min(
-      100% - 1.25rem,
-      1120px
-    );
+    width: min(100% - 1.25rem,
+        1120px);
   }
 
   .orders-heading {
