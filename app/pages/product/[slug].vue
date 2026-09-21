@@ -52,13 +52,24 @@ const loading = ref(true)
 const slug = computed(() => route.params.slug as string)
 
 const galleryImages = computed(() => {
-  if (!product.value) return ['/images/shop/Rectangle-5.png']
+  if (!product.value) return []
   const list = (product.value.assets || [])
     .map((a: any) => a.preview)
     .filter(Boolean)
+  
   const featured = product.value.featuredAsset?.preview
   if (featured && !list.includes(featured)) list.unshift(featured)
-  return list.length ? list : ['/images/shop/Rectangle-5.png']
+  
+  if (selectedVariant.value?.featuredAsset?.preview) {
+    const variantPreview = selectedVariant.value.featuredAsset.preview
+    const idx = list.indexOf(variantPreview)
+    if (idx > -1) {
+      list.splice(idx, 1)
+    }
+    list.unshift(variantPreview)
+  }
+
+  return list
 })
 
 async function loadProduct() {
@@ -92,12 +103,28 @@ async function loadProduct() {
 onMounted(loadProduct)
 watch(slug, loadProduct)
 
-function onAddToCart() {
-  console.log('ADD', selectedVariant.value?.id, quantity.value)
+const { addItem } = useCart()
+const { openCart } = useCartDrawer()
+const router = useRouter()
+
+async function onAddToCart() {
+  if (!selectedVariant.value?.id) return
+  try {
+    await addItem(selectedVariant.value.id, quantity.value)
+    openCart()
+  } catch (e) {
+    console.error(e)
+  }
 }
 
-function onBuyNow() {
-  console.log('BUY', selectedVariant.value?.id, quantity.value)
+async function onBuyNow() {
+  if (!selectedVariant.value?.id) return
+  try {
+    await addItem(selectedVariant.value.id, quantity.value)
+    router.push('/checkout')
+  } catch (e) {
+    console.error(e)
+  }
 }
 
 function onAddBundle() {

@@ -75,9 +75,24 @@ export function useProducts() {
           sku
           priceWithTax
           stockLevel
+          featuredAsset {
+            preview
+          }
           options {
+            id
             code
             name
+            groupId
+          }
+        }
+        optionGroups {
+          id
+          name
+          code
+          options {
+            id
+            name
+            code
           }
         }
         facetValues {

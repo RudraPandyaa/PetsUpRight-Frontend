@@ -868,29 +868,36 @@ async function prepareVendureOrder() {
 }
 
 async function syncShippingMethod() {
-  if (
-    !form.address ||
-    !form.city ||
-    !form.postalCode ||
-    !form.countryCode
-  ) {
-    return
-  }
+  const isAddressComplete =
+    form.address &&
+    form.city &&
+    form.postalCode &&
+    form.countryCode;
+
+  const addressInput = isAddressComplete
+    ? {
+        fullName: form.name,
+        streetLine1: form.address,
+        city: form.city,
+        province: form.province || undefined,
+        postalCode: form.postalCode,
+        countryCode: form.countryCode,
+        phoneNumber: form.phone,
+      }
+    : {
+        fullName: 'Guest',
+        streetLine1: 'Dummy Address',
+        city: 'Dummy City',
+        postalCode: '000000',
+        countryCode: 'IN',
+        phoneNumber: '0000000000',
+      };
 
   const addressResult: any =
     await client.request(
       SET_ORDER_SHIPPING_ADDRESS,
       {
-        input: {
-          fullName: form.name,
-          streetLine1: form.address,
-          city: form.city,
-          province:
-            form.province || undefined,
-          postalCode: form.postalCode,
-          countryCode: form.countryCode,
-          phoneNumber: form.phone,
-        },
+        input: addressInput,
       }
     )
 
