@@ -98,32 +98,32 @@ const isTransitioning = ref(false)
 
 const defaultReviews = [
   {
-    name: 'Dhruvi Khanna',
+    name: 'Reheman Dakait',
     rating: 4,
     text: 'Excellent products and great customer service. The collar fits perfectly, and the quality exceeded my expectations. Highly recommended!',
   },
   {
-    name: 'Urmi Patel',
+    name: 'Uzair Baloch',
     rating: 4,
     text: 'The pet bed is soft, comfortable, and exactly as shown. My dog started using it right away. Great shopping experience overall!',
   },
   {
-    name: 'Tanvi Sharma',
+    name: 'Jameel Jamali',
     rating: 5,
     text: 'Amazing quality and super fast delivery! My Golden Retriever absolutely loves the treats, and the toys are durable too. Will definitely order again!',
   },
   {
-    name: 'Vidhi Singh',
+    name: 'SP Chourdhry Aslam',
     rating: 5,
     text: 'Loved the grooming kit. My cat looks so fresh and the brushes are gentle on her skin. Will buy again soon!',
   },
   {
-    name: 'Amit Verma',
+    name: 'Major Iqbal',
     rating: 4,
     text: 'Good quality leashes and collars. Delivery was on time and packaging was neat. Happy with the purchase.',
   },
   {
-    name: 'Sneha Kapoor',
+    name: 'Ajay Sanyal',
     rating: 5,
     text: 'Best pet store experience! The treats are healthy and my dog is obsessed. Fast shipping too.',
   },

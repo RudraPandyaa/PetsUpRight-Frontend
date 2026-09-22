@@ -27,7 +27,8 @@
         :shipping="product.shipping || ''" />
       <ProductFrequentlyBought :exclude-product-id="product.id" @add-bundle="onAddBundle" />
       <ProductReviews />
-      <ProductYouMayAlsoLike @add-to-cart="onAddToCart" @buy-now="onBuyNow" />
+      <ProductYouMayAlsoLike :product-id="String(product.id)"
+        :facet-value-ids="(product.facetValues ?? []).map((value: any) => String(value.id))" />
       <ProductWhyShop />
       <ProductExpertBanner @talk-expert="onTalkExpert" />
     </template>
@@ -56,10 +57,10 @@ const galleryImages = computed(() => {
   const list = (product.value.assets || [])
     .map((a: any) => a.preview)
     .filter(Boolean)
-  
+
   const featured = product.value.featuredAsset?.preview
   if (featured && !list.includes(featured)) list.unshift(featured)
-  
+
   if (selectedVariant.value?.featuredAsset?.preview) {
     const variantPreview = selectedVariant.value.featuredAsset.preview
     const idx = list.indexOf(variantPreview)

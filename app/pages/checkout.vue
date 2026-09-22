@@ -1247,14 +1247,18 @@ function loadRazorpayScript(): Promise<boolean> {
   margin-bottom: 32px;
 }
 
-.back-link {
-  color: #6b7280;
-  font-size: 13px;
-  text-decoration: none;
+
+.back-link:hover,
+.login-link:hover {
+  border-color: #b9afd1;
+  background: #f8f6fb;
+  color: #44476f;
 }
 
-.back-link:hover {
-  color: #44476f;
+.back-link:focus-visible,
+.login-link:focus-visible {
+  outline: 2px solid #44476f;
+  outline-offset: 2px;
 }
 
 
@@ -1295,10 +1299,23 @@ function loadRazorpayScript(): Promise<boolean> {
   margin-bottom: 14px;
 }
 
+.back-link,
 .login-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 18px;
+  margin-bottom: 20px;
+  border: 1px solid #d9d9e2;
+  border-radius: 7px;
+  background: #ffffff;
   color: #44476f;
-  font-size: 12px;
-  text-decoration: underline;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .section-description {

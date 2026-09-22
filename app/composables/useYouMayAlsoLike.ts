@@ -1,67 +1,64 @@
-export function useYouMayAlsoLike(slug = 'you-may-also-like') {
-  const config = useRuntimeConfig()
-  const apiUrl =
-    config.public.vendureShopApiUrl || 'http://localhost:3000/shop-api'
+import { toValue, type MaybeRefOrGetter } from 'vue'
 
-  function normalizeAssetUrl(preview?: string | null) {
-    if (!preview) return '/images/shop/Rectangle-5.png'
+export function useYouMayAlsoLike(
+  productId: MaybeRefOrGetter<string>,
+  facetValueIds: MaybeRefOrGetter<string[]>,
+) {
+  const { getProducts } = useProducts()
 
-    // Windows backslash fix
-    let url = preview.replace(/\\/g, '/')
-
-    if (url.startsWith('http')) return url
-    if (url.startsWith('/')) return `http://localhost:3000${url}`
-    return `http://localhost:3000/assets/${url}`
-  }
+  const currentId = computed(() => toValue(productId))
+  const currentFacetIds = computed(() => toValue(facetValueIds) ?? [])
 
   const { data, pending, error } = useAsyncData(
-    `ymal-${slug}`,
+    () => `you-may-also-like:${currentId.value}:${[...currentFacetIds.value].sort().join(',')}`,
     async () => {
-      const res: any = await $fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: {
-          query: `
-            query ($slug: String!) {
-              collection(slug: $slug) {
-                name
-                productVariants(options: { take: 4 }) {
-                  items {
-                    id
-                    name
-                    priceWithTax
-                    product {
-                      id
-                      name
-                      slug
-                      featuredAsset { preview }
-                    }
-                  }
-                }
-              }
-            }
-          `,
-          variables: { slug },
-        },
+      const ids = currentFacetIds.value
+      if (!currentId.value || !ids.length) return []
+
+      const result = await getProducts({
+        take: 24,
+        facetValueFilters: [{ or: ids }],
       })
 
-      return res?.data?.collection ?? null
-    }
+      const currentFacets = new Set(ids)
+
+      return (result.items ?? [])
+        .filter((item: any) =>
+          String(item.productId) !== currentId.value
+        )
+        .map((item: any) => ({
+          item,
+          sharedFacetCount: (item.facetValueIds ?? []).filter(
+            (id: string) => currentFacets.has(String(id))
+          ).length,
+        }))
+        .sort((a: any, b: any) =>
+          b.sharedFacetCount - a.sharedFacetCount
+        )
+        .slice(0, 4)
+        .map(({ item }: any) => {
+          const priceWithTax = item.priceWithTax
+
+          return {
+            id: item.productId,
+            variantId: String(item.productVariantId ?? ''),
+            name: item.productName,
+            slug: item.slug,
+            image:
+              item.productAsset?.preview
+                ? `${item.productAsset.preview}?preset=medium`
+                : '/images/shop/Rectangle-5.png',
+            price: Number(
+              priceWithTax?.value ?? priceWithTax?.min ?? 0
+            ) / 100,
+            rating: 4.9,
+          }
+        })
+    },
+    { default: () => [] },
   )
 
-  const products = computed(() => {
-    const items = data.value?.productVariants?.items || []
-
-    return items.map((v: any) => ({
-      id: v.product?.id || v.id,
-      name: v.product?.name || v.name,
-      image: normalizeAssetUrl(v.product?.featuredAsset?.preview),
-      price: (v.priceWithTax || 0) / 100,
-      rating: 4.9,
-      slug: v.product?.slug || '',
-      wishlisted: false,
-    }))
-  })
+  const products = computed(() => data.value ?? [])
 
   return { products, pending, error }
 }
