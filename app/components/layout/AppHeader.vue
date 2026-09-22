@@ -278,14 +278,14 @@ onUnmounted(() => {
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Trending Now
             </NuxtLink> -->
-            <NuxtLink to="/shop?collection=combo-deals"
+            <!-- <NuxtLink to="/shop?collection=combo-deals"
               class="text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap">
               Combo Deals
             </NuxtLink>
             <NuxtLink to="/shop?collection=offers"
               class="text-sm font-semibold text-red-500 hover:text-red-600 transition whitespace-nowrap">
               Offers
-            </NuxtLink>
+            </NuxtLink> -->
             <!-- Brands dropdown -->
             <div class="relative" @mouseenter="isBrandsOpen = true" @mouseleave="isBrandsOpen = false">
               <button type="button"
