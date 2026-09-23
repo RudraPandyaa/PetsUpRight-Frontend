@@ -62,6 +62,10 @@ export function useProducts() {
         description
         customFields {
           petType
+          isFood
+          ingredients
+          usageAndFeeding
+          specifications
         }
         featuredAsset {
           preview
@@ -184,6 +188,10 @@ export function useProducts() {
 
           customFields {
             petType
+            isFood
+            ingredients
+            usageAndFeeding
+            specifications
           }
 
           featuredAsset {
@@ -235,7 +243,7 @@ export function useProducts() {
       productOptions.sort = {
         createdAt: 'DESC',
       }
-      
+
     }
 
     const data = await client.request(GET_PRODUCTS, {

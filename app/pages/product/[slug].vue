@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto px-4 pt-6 md:pt-10 pb-10">
+  <div class="container mx-auto px-4 pt-6 md:pt-10">
     <!-- Loading -->
     <div v-if="loading" class="animate-pulse grid lg:grid-cols-2 gap-10">
       <div class="aspect-square bg-gray-200 rounded-xl" />
@@ -22,9 +22,9 @@
           @buy-now="onBuyNow" />
       </div>
 
-      <ProductTabs :description="product.description || ''" :highlights="product.highlights || []"
-        :ingredients="product.ingredients || ''" :usage="product.usage || ''" :specs="product.specs || ''"
-        :shipping="product.shipping || ''" />
+      <ProductTabs :description="product.description || ''" :is-food="product.customFields?.isFood === true"
+        :ingredients="product.customFields?.ingredients || []" :usage="product.customFields?.usageAndFeeding || ''"
+        :specs="product.customFields?.specifications || ''" />
       <ProductFrequentlyBought :exclude-product-id="product.id" @add-bundle="onAddBundle" />
       <ProductReviews />
       <ProductYouMayAlsoLike :product-id="String(product.id)"

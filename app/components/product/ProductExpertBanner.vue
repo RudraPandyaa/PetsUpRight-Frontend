@@ -22,14 +22,6 @@
             Talk to an Expert
           </button>
         </div>
-
-        <div class="banner-logo">
-          <img
-            src="/images/pets-upright-logo-circle.png"
-            alt="Pets Upright"
-            class="logo-img"
-          />
-        </div>
       </div>
     </div>
   </section>
