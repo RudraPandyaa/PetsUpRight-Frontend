@@ -35,14 +35,54 @@
           </div>
 
           <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" v-model="password" type="password" minlength="8" required />
-          </div>
+          <label for="password">Password</label>
 
-          <div class="form-group">
-            <label for="confirm-password">Confirm password</label>
-            <input id="confirm-password" v-model="confirmPassword" type="password" minlength="8" required />
+          <div class="password-field">
+            <input
+              id="password"
+              v-model="password"
+              :type="showPassword ? 'text' : 'password'"
+              minlength="8"
+              required
+            />
+
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="showPassword ? 'Hide password' : 'Show password'"
+              @click="showPassword = !showPassword"
+            >
+              {{ showPassword ? '🙈' : '👁' }}
+            </button>
           </div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm-password">Confirm password</label>
+
+          <div class="password-field">
+            <input
+              id="confirm-password"
+              v-model="confirmPassword"
+              :type="showConfirmPassword ? 'text' : 'password'"
+              minlength="8"
+              required
+            />
+
+            <button
+              type="button"
+              class="password-toggle"
+              :aria-label="
+                showConfirmPassword
+                  ? 'Hide confirm password'
+                  : 'Show confirm password'
+              "
+              @click="showConfirmPassword = !showConfirmPassword"
+            >
+              {{ showConfirmPassword ? '🙈' : '👁' }}
+            </button>
+          </div>
+        </div>
 
           <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
           <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
@@ -70,6 +110,8 @@ const confirmPassword = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
 
 const { register } = useAuth()
 
@@ -256,6 +298,28 @@ async function handleRegister() {
   color: #44476f;
   font-weight: 700;
   text-decoration: none;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.9rem;
+  transform: translateY(-50%);
+  border: 0;
+  padding: 0.25rem;
+  background: transparent;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 1rem;
 }
 
 @media (max-width: 800px) {

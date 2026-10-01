@@ -1,15 +1,43 @@
 <template>
   <div class="product-info">
     <!-- Brand -->
-    <p class="brand">BARK & FEAST</p>
+    <p v-if="productCategoryLabel" class="product-brand">
+      {{ productCategoryLabel }}
+    </p>
 
     <!-- Title -->
     <h1 class="title">{{ product?.name }}</h1>
 
     <!-- Rating -->
     <div class="rating-row">
-      <span class="stars">★★★★★</span>
-      <span class="rating-count">(1,250 Reviews)</span>
+      <div
+        class="stars"
+        :aria-label="`${safeAverageRating} out of 5 stars`"
+      >
+        <span
+          v-for="star in 5"
+          :key="star"
+          class="rating-star"
+          :class="{
+            full: star <= Math.floor(safeAverageRating),
+            half:
+              star === Math.ceil(safeAverageRating) &&
+              safeAverageRating % 1 !== 0,
+          }"
+        >
+          ★
+        </span>
+      </div>
+
+      <span v-if="safeTotalReviews > 0" class="rating-count">
+        {{ safeAverageRating.toFixed(1) }}
+        ({{ safeTotalReviews.toLocaleString('en-IN') }}
+        {{ safeTotalReviews === 1 ? 'Review' : 'Reviews' }})
+      </span>
+
+      <span v-else class="rating-count">
+        No reviews yet
+      </span>
     </div>
 
     <!-- Price -->
@@ -128,12 +156,59 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+const productCategoryLabel = computed(() => {
+  const product = props.product
 
-const props = defineProps<{
-  product: any
-  variant?: any
-  quantity: number
-}>()
+  if (!product) {
+    return ''
+  }
+
+  const petType = String(
+    product.customFields?.petType ?? ''
+  ).trim()
+
+  const category = (product.facetValues ?? []).find(
+    (value: any) => {
+      const facetCode = String(
+        value?.facet?.code ?? ''
+      )
+        .trim()
+        .toLowerCase()
+
+      const facetName = String(
+        value?.facet?.name ?? ''
+      )
+        .trim()
+        .toLowerCase()
+
+      return (
+        facetCode === 'category' ||
+        facetName === 'category'
+      )
+    }
+  )?.name
+
+  // Do not show anything unless both values exist.
+  if (!petType || !category) {
+    return ''
+  }
+
+  return `${petType} • ${category}`.toUpperCase()
+})
+
+const props = withDefaults(
+  defineProps<{
+    product: any
+    variant?: any
+    quantity: number
+    averageRating?: number
+    totalReviews?: number
+  }>(),
+  {
+    averageRating: 0,
+    totalReviews: 0,
+  },
+)
 
 const emit = defineEmits<{
   (e: 'update:variant', v: any): void
@@ -146,6 +221,27 @@ const displayPrice = computed(() => {
   const raw = props.variant?.priceWithTax ?? 0
   return Math.round(Number(raw) / 100)
 })
+
+const safeAverageRating = computed(() => {
+  const value = Number(props.averageRating || 0)
+
+  if (!Number.isFinite(value)) {
+    return 0
+  }
+
+  return Math.min(5, Math.max(0, value))
+})
+
+const safeTotalReviews = computed(() => {
+  const value = Number(props.totalReviews || 0)
+
+  if (!Number.isFinite(value)) {
+    return 0
+  }
+
+  return Math.max(0, Math.floor(value))
+})
+
 const pincode = ref('')
 
 const wishlistProducts = useState<any[]>('wishlist', () => [])
@@ -258,17 +354,40 @@ function changeQty(delta: number) {
 .rating-row {
   display: flex;
   align-items: center;
-  gap: 0.35rem;
-  font-size: 1.60rem;
+  gap: 0.5rem;
+  min-height: 28px;
 }
 
 .stars {
-  color: #C3B5DF;
-  letter-spacing: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.rating-star {
+  color: #e5e7eb;
+}
+
+.rating-star.full {
+  color: #c3b5df;
+}
+
+.rating-star.half {
+  color: transparent;
+  background: linear-gradient(
+    90deg,
+    #c3b5df 50%,
+    #e5e7eb 50%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
 }
 
 .rating-count {
   color: #9ca3af;
+  font-size: 1rem;
   font-weight: 500;
 }
 

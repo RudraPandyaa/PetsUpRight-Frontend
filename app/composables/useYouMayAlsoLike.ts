@@ -51,7 +51,8 @@ export function useYouMayAlsoLike(
             price: Number(
               priceWithTax?.value ?? priceWithTax?.min ?? 0
             ) / 100,
-            rating: 4.9,
+            rating: Number(item.rating ?? 0),
+            totalReviews: Number(item.totalReviews ?? 0),
           }
         })
     },

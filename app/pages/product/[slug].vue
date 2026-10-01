@@ -17,16 +17,28 @@
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 mt-4 items-start">
         <ProductGallery :images="galleryImages" :name="product.name" />
 
-        <ProductInfo :product="product" :variant="selectedVariant" :quantity="quantity" class="h-full"
-          @update:variant="selectedVariant = $event" @update:quantity="quantity = $event" @add-to-cart="onAddToCart"
-          @buy-now="onBuyNow" />
+        <ProductInfo
+          :product="product"
+          :variant="selectedVariant"
+          :quantity="quantity"
+          :average-rating="averageRating"
+          :total-reviews="totalReviews"
+          class="h-full"
+          @update:variant="selectedVariant = $event"
+          @update:quantity="quantity = $event"
+          @add-to-cart="onAddToCart"
+          @buy-now="onBuyNow"
+        />
       </div>
 
       <ProductTabs :description="product.description || ''" :is-food="product.customFields?.isFood === true"
         :ingredients="product.customFields?.ingredients || []" :usage="product.customFields?.usageAndFeeding || ''"
         :specs="product.customFields?.specifications || ''" />
       <ProductFrequentlyBought :exclude-product-id="product.id" @add-bundle="onAddBundle" />
-      <ProductReviews />
+      <ProductReviews
+        :product-id="String(product.id)"
+        @rating-updated="updateProductRating"
+      />
       <ProductYouMayAlsoLike :product-id="String(product.id)"
         :facet-value-ids="(product.facetValues ?? []).map((value: any) => String(value.id))" />
       <ProductWhyShop />
@@ -49,7 +61,8 @@ const product = ref<any>(null)
 const selectedVariant = ref<any>(null)
 const quantity = ref(1)
 const loading = ref(true)
-
+const averageRating = ref(0)
+const totalReviews = ref(0)
 const slug = computed(() => route.params.slug as string)
 
 const galleryImages = computed(() => {
@@ -75,6 +88,8 @@ const galleryImages = computed(() => {
 
 async function loadProduct() {
   loading.value = true
+  averageRating.value = 0
+  totalReviews.value = 0
   try {
     const data = await getProductBySlug(slug.value)
     product.value = data
@@ -116,6 +131,14 @@ async function onAddToCart() {
   } catch (e) {
     console.error(e)
   }
+}
+
+function updateProductRating(value: {
+  averageRating: number
+  totalReviews: number
+}) {
+  averageRating.value = Number(value.averageRating || 0)
+  totalReviews.value = Number(value.totalReviews || 0)
 }
 
 async function onBuyNow() {

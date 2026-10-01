@@ -8,6 +8,7 @@
     <!-- Image → product page -->
     <NuxtLink
       :to="productLink"
+      :prefetch="false"
       :class="[
         'relative bg-gray-50 overflow-hidden shrink-0 block',
         isList
@@ -75,26 +76,26 @@
         </h3>
       </NuxtLink>
       <!-- Rating -->
-      <div class="flex items-center gap-2 mt-1">
-        <!-- Stars -->
+      <div
+        v-if="Number(product.totalReviews ?? 0) > 0"
+        class="flex items-center gap-2 mt-1"
+      >
         <div class="flex items-center gap-0.5">
           <div
             v-for="star in 5"
             :key="star"
             class="relative w-4 h-4"
           >
-            <!-- Empty Star -->
             <span
               class="absolute inset-0 text-gray-300 text-lg leading-4"
             >
               ★
             </span>
 
-            <!-- Filled Star -->
             <span
               class="absolute inset-0 overflow-hidden text-yellow-400 text-lg leading-4"
               :style="{
-                width: `${getStarFill(star)}%`
+                width: `${getStarFill(star)}%`,
               }"
             >
               ★
@@ -102,9 +103,8 @@
           </div>
         </div>
 
-        <!-- Rating Number -->
         <span class="text-gray-500 text-base font-semibold">
-          ({{ product.rating.toFixed(1) }})
+          ({{ Number(product.rating ?? 0).toFixed(1) }})
         </span>
       </div>
       <!-- Price -->
@@ -213,6 +213,7 @@ interface Product {
   image: string
   price: number
   rating: number
+  totalReviews?: number
   originalPrice?: number
   discount?: number
   slug?: string

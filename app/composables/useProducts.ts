@@ -112,6 +112,91 @@ export function useProducts() {
     }
   `
 
+  interface ProductRatingSummary {
+    productId: string
+    averageRating: number
+    totalReviews: number
+  }
+
+  async function getProductRatings(
+    productIds: Array<string | number>,
+  ): Promise<Record<string, ProductRatingSummary>> {
+    const uniqueIds = [
+      ...new Set(
+        productIds
+          .map(id => String(id))
+          .filter(Boolean),
+      ),
+    ]
+
+    if (!uniqueIds.length) {
+      return {}
+    }
+
+    const variableDefinitions = uniqueIds
+      .map((_, index) => `$productId${index}: ID!`)
+      .join(', ')
+
+    const ratingQueries = uniqueIds
+      .map(
+        (_, index) => `
+          rating${index}: productRating(
+            productId: $productId${index}
+          ) {
+            productId
+            averageRating
+            totalReviews
+          }
+        `,
+      )
+      .join('\n')
+
+    const query = `
+      query GetProductRatings(${variableDefinitions}) {
+        ${ratingQueries}
+      }
+    `
+
+    const variables = Object.fromEntries(
+      uniqueIds.map((id, index) => [
+        `productId${index}`,
+        id,
+      ]),
+    )
+
+    try {
+      const data: any = await client.request(
+        query,
+        variables,
+      )
+
+      return uniqueIds.reduce<
+        Record<string, ProductRatingSummary>
+      >((result, productId, index) => {
+        const summary = data?.[`rating${index}`]
+
+        result[productId] = {
+          productId,
+          averageRating: Number(
+            summary?.averageRating ?? 0,
+          ),
+          totalReviews: Number(
+            summary?.totalReviews ?? 0,
+          ),
+        }
+
+        return result
+      }, {})
+    } catch (error) {
+      console.error(
+        'Unable to load product ratings:',
+        error,
+      )
+
+      return {}
+    }
+  }
+
   async function getProductBySlug(slug: string) {
     const data = await client.request(GET_PRODUCT, { slug })
     return data?.product ?? null
@@ -168,10 +253,33 @@ export function useProducts() {
       { input }
     )
 
-    return data?.search ?? {
+    const result = data?.search ?? {
       totalItems: 0,
       items: [],
       facetValues: [],
+    }
+
+    const ratings = await getProductRatings(
+      (result.items ?? []).map(
+        (item: any) => item.productId,
+      ),
+    )
+
+    return {
+      ...result,
+
+      items: (result.items ?? []).map(
+        (item: any) => {
+          const rating =
+            ratings[String(item.productId)]
+
+          return {
+            ...item,
+            rating: rating?.averageRating ?? 0,
+            totalReviews: rating?.totalReviews ?? 0,
+          }
+        },
+      ),
     }
   }
 
@@ -250,9 +358,31 @@ export function useProducts() {
       options: productOptions,
     })
 
-    return data?.products ?? {
+    const result = data?.products ?? {
       totalItems: 0,
       items: [],
+    }
+
+    const ratings = await getProductRatings(
+      (result.items ?? []).map(
+        (item: any) => item.id,
+      ),
+    )
+
+    return {
+      ...result,
+
+      items: (result.items ?? []).map(
+        (item: any) => {
+          const rating = ratings[String(item.id)]
+
+          return {
+            ...item,
+            rating: rating?.averageRating ?? 0,
+            totalReviews: rating?.totalReviews ?? 0,
+          }
+        },
+      ),
     }
   }
 
@@ -291,6 +421,7 @@ export function useProducts() {
     getProducts,
     getShopProducts,
     getProductBySlug,
+    getProductRatings,
     getShopFacets,
     formatPrice,
   }

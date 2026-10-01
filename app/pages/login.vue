@@ -52,7 +52,44 @@
               </NuxtLink>
             </div>
 
-            <input id="password" v-model="password" type="password" placeholder="Enter your password" required />
+            <div class="password-field">
+              <input
+                id="password"
+                v-model="password"
+                :type="showPassword ? 'text' : 'password'"
+                placeholder="Enter your password"
+                autocomplete="current-password"
+                required
+              />
+
+              <button
+                type="button"
+                class="password-toggle"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                @click="showPassword = !showPassword"
+              >
+                <svg
+                  v-if="!showPassword"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"
+                  />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+
+                <svg
+                  v-else
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path d="m3 3 18 18" />
+                  <path d="M10.6 6.2A10.8 10.8 0 0 1 12 6c6.5 0 10 6 10 6a17 17 0 0 1-2.1 2.8" />
+                  <path d="M6.2 6.2C3.5 8 2 12 2 12s3.5 6 10 6c1.6 0 3-.4 4.2-1" />
+                </svg>
+              </button>
+            </div>
 
           </div>
 
@@ -114,7 +151,7 @@
 const email = ref('')
 const password = ref('')
 const rememberMe = ref(false)
-
+const showPassword = ref(false)
 const loading = ref(false)
 const errorMessage = ref('')
 const googleButton = ref<HTMLElement | null>(null)
@@ -454,6 +491,64 @@ onMounted(() => {
 
 .password-label a:hover {
   text-decoration: underline;
+}
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  display: block;
+  width: 100%;
+  height: 48px;
+  box-sizing: border-box;
+  padding: 0 3rem 0 0.95rem;
+  color: #25263d;
+  background: #ffffff;
+  border: 1px solid #d6d7df;
+  border-radius: 8px;
+  font: inherit;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+.password-field input:focus {
+  border-color: #44476f;
+  box-shadow: 0 0 0 3px rgba(68, 71, 111, 0.12);
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: #77767f;
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  color: #44476f;
+  background: #f4f2f8;
+}
+
+.password-toggle svg {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 

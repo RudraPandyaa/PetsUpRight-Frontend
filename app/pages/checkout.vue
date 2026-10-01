@@ -427,6 +427,7 @@ const {
   cartTotal,
   getActiveOrder,
   refreshCart,
+  ensureOrderCanBeModified,
   applyCoupon,
   removeCoupon,
 } = useCart()
@@ -1088,12 +1089,23 @@ async function submitOrder() {
       },
 
       modal: {
-        ondismiss: () => {
+        ondismiss: async () => {
           isProcessingPayment.value = false
 
-          console.log(
-            'Razorpay checkout closed'
-          )
+          try {
+            /*
+            * prepareVendureOrder() changed the order to
+            * ArrangingPayment. Since payment was cancelled,
+            * return it to AddingItems.
+            */
+            await ensureOrderCanBeModified()
+            await refreshCart()
+          } catch (error) {
+            console.error(
+              'Unable to restore cart after closing payment:',
+              error
+            )
+          }
         },
       },
     }
@@ -1102,17 +1114,20 @@ async function submitOrder() {
 
     razorpay.open()
   } catch (error: any) {
+    try {
+      await ensureOrderCanBeModified()
+      await refreshCart()
+    } catch (restoreError) {
+      console.error(
+        'Unable to restore the cart:',
+        restoreError
+      )
+    }
+
     console.error(
       'Unable to start Razorpay payment:',
       error
     )
-
-    errorMessage.value =
-      error?.response?.errors?.[0]?.message ||
-      error?.message ||
-      'Unable to start payment.'
-
-    isProcessingPayment.value = false
   }
 }
 

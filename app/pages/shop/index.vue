@@ -11,7 +11,7 @@
 
         <!-- LEFT: Filters -->
         <div class="w-full lg:w-64 xl:w-72 shrink-0">
-          <ShopFilters @update:filters="onFiltersChange" />
+          <ShopFilters     :initial-filters="activeFilters" @update:filters="onFiltersChange" />
         </div>
 
         <!-- RIGHT: Products -->
@@ -40,26 +40,75 @@
     <ShopNewsletter />
   </div>
 </template>
+
 <script setup lang="ts">
+const route = useRoute()
+
 const sortBy = ref('popularity')
 const viewMode = ref<'grid' | 'list'>('grid')
 const totalProducts = ref(0)
 const currentPage = ref(1)
 
-const activeFilters = ref({
+type ShopFilterState = {
+  search: string
+  petType: string[]
+  category: string[]
+  brand: string[]
+  priceMin: number
+  priceMax: number
+  ratings: number[]
+}
+
+function getPetTypeFromUrl(): string[] {
+  const value = route.query['pet-type']
+
+  if (Array.isArray(value)) {
+    return value
+      .filter((item): item is string => typeof item === 'string')
+      .map(item => item.trim().toLowerCase())
+      .filter(Boolean)
+  }
+
+  if (typeof value === 'string' && value.trim()) {
+    return [value.trim().toLowerCase()]
+  }
+
+  return []
+}
+
+const activeFilters = ref<ShopFilterState>({
   search: '',
-  petType: [] as string[],
-  category: [] as string[],
-  brand: [] as string[],
+  petType: getPetTypeFromUrl(),
+  category: [],
+  brand: [],
   priceMin: 0,
   priceMax: 10000,
-  ratings: [] as number[],
+  ratings: [],
 })
 
-function onFiltersChange(filters: typeof activeFilters.value) {
-  activeFilters.value = { ...filters }
+function onFiltersChange(filters: ShopFilterState) {
+  activeFilters.value = {
+    ...filters,
+    petType: [...filters.petType],
+    category: [...filters.category],
+    brand: [...filters.brand],
+    ratings: [...filters.ratings],
+  }
+
   currentPage.value = 1
 }
+
+watch(
+  () => route.query['pet-type'],
+  () => {
+    activeFilters.value = {
+      ...activeFilters.value,
+      petType: getPetTypeFromUrl(),
+    }
+
+    currentPage.value = 1
+  },
+)
 
 useHead({
   title: 'Shop Pet Products | PetsUpRight',

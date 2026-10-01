@@ -362,7 +362,7 @@ onUnmounted(() => {
               </span>
             </button>
 
-            <NuxtLink to="/store-locator" class="hidden sm:block p-1 text-[#1a1a2e] hover:text-[#44476f] transition"
+            <NuxtLink to="/store-location" class="hidden sm:block p-1 text-[#1a1a2e] hover:text-[#44476f] transition"
               aria-label="Store locator">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">

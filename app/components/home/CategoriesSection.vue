@@ -142,7 +142,12 @@ onMounted(async () => {
         id: category.id,
         name: category.name,
         image: categoryImages[code] || '/images/black-dog.jpg',
-        link: `/shop?pet-type=${code}`,
+        link: {
+          path: '/shop',
+          query: {
+            'pet-type': code,
+          },
+        },
       }
     })
   } catch (error) {

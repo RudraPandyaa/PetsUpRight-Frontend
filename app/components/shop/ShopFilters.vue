@@ -345,11 +345,26 @@
 </template>
 
 <script setup lang="ts">
+const applyingInitialFilters = ref(false)
 interface FilterOption {
   label: string
   value: string
   code: string
 }
+
+type ShopFilterState = {
+  search: string
+  petType: string[]
+  category: string[]
+  brand: string[]
+  priceMin: number
+  priceMax: number
+  ratings: number[]
+}
+
+const props = defineProps<{
+  initialFilters?: ShopFilterState
+}>()
 
 export interface ShopFiltersState {
   search: string
@@ -418,6 +433,85 @@ const filteredBrands = computed(() => {
   )
 })
 
+function resolveOptionIds(
+  values: string[] | undefined,
+  options: FilterOption[],
+): string[] {
+  if (!values?.length) return []
+
+  return values
+    .map((input) => {
+      const normalized = String(input).trim().toLowerCase()
+
+      const option = options.find(
+        item =>
+          item.value === String(input) ||
+          item.code === normalized,
+      )
+
+      return option?.value
+    })
+    .filter((value): value is string => Boolean(value))
+}
+
+async function applyInitialFilters() {
+  const initial = props.initialFilters
+
+  if (!initial) return
+
+  applyingInitialFilters.value = true
+
+  const petTypeIds = resolveOptionIds(
+    initial.petType,
+    petTypes.value,
+  )
+
+  const categoryIds = resolveOptionIds(
+    initial.category,
+    categories.value,
+  )
+
+  const brandIds = resolveOptionIds(
+    initial.brand,
+    brands.value,
+  )
+
+  selected.petType.splice(
+    0,
+    selected.petType.length,
+    ...petTypeIds,
+  )
+
+  selected.category.splice(
+    0,
+    selected.category.length,
+    ...categoryIds,
+  )
+
+  selected.brand.splice(
+    0,
+    selected.brand.length,
+    ...brandIds,
+  )
+
+  selected.ratings.splice(
+    0,
+    selected.ratings.length,
+    ...(initial.ratings ?? []),
+  )
+
+  priceRange.value = [
+    initial.priceMin ?? 0,
+    initial.priceMax ?? 10000,
+  ]
+
+  // Allow Vue's selected/price watchers to finish
+  // while emitting is disabled.
+  await nextTick()
+
+  applyingInitialFilters.value = false
+}
+
 function toggleSection(
   key: keyof typeof openSections
 ) {
@@ -425,6 +519,9 @@ function toggleSection(
 }
 
 function emitFilters() {
+  if (applyingInitialFilters.value) {
+    return
+  }
   emit('update:filters', {
     search: '',
     petType: [...selected.petType],
@@ -491,6 +588,7 @@ async function loadFacets() {
           code: String(value.code).toLowerCase(),
         })
       ) ?? []
+      applyInitialFilters()
 
     console.log('FINAL PET TYPES:', petTypes.value)
   } catch (error) {
@@ -527,7 +625,21 @@ watch(
   }
 )
 
-onMounted(async () => {
-  await loadFacets()
-})
+watch(
+  () => props.initialFilters,
+  async () => {
+    if (
+      !loadingFacets.value &&
+      petTypes.value.length &&
+      !applyingInitialFilters.value
+    ) {
+      await applyInitialFilters()
+    }
+  },
+  {
+    deep: true,
+  },
+)
+
+onMounted(loadFacets)
 </script>

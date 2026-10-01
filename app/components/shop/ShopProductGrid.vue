@@ -109,7 +109,7 @@ const {
 
 const products = ref<ShopProduct[]>([])
 const loading = ref(false)
-
+let fetchRequestId = 0
 const categoryIdByCode = ref<Record<string, string>>({})
 const petTypeIdByCode = ref<Record<string, string>>({})
 const brandIdByCode = ref<Record<string, string>>({})
@@ -192,6 +192,28 @@ async function loadHeaderFacetMaps() {
   }
 }
 
+function resolveFacetIds(
+  values: string[] | undefined,
+  idByCode: Record<string, string>,
+): string[] {
+  if (!values?.length) return []
+
+  return [
+    ...new Set(
+      values
+        .map((value) => {
+          const input = String(value).trim()
+          const normalized = input.toLowerCase()
+
+          // Convert codes such as "dog" into Vendure IDs.
+          // Existing IDs remain unchanged.
+          return idByCode[normalized] ?? input
+        })
+        .filter(Boolean),
+    ),
+  ]
+}
+
 /*
 |--------------------------------------------------------------------------
 | Build Vendure facet filters
@@ -221,40 +243,25 @@ function buildFacetValueFilters() {
   /*
    * Pet Type
    */
-  if (f?.petType?.length) {
+  const petTypeIds = resolveFacetIds(
+    f?.petType,
+    petTypeIdByCode.value,
+  )
+
+  if (petTypeIds.length) {
     filters.push({
-      or: [...f.petType],
+      or: petTypeIds,
     })
-  }
-
-  /*
-  * Pet Type coming from Header:
-  *
-  * /shop?pet=dog
-  * /shop?pet=cat
-  */
-
-  const petCode =
-    typeof route.query.pet === 'string'
-      ? route.query.pet.toLowerCase()
-      : undefined
-
-  if (petCode) {
-    const petTypeId =
-      petTypeIdByCode.value[petCode]
-
-    if (petTypeId) {
-      filters.push({
-        and: petTypeId,
-      })
-    }
   }
 
   /*
    * Category
    */
   const categoryIds = new Set<string>(
-    f?.category ?? []
+    resolveFacetIds(
+      f?.category,
+      categoryIdByCode.value,
+    ),
   )
 
   const categoryCode =
@@ -287,9 +294,14 @@ function buildFacetValueFilters() {
   /*
    * Brand
    */
-  if (f?.brand?.length) {
+  const brandIds = resolveFacetIds(
+    f?.brand,
+    brandIdByCode.value,
+  )
+
+  if (brandIds.length) {
     filters.push({
-      or: [...f.brand],
+      or: brandIds,
     })
   }
 
@@ -378,6 +390,7 @@ function mapShopProduct(item: any): ShopProduct {
 |--------------------------------------------------------------------------
 */
 async function fetchProducts() {
+  const requestId = ++fetchRequestId
   loading.value = true
 
   try {
@@ -501,6 +514,9 @@ async function fetchProducts() {
         )
       )
     }
+    if (requestId !== fetchRequestId) {
+      return
+    }
 
     products.value = items
 
@@ -526,7 +542,9 @@ async function fetchProducts() {
 
     emit('update:total', 0)
   } finally {
+    if (requestId === fetchRequestId) {
     loading.value = false
+  }
   }
 }
 

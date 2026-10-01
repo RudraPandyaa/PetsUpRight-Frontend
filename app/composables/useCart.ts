@@ -13,6 +13,16 @@ const ORDER_FIELDS = gql`
     shipping
     shippingWithTax
 
+    shippingLines {
+      id
+      priceWithTax
+      shippingMethod {
+        id
+        code
+        name
+      }
+    }
+
     total
     totalWithTax
 
@@ -139,7 +149,27 @@ const REMOVE_ORDER_LINE = gql`
     }
   }
 `
+const RETURN_ORDER_TO_ADDING_ITEMS = gql`
+  ${ORDER_FIELDS}
 
+  mutation ReturnOrderToAddingItems {
+    transitionOrderToState(state: "AddingItems") {
+      __typename
+
+      ... on Order {
+        ...CartOrderFields
+      }
+
+      ... on OrderStateTransitionError {
+        errorCode
+        message
+        transitionError
+        fromState
+        toState
+      }
+    }
+  }
+`
 
 
 export function useCart() {
@@ -257,6 +287,62 @@ export function useCart() {
   function clearCartState() {
     activeOrder.value = null
   }
+    async function ensureOrderCanBeModified() {
+    // Always get the latest order state from Vendure.
+    const order = await getActiveOrder()
+
+    // No active order means addItemToOrder will create a new order.
+    if (!order) {
+      return null
+    }
+
+    if (order.state === 'AddingItems') {
+      return order
+    }
+
+    if (order.state === 'ArrangingPayment') {
+      const data: any = await client.request(
+        RETURN_ORDER_TO_ADDING_ITEMS
+      )
+
+      const result = data?.transitionOrderToState
+
+      if (!result) {
+        throw new Error(
+          'No response received while restoring the cart'
+        )
+      }
+
+      if (result.__typename === 'OrderStateTransitionError') {
+        throw new Error(
+          result.transitionError ||
+          result.message ||
+          'Unable to return the order to the cart'
+        )
+      }
+
+      return handleOrderResult(result)
+    }
+
+    /*
+    * Completed, cancelled and settled orders cannot be edited.
+    * Refreshing removes an old order left in frontend state.
+    */
+    activeOrder.value = null
+
+    const latestOrder = await getActiveOrder()
+
+    if (
+      latestOrder &&
+      latestOrder.state !== 'AddingItems'
+    ) {
+      throw new Error(
+        `This order cannot be modified because it is in the "${latestOrder.state}" state`
+      )
+    }
+
+    return latestOrder
+  }
 
   async function applyCoupon(couponCode: string) {
   const code = couponCode.trim()
@@ -345,6 +431,7 @@ async function removeCoupon(couponCode: string) {
         'Quantity must be greater than 0'
       )
     }
+    await ensureOrderCanBeModified()
 
     try {
       cartLoading.value = true
@@ -394,6 +481,7 @@ async function removeCoupon(couponCode: string) {
         'Quantity cannot be negative'
       )
     }
+    await ensureOrderCanBeModified()
 
     try {
       cartLoading.value = true
@@ -436,6 +524,8 @@ async function removeCoupon(couponCode: string) {
         'Order line ID is required'
       )
     }
+    await ensureOrderCanBeModified()
+
 
     try {
       cartLoading.value = true
@@ -501,6 +591,7 @@ const REMOVE_COUPON_CODE = gql`
 
     getActiveOrder,
     refreshCart,
+    ensureOrderCanBeModified,
     clearCartState,
 
     addItem,

@@ -62,25 +62,25 @@
           >
             <div class="saving-labels">
 
-  <span
-    :class="{ active: totalPrice >= 750 }"
-  >
-    DELIVERY FREE
-  </span>
+            <span
+              :class="{ active: hasFreeDelivery }"
+            >
+              FREE DELIVERY
+            </span>
 
-  <span
-    :class="{ active: totalPrice >= 2000 }"
-  >
-    SAVE ₹200
-  </span>
+            <span
+              :class="{ active: totalSavings >= 200 }"
+            >
+              SAVE ₹200
+            </span>
 
-  <span
-    :class="{ active: totalPrice >= 5000 }"
-  >
-    SAVE ₹400
-  </span>
+            <span
+              :class="{ active: totalSavings >= 400 }"
+            >
+              SAVE ₹400
+            </span>
 
-</div>
+          </div>
 
             <div class="saving-line">
               <div
@@ -91,7 +91,7 @@
 
             <div class="saving-values">
               <span>₹0</span>
-              <span>₹2000</span>
+              <span>₹999</span>
               <span>₹3000</span>
               <span>₹5000</span>
             </div>
@@ -230,25 +230,121 @@
           >
 
             <button
-              type="button"
-              class="order-summary"
+            type="button"
+            class="order-summary"
+            :aria-expanded="isOrderSummaryOpen"
+            @click="isOrderSummaryOpen = !isOrderSummaryOpen"
+          >
+            <span>ORDER SUMMARY</span>
+
+            <svg
+              class="summary-arrow"
+              :class="{ open: isOrderSummaryOpen }"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
             >
-              <span>ORDER SUMMARY</span>
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
 
-              <svg
-                class="summary-arrow"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
+          <Transition name="summary">
+            <div
+              v-if="isOrderSummaryOpen"
+              class="order-summary-details"
+            >
+              <div class="summary-row">
+                <span>Items subtotal</span>
+
+                <span>
+                  ₹{{ cartSubtotal.toLocaleString('en-IN') }}
+                </span>
+              </div>
+
+              <div
+                v-if="totalSavings > 0"
+                class="summary-row discount-row"
               >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
+                <span>Promotion savings</span>
+
+                <span>
+                  − ₹{{ totalSavings.toLocaleString('en-IN') }}
+                </span>
+              </div>
+
+              <div class="summary-row">
+                <span>Delivery</span>
+
+                <span
+                  v-if="hasFreeDelivery"
+                  class="free-delivery"
+                >
+                  FREE
+                </span>
+
+                <span v-else-if="shippingCharge > 0">
+                  ₹{{ shippingCharge.toLocaleString('en-IN') }}
+                </span>
+
+                <span v-else class="muted-value">
+                  Calculated at checkout
+                </span>
+              </div>
+
+              <div class="summary-divider"></div>
+
+              <div class="summary-row total-row">
+                <span>Total</span>
+
+                <span>
+                  ₹{{ totalPrice.toLocaleString('en-IN') }}
+                </span>
+              </div>
+
+              <div
+                v-if="totalSavings > 0 || hasFreeDelivery"
+                class="total-savings-box"
+              >
+                <span>
+                  Total benefit
+                </span>
+
+                <strong>
+                  <template v-if="totalSavings > 0">
+                    ₹{{ totalSavings.toLocaleString('en-IN') }} saved
+                  </template>
+
+                  <template v-if="totalSavings > 0 && hasFreeDelivery">
+                    +
+                  </template>
+
+                  <template v-if="hasFreeDelivery">
+                    Free delivery
+                  </template>
+                </strong>
+              </div>
+            </div>
+          </Transition>
 
 
-            <div class="saving-message">
-              You're saving ₹{{ totalSavings.toLocaleString('en-IN') }} on this order
+            <div
+              v-if="totalSavings > 0 || hasFreeDelivery"
+              class="saving-message"
+            >
+              <template v-if="totalSavings > 0 && hasFreeDelivery">
+                You're saving ₹{{ totalSavings.toLocaleString('en-IN') }}
+                with free delivery
+              </template>
+
+              <template v-else-if="totalSavings > 0">
+                You're saving ₹{{ totalSavings.toLocaleString('en-IN') }}
+                on this order
+              </template>
+
+              <template v-else>
+                You've unlocked free delivery
+              </template>
             </div>
 
 
@@ -307,6 +403,7 @@ const emit = defineEmits<{
 }>()
 
 const {
+  activeOrder,
   cartLines,
   cartCount,
   cartTotal,
@@ -314,6 +411,17 @@ const {
   adjustQuantity,
   removeItem: removeOrderItem,
 } = useCart()
+
+
+const isOrderSummaryOpen = ref(false)
+
+const shippingCharge = computed(() => {
+  return (
+    Number(
+      activeOrder.value?.shippingWithTax ?? 0
+    ) / 100
+  )
+})
 
 const cart = computed(() => cartLines.value.map((line: any) => {
   const quantity = Number(line.quantity ?? 1)
@@ -342,6 +450,44 @@ onMounted(() => {
 })
 
 
+const savingsMessage = computed(() => {
+  const subtotal = cartSubtotal.value
+
+  if (subtotal < FREE_DELIVERY_THRESHOLD) {
+    const remaining =
+      FREE_DELIVERY_THRESHOLD - subtotal
+
+    return `Add ₹${Math.ceil(remaining).toLocaleString(
+      'en-IN'
+    )} more for free delivery`
+  }
+
+  if (subtotal < SAVE_200_THRESHOLD) {
+    const remaining =
+      SAVE_200_THRESHOLD - subtotal
+
+    return `Free delivery unlocked! Add ₹${Math.ceil(
+      remaining
+    ).toLocaleString('en-IN')} more to save ₹200`
+  }
+
+  if (subtotal < SAVE_400_THRESHOLD) {
+    const remaining =
+      SAVE_400_THRESHOLD - subtotal
+
+    return `You're saving ₹${totalSavings.value.toLocaleString(
+      'en-IN'
+    )}. Add ₹${Math.ceil(
+      remaining
+    ).toLocaleString('en-IN')} more to save ₹400`
+  }
+
+  return `You're saving ₹${totalSavings.value.toLocaleString(
+    'en-IN'
+  )} with free delivery`
+})
+
+
 /*
 |--------------------------------------------------------------------------
 | CART COUNT
@@ -360,8 +506,60 @@ const totalPrice = computed(() => cartTotal.value)
 | TOTAL SAVINGS
 |--------------------------------------------------------------------------
 */
-const totalSavings = computed(() => 0)
+const totalSavings = computed(() => {
+  const discounts = activeOrder.value?.discounts ?? []
 
+  const savingsInPaise = discounts.reduce(
+    (total: number, discount: any) => {
+      return total + Math.abs(
+        Number(discount.amountWithTax ?? 0)
+      )
+    },
+    0
+  )
+
+  return savingsInPaise / 100
+})
+
+const cartSubtotal = computed(() => {
+  return (
+    Number(
+      activeOrder.value?.subTotalWithTax ?? 0
+    ) / 100
+  )
+})
+
+// const hasCalculatedShipping = computed(() => {
+//   return (
+//     activeOrder.value?.shippingLines?.length > 0
+//   )
+// })
+
+// const hasFreeDelivery = computed(() => {
+//   return (
+//     hasCalculatedShipping.value &&
+//     Number(
+//       activeOrder.value?.shippingWithTax ?? 0
+//     ) === 0
+//   )
+// })
+
+
+const FREE_DELIVERY_THRESHOLD = 999
+const SAVE_200_THRESHOLD = 3000
+const SAVE_400_THRESHOLD = 5000
+
+const hasFreeDelivery = computed(() => {
+  return cartSubtotal.value >= FREE_DELIVERY_THRESHOLD
+})
+
+const hasSave200 = computed(() => {
+  return cartSubtotal.value >= SAVE_200_THRESHOLD
+})
+
+const hasSave400 = computed(() => {
+  return cartSubtotal.value >= SAVE_400_THRESHOLD
+})
 
 /*
 |--------------------------------------------------------------------------
@@ -369,14 +567,16 @@ const totalSavings = computed(() => 0)
 |--------------------------------------------------------------------------
 */
 const savingProgress = computed(() => {
-  const total = totalPrice.value
+  const subtotal = cartSubtotal.value
 
-  if (total <= 0) return 0
-  if (total <= 750) return (total / 750) * 25
-  if (total <= 2000) return 25 + ((total - 750) / (2000 - 750)) * 25
-  if (total <= 3000) return 50 + ((total - 2000) / (3000 - 2000)) * 25
-  if (total <= 5000) return 75 + ((total - 3000) / (5000 - 3000)) * 25
-  return 100
+  if (subtotal <= 0) {
+    return 0
+  }
+
+  return Math.min(
+    (subtotal / 5000) * 100,
+    100
+  )
 })
 
 const closeCart = () => {
@@ -389,13 +589,25 @@ const closeCart = () => {
 | INCREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const increaseQuantity = async (id: number | string) => {
+const increaseQuantity = async (
+  id: number | string
+) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
 
-  if (item) {
-    await adjustQuantity(String(item.orderLineId), item.quantity + 1)
+  if (!item) return
+
+  try {
+    await adjustQuantity(
+      String(item.orderLineId),
+      item.quantity + 1
+    )
+  } catch (error) {
+    console.error(
+      'Could not increase quantity:',
+      error
+    )
   }
 }
 
@@ -405,26 +617,44 @@ const increaseQuantity = async (id: number | string) => {
 | DECREASE QUANTITY
 |--------------------------------------------------------------------------
 */
-const decreaseQuantity = async (id: number | string) => {
+const decreaseQuantity = async (
+  id: number | string
+) => {
   const item = cart.value.find(
     item => String(item.id) === String(id)
   )
 
-  if (!item) return
+  if (!item || item.quantity <= 1) return
 
-  if (item.quantity > 1) {
-    await adjustQuantity(String(item.orderLineId), item.quantity - 1)
+  try {
+    await adjustQuantity(
+      String(item.orderLineId),
+      item.quantity - 1
+    )
+  } catch (error) {
+    console.error(
+      'Could not decrease quantity:',
+      error
+    )
   }
 }
-
 
 /*
 |--------------------------------------------------------------------------
 | REMOVE ITEM
 |--------------------------------------------------------------------------
 */
-const removeItem = async (id: number | string) => {
-  await removeOrderItem(String(id))
+const removeItem = async (
+  id: number | string
+) => {
+  try {
+    await removeOrderItem(String(id))
+  } catch (error) {
+    console.error(
+      'Could not remove cart item:',
+      error
+    )
+  }
 }
 
 
@@ -947,6 +1177,88 @@ const buyNow = () => {
 .summary-arrow {
   width: 13px;
   height: 13px;
+  transition: transform 0.2s ease;
+}
+
+.summary-arrow.open {
+  transform: rotate(180deg);
+}
+
+.order-summary-details {
+  padding: 12px 17px 14px;
+  background: #ffffff;
+  border-top: 1px solid #eeeeee;
+}
+
+.summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 9px;
+  color: #5f6070;
+  font-size: 13px;
+}
+
+.summary-row:last-child {
+  margin-bottom: 0;
+}
+
+.discount-row {
+  color: #238c3c;
+}
+
+.free-delivery {
+  color: #238c3c;
+  font-weight: 700;
+}
+
+.muted-value {
+  color: #999999;
+  font-size: 12px;
+}
+
+.summary-divider {
+  height: 1px;
+  margin: 11px 0;
+  background: #e5e7eb;
+}
+
+.total-row {
+  margin-bottom: 11px;
+  color: #34364d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.total-savings-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 11px;
+  color: #237c36;
+  background: #edf8ef;
+  border-radius: 7px;
+  font-size: 12px;
+}
+
+.total-savings-box strong {
+  text-align: right;
+}
+
+.summary-enter-active,
+.summary-leave-active {
+  overflow: hidden;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.summary-enter-from,
+.summary-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
 }
 
 
