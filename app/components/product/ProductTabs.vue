@@ -9,12 +9,16 @@
 
     <div class="tab-content">
       <!-- Description -->
-      <div v-if="hasDescription" v-show="activeTab === 'description'" class="tab-panel">
-        <p class="desc-text">
-          {{ description }}
-        </p>
+      <div
+        v-if="hasDescription"
+        v-show="activeTab === 'description'"
+        class="tab-panel"
+      >
+        <div
+          class="desc-text"
+          v-html="description"
+        ></div>
       </div>
-
       <!-- Ingredients -->
       <div v-if="showIngredients" v-show="activeTab === 'ingredients'" class="tab-panel">
         <ul class="ingredient-list">

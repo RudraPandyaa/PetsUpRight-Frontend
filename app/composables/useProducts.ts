@@ -1,8 +1,11 @@
 import { useVendure } from './useVendure'
-
+let shopFacetsRequest: Promise<any[]> | null = null
 export function useProducts() {
   const { client } = useVendure()
-
+  const shopFacetsCache = useState<any[] | null>(
+    'shop-facets-cache',
+    () => null,
+  )
   const SEARCH_PRODUCTS = `
     query SearchProducts($input: SearchInput!) {
       search(input: $input) {
@@ -60,6 +63,7 @@ export function useProducts() {
         name
         slug
         description
+
         customFields {
           petType
           isFood
@@ -67,21 +71,26 @@ export function useProducts() {
           usageAndFeeding
           specifications
         }
+
         featuredAsset {
           preview
         }
+
         assets {
           preview
         }
+
         variants {
           id
           name
           sku
           priceWithTax
           stockLevel
+
           featuredAsset {
             preview
           }
+
           options {
             id
             code
@@ -89,20 +98,24 @@ export function useProducts() {
             groupId
           }
         }
+
         optionGroups {
           id
           name
           code
+
           options {
             id
             name
             code
           }
         }
+
         facetValues {
           id
           name
           code
+
           facet {
             name
             code
@@ -211,11 +224,11 @@ export function useProducts() {
       name?: 'ASC' | 'DESC'
       price?: 'ASC' | 'DESC'
     }
-
     facetValueFilters?: Array<{
       and?: string
       or?: string[]
     }>
+    includeRatings?: boolean
   } = {}) {
     const {
       take = 12,
@@ -224,6 +237,7 @@ export function useProducts() {
       collectionSlug,
       sort,
       facetValueFilters,
+      includeRatings = true,
     } = options
 
     const input: any = {
@@ -232,17 +246,9 @@ export function useProducts() {
       skip,
     }
 
-    if (term) {
-      input.term = term
-    }
-
-    if (collectionSlug) {
-      input.collectionSlug = collectionSlug
-    }
-
-    if (sort) {
-      input.sort = sort
-    }
+    if (term) input.term = term
+    if (collectionSlug) input.collectionSlug = collectionSlug
+    if (sort) input.sort = sort
 
     if (facetValueFilters?.length) {
       input.facetValueFilters = facetValueFilters
@@ -250,13 +256,17 @@ export function useProducts() {
 
     const data = await client.request(
       SEARCH_PRODUCTS,
-      { input }
+      { input },
     )
 
     const result = data?.search ?? {
       totalItems: 0,
       items: [],
       facetValues: [],
+    }
+
+    if (!includeRatings) {
+      return result
     }
 
     const ratings = await getProductRatings(
@@ -267,19 +277,15 @@ export function useProducts() {
 
     return {
       ...result,
+      items: (result.items ?? []).map((item: any) => {
+        const rating = ratings[String(item.productId)]
 
-      items: (result.items ?? []).map(
-        (item: any) => {
-          const rating =
-            ratings[String(item.productId)]
-
-          return {
-            ...item,
-            rating: rating?.averageRating ?? 0,
-            totalReviews: rating?.totalReviews ?? 0,
-          }
-        },
-      ),
+        return {
+          ...item,
+          rating: rating?.averageRating ?? 0,
+          totalReviews: rating?.totalReviews ?? 0,
+        }
+      }),
     }
   }
 
@@ -323,7 +329,7 @@ export function useProducts() {
             name
             sku
             priceWithTax
-            stockLevel
+            // stockLevel
             currencyCode
           }
         }
@@ -412,9 +418,28 @@ export function useProducts() {
     }
   `
   async function getShopFacets() {
-    const data = await client.request(GET_SHOP_FACETS)
+    if (shopFacetsCache.value) {
+      return shopFacetsCache.value
+    }
 
-    return data?.facets?.items ?? []
+    if (shopFacetsRequest) {
+      return shopFacetsRequest
+    }
+
+    shopFacetsRequest = client
+      .request(GET_SHOP_FACETS)
+      .then((data: any) => {
+        const facets = data?.facets?.items ?? []
+
+        shopFacetsCache.value = facets
+
+        return facets
+      })
+      .finally(() => {
+        shopFacetsRequest = null
+      })
+
+    return shopFacetsRequest
   }
 
   return {

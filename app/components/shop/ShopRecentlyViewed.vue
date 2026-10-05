@@ -14,7 +14,8 @@
   </section>
 </template>
 
-<script setup lang="ts">
+<!-- <script setup lang="ts">
+
 import ProductCard from '~/components/shop/ProductCard.vue'
 
 const { getAll } = useRecentlyViewed()
@@ -94,5 +95,26 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+})
+</script> -->
+
+<script setup lang="ts">
+import ProductCard from '~/components/shop/ProductCard.vue'
+
+const { getAll } = useRecentlyViewed()
+
+const recentProducts = computed(() => {
+  return getAll().map((product: any) => ({
+    id: product.id,
+    variantId: String(product.variantId ?? ''),
+    name: product.name,
+    slug: product.slug,
+    image:
+      product.image ||
+      '/images/shop/Rectangle-5.png',
+    price: Number(product.price ?? 0),
+    rating: Number(product.rating ?? 0),
+    totalReviews: Number(product.totalReviews ?? 0),
+  }))
 })
 </script>

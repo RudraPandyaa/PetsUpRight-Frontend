@@ -100,12 +100,15 @@ async function loadProduct() {
 
       add({
         id: data.id,
+        variantId: String(firstVariant?.id ?? ''),
         name: data.name,
         slug: data.slug,
         image: data.featuredAsset?.preview || '',
         price: Math.round(
-          Number(firstVariant?.priceWithTax || 0) / 100
+          Number(firstVariant?.priceWithTax || 0) / 100,
         ),
+        rating: Number(data.rating ?? 0),
+        totalReviews: Number(data.totalReviews ?? 0),
       })
     }
   } catch (e) {
