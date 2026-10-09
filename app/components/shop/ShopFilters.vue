@@ -381,6 +381,7 @@ const emit = defineEmits<{
 }>()
 
 const { getShopFacets } = useProducts()
+const { loadCategoryTree, categoryOptions } = useCategoryTree()
 
 const brandSearch = ref('')
 const priceRange = ref<[number, number]>([0, 10000])
@@ -555,9 +556,12 @@ async function loadFacets() {
       (facet: any) => facet.code === 'pet-type'
     )
 
-    const categoryFacet = facets.find(
-      (facet: any) => facet.code === 'category'
-    )
+    // The client's categories (Food, Grooming, ...), from the collections.
+    // A failure here only empties the Category filter.
+    const pets = await loadCategoryTree().catch((error) => {
+      console.error('Failed to load categories:', error)
+      return []
+    })
 
     const brandFacet = facets.find(
       (facet: any) => facet.code === 'brand'
@@ -573,12 +577,13 @@ async function loadFacets() {
       code: String(value.code).toLowerCase(),
     })) ?? []
 
-    categories.value =
-    categoryFacet?.values?.map((value: any) => ({
-      label: value.name,
-      value: String(value.id),
-      code: String(value.code).toLowerCase(),
-    })) ?? []
+    // value and code are the category's slug part, e.g. "clean-and-hygiene";
+    // ShopProductGrid turns them into collection slugs per pet
+    categories.value = categoryOptions(pets).map(option => ({
+      label: option.label,
+      value: option.code,
+      code: option.code,
+    }))
 
     brands.value =
       brandFacet?.values?.map(

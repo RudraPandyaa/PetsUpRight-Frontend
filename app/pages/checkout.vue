@@ -97,7 +97,14 @@
                 <label>
                   <span>Postal code</span>
 
-                  <input v-model="form.postalCode" type="text" placeholder="Postal code" required />
+                  <input v-model="form.postalCode" type="text" inputmode="numeric" maxlength="6"
+                    placeholder="Postal code" required />
+
+                  <small v-if="postalCodeStatus" class="pincode-status"
+                    :class="postalCodeStatus.deliverable ? 'is-deliverable' : 'is-not-deliverable'"
+                    aria-live="polite">
+                    {{ postalCodeStatus.message }}
+                  </small>
                 </label>
 
               </div>
@@ -605,6 +612,37 @@ const form = reactive({
   countryCode: 'IN',
 })
 const errorMessage = ref('')
+
+/*
+ * Live delivery check for the postal code field
+ */
+const { checkPincode } = usePincode()
+const postalCodeStatus = ref<{ deliverable: boolean, message: string } | null>(null)
+let postalCodeCheckId = 0
+
+watch(
+  () => form.postalCode,
+  async (value) => {
+    const pincode = String(value ?? '').replace(/\s+/g, '')
+    const checkId = ++postalCodeCheckId
+
+    if (pincode.length !== 6) {
+      postalCodeStatus.value = null
+      return
+    }
+
+    try {
+      const result = await checkPincode(pincode)
+
+      // Ignore answers for a pincode the customer has since changed
+      if (checkId === postalCodeCheckId) {
+        postalCodeStatus.value = result
+      }
+    } catch (error) {
+      console.error('Pincode check failed:', error)
+    }
+  },
+)
 const isProcessingPayment = ref(false)
 const isCartLoaded = ref(false)
 const selectedPaymentMode = ref('upi')
@@ -753,9 +791,17 @@ function ensureOrderResult(
   }
 
   if (result.__typename !== 'Order') {
+    // transitionError holds the real reason (e.g. an undeliverable pincode),
+    // unless it is an untranslated key such as "message.cannot-..."
+    const transitionError =
+      typeof result.transitionError === 'string' &&
+      !result.transitionError.startsWith('message.')
+        ? result.transitionError
+        : ''
+
     throw new Error(
+      transitionError ||
       result.message ||
-      result.transitionError ||
       fallbackMessage
     )
   }
@@ -764,6 +810,15 @@ function ensureOrderResult(
 }
 
 async function prepareVendureOrder() {
+  // Delivery is only available to the pincodes the admin has added. The
+  // backend enforces this too; checking first gives a clear message before
+  // anything is changed.
+  const delivery = await checkPincode(form.postalCode)
+
+  if (!delivery.deliverable) {
+    throw new Error(delivery.message)
+  }
+
   if (!isLoggedIn.value) {
     const customerResult: any =
       await client.request(
@@ -1535,6 +1590,21 @@ input:focus {
 /* =========================================
    ERROR
 ========================================= */
+
+.pincode-status {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.pincode-status.is-deliverable {
+  color: #16a34a;
+}
+
+.pincode-status.is-not-deliverable {
+  color: #dc2626;
+}
 
 .error-message {
   padding:

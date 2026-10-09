@@ -220,6 +220,8 @@ export function useProducts() {
     skip?: number
     term?: string
     collectionSlug?: string
+    // Products in any of these collections (e.g. dog-food, cat-food)
+    collectionSlugs?: string[]
     sort?: {
       name?: 'ASC' | 'DESC'
       price?: 'ASC' | 'DESC'
@@ -235,6 +237,7 @@ export function useProducts() {
       skip = 0,
       term,
       collectionSlug,
+      collectionSlugs,
       sort,
       facetValueFilters,
       includeRatings = true,
@@ -247,7 +250,8 @@ export function useProducts() {
     }
 
     if (term) input.term = term
-    if (collectionSlug) input.collectionSlug = collectionSlug
+    if (collectionSlugs?.length) input.collectionSlugs = collectionSlugs
+    else if (collectionSlug) input.collectionSlug = collectionSlug
     if (sort) input.sort = sort
 
     if (facetValueFilters?.length) {

@@ -93,19 +93,32 @@
     <div class="delivery-box">
       <div class="delivery-head">
         <span class="delivery-title">Delivery Check</span>
-        <span class="deliverable">Deliverable</span>
+        <span v-if="pincodeResult?.deliverable" class="deliverable">Deliverable</span>
+        <span v-else-if="pincodeResult" class="not-deliverable">Not deliverable</span>
       </div>
-      <p class="delivery-hint">Enter your pincode to see the estimated delivery date.</p>
-      <div class="pincode-row">
+      <p class="delivery-hint">Enter your pincode to check if we deliver to you.</p>
+      <form class="pincode-row" @submit.prevent="onCheckPincode">
         <input
           v-model="pincode"
           type="text"
+          inputmode="numeric"
           maxlength="6"
           placeholder="Enter Pincode"
+          aria-label="Pincode"
           class="pincode-input"
         />
-        <button type="button" class="pincode-btn">Check ›</button>
-      </div>
+        <button type="submit" class="pincode-btn" :disabled="checkingPincode">
+          {{ checkingPincode ? 'Checking…' : 'Check ›' }}
+        </button>
+      </form>
+      <p
+        v-if="pincodeResult"
+        class="pincode-result"
+        :class="pincodeResult.deliverable ? 'is-deliverable' : 'is-not-deliverable'"
+        aria-live="polite"
+      >
+        {{ pincodeResult.message }}
+      </p>
       <p class="eta">
         <span class="trust-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24">
@@ -156,6 +169,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import type { PincodeDeliverability } from '~/composables/usePincode'
 const productCategoryLabel = computed(() => {
   const product = props.product
 
@@ -243,6 +257,28 @@ const safeTotalReviews = computed(() => {
 })
 
 const pincode = ref('')
+const pincodeResult = ref<PincodeDeliverability | null>(null)
+const checkingPincode = ref(false)
+const { checkPincode } = usePincode()
+
+async function onCheckPincode() {
+  if (!pincode.value.trim()) return
+
+  checkingPincode.value = true
+
+  try {
+    pincodeResult.value = await checkPincode(pincode.value)
+  } catch (error) {
+    console.error('Pincode check failed:', error)
+    pincodeResult.value = {
+      pincode: pincode.value,
+      deliverable: false,
+      message: 'Could not check this pincode right now. Please try again.',
+    }
+  } finally {
+    checkingPincode.value = false
+  }
+}
 
 const wishlistProducts = useState<any[]>('wishlist', () => [])
 
@@ -560,6 +596,31 @@ function changeQty(delta: number) {
   font-size: 1rem;
   font-weight: 600;
   color: #16a34a;
+}
+
+.not-deliverable {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.pincode-result {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.pincode-result.is-deliverable {
+  color: #16a34a;
+}
+
+.pincode-result.is-not-deliverable {
+  color: #dc2626;
+}
+
+.pincode-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
 }
 
 .delivery-hint {

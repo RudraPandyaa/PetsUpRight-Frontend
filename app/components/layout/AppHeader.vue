@@ -4,15 +4,18 @@ import CartDrawer from '~/components/cart layout/cartlayout.vue'
 
 const isMobileMenuOpen = ref(false)
 const route = useRoute()
-const isDogsOpen = ref(false)
-const isCatsOpen = ref(false)
 const searchQuery = ref('')
 const { getShopFacets } = useProducts()
 const isBrandsOpen = ref(false)
 const brandOptions = ref<HeaderFacetOption[]>([])
-const isMobileDogsOpen = ref(false)
-const isMobileCatsOpen = ref(false)
 const isMobileBrandsOpen = ref(false)
+
+// One menu per pet (Dogs, Cats, Birds, ...) from the client's category
+// structure: pet -> category -> subcategory, each linking to its collection
+const { categoryTree, loadCategoryTree, petLabel } = useCategoryTree()
+const petMenus = computed(() => categoryTree.value ?? [])
+const openPet = ref<string | null>(null)
+const openMobilePet = ref<string | null>(null)
 const { cartCount, getActiveOrder } = useCart()
 const {
   isCartOpen,
@@ -31,26 +34,15 @@ interface HeaderFacetOption {
   code: string
 }
 
-const dogCategories = ref<HeaderFacetOption[]>([])
-const catCategories = ref<HeaderFacetOption[]>([])
-
 async function loadHeaderData() {
   try {
+    await loadCategoryTree()
+  } catch (error) {
+    console.error('Failed to load categories:', error)
+  }
+
+  try {
     const facets = await getShopFacets()
-
-    const categoryFacet = facets.find(
-      (facet: any) => facet.code === 'category'
-    )
-
-    const categories =
-      categoryFacet?.values?.map((value: any) => ({
-        id: String(value.id),
-        name: value.name,
-        code: value.code,
-      })) ?? []
-
-    dogCategories.value = categories
-    catCategories.value = categories
 
     const brandFacet = facets.find(
       (facet: any) => facet.code === 'brand'
@@ -64,8 +56,6 @@ async function loadHeaderData() {
       })) ?? []
   } catch (error) {
     console.error('Failed to load header data:', error)
-    dogCategories.value = []
-    catCategories.value = []
     brandOptions.value = []
   }
 }
@@ -207,65 +197,42 @@ onUnmounted(() => {
           </NuxtLink>
 
           <!-- Desktop Navigation -->
-          <nav class="hidden md:flex items-center gap-6 flex-1">
-            <!-- Dogs dropdown -->
-            <div class="relative" @mouseenter="isDogsOpen = true" @mouseleave="isDogsOpen = false">
-              <button type="button"
-                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition">
-                Dogs
+          <nav class="hidden md:flex items-center gap-5 flex-1">
+            <!-- One dropdown per pet: its categories and subcategories -->
+            <div v-for="pet in petMenus" :key="pet.id" class="relative" @mouseenter="openPet = pet.slug"
+              @mouseleave="openPet = null">
+              <NuxtLink :to="{ path: '/shop', query: { collection: pet.slug } }"
+                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition whitespace-nowrap"
+                @click="openPet = null">
+                {{ petLabel(pet) }}
 
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
+                <svg v-if="pet.children.length" xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
                 </svg>
-              </button>
+              </NuxtLink>
 
-              <div v-if="isDogsOpen" class="absolute top-full left-0 pt-2 w-56 z-50">
-                <div class="bg-white shadow-lg rounded-md border border-[#ede7e7] py-2">
-                  <NuxtLink v-for="category in dogCategories" :key="category.id" :to="{
-                    path: '/shop',
-                    query: {
-                      pet: 'dog',
-                      category: category.code,
-                    },
-                  }" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]" @click="isDogsOpen = false">
-                    {{ category.name }}
+              <div v-if="openPet === pet.slug && pet.children.length" class="absolute top-full left-0 pt-2 z-50"
+                :class="pet.children.length > 3 ? 'w-[640px] max-w-[90vw]' : 'w-64'">
+                <div class="bg-white shadow-lg rounded-md border border-[#ede7e7] p-4 grid gap-x-6 gap-y-4"
+                  :class="pet.children.length > 3 ? 'grid-cols-3' : 'grid-cols-1'">
+                  <div v-for="category in pet.children" :key="category.id">
+                    <NuxtLink :to="{ path: '/shop', query: { collection: category.slug } }"
+                      class="block text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f]" @click="openPet = null">
+                      {{ category.name }}
+                    </NuxtLink>
+
+                    <NuxtLink v-for="sub in category.children" :key="sub.id"
+                      :to="{ path: '/shop', query: { collection: sub.slug } }"
+                      class="block mt-1 text-sm text-[#44476f] hover:underline" @click="openPet = null">
+                      {{ sub.name }}
+                    </NuxtLink>
+                  </div>
+
+                  <NuxtLink :to="{ path: '/shop', query: { collection: pet.slug } }"
+                    class="col-span-full text-xs font-semibold text-[#44476f] hover:underline" @click="openPet = null">
+                    View all {{ petLabel(pet) }} products →
                   </NuxtLink>
-
-                  <p v-if="dogCategories.length === 0" class="px-4 py-2 text-sm text-gray-400">
-                    No categories available
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Cats dropdown -->
-            <div class="relative" @mouseenter="isCatsOpen = true" @mouseleave="isCatsOpen = false">
-              <button type="button"
-                class="flex items-center gap-1 text-sm font-semibold text-[#1a1a2e] hover:text-[#44476f] transition">
-                Cats
-
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              <div v-if="isCatsOpen" class="absolute top-full left-0 pt-2 w-56 z-50">
-                <div class="bg-white shadow-lg rounded-md border border-[#ede7e7] py-2">
-                  <NuxtLink v-for="category in catCategories" :key="category.id" :to="{
-                    path: '/shop',
-                    query: {
-                      pet: 'cat',
-                      category: category.code,
-                    },
-                  }" class="block px-4 py-2 text-sm text-[#44476f] hover:bg-[#ede7e7]" @click="isCatsOpen = false">
-                    {{ category.name }}
-                  </NuxtLink>
-
-                  <p v-if="catCategories.length === 0" class="px-4 py-2 text-sm text-gray-400">
-                    No categories available
-                  </p>
                 </div>
               </div>
             </div>
@@ -421,67 +388,45 @@ onUnmounted(() => {
       <div v-if="isMobileMenuOpen" class="md:hidden border-t border-[#ede7e7] bg-white shadow-lg">
         <nav class="container mx-auto px-4 py-3 flex flex-col gap-1">
 
-          <!-- Dogs -->
-          <div>
+          <!-- One section per pet: its categories and subcategories -->
+          <div v-for="pet in petMenus" :key="pet.id">
             <button type="button"
               class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
-              @click="isMobileDogsOpen = !isMobileDogsOpen">
-              <span>Dogs</span>
+              @click="openMobilePet = openMobilePet === pet.slug ? null : pet.slug">
+              <span>{{ petLabel(pet) }}</span>
 
               <span>
-                {{ isMobileDogsOpen ? '−' : '+' }}
+                {{ openMobilePet === pet.slug ? '−' : '+' }}
               </span>
             </button>
 
-            <div v-if="isMobileDogsOpen" class="pl-4 pb-2">
-              <NuxtLink v-for="category in dogCategories" :key="category.id" :to="{
-                path: '/shop',
-                query: {
-                  pet: 'dog',
-                  category: category.code,
-                },
-              }" class="block px-3 py-2 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg" @click="
-                isMobileMenuOpen = false;
-              isMobileDogsOpen = false
-                ">
-                {{ category.name }}
+            <div v-if="openMobilePet === pet.slug" class="pl-4 pb-2">
+              <NuxtLink :to="{ path: '/shop', query: { collection: pet.slug } }"
+                class="block px-3 py-2 text-sm font-semibold text-[#44476f] hover:bg-[#f5f4f7] rounded-lg" @click="
+                  isMobileMenuOpen = false;
+                openMobilePet = null
+                  ">
+                All {{ petLabel(pet) }} products
               </NuxtLink>
 
-              <p v-if="dogCategories.length === 0" class="px-3 py-2 text-sm text-gray-400">
-                No categories available
-              </p>
-            </div>
-          </div>
+              <div v-for="category in pet.children" :key="category.id">
+                <NuxtLink :to="{ path: '/shop', query: { collection: category.slug } }"
+                  class="block px-3 py-2 text-sm font-semibold text-[#1a1a2e] hover:bg-[#f5f4f7] rounded-lg" @click="
+                    isMobileMenuOpen = false;
+                  openMobilePet = null
+                    ">
+                  {{ category.name }}
+                </NuxtLink>
 
-          <!-- Cats -->
-          <div>
-            <button type="button"
-              class="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-[#44476f] font-semibold hover:bg-[#f5f4f7] transition"
-              @click="isMobileCatsOpen = !isMobileCatsOpen">
-              <span>Cats</span>
-
-              <span>
-                {{ isMobileCatsOpen ? '−' : '+' }}
-              </span>
-            </button>
-
-            <div v-if="isMobileCatsOpen" class="pl-4 pb-2">
-              <NuxtLink v-for="category in catCategories" :key="category.id" :to="{
-                path: '/shop',
-                query: {
-                  pet: 'cat',
-                  category: category.code,
-                },
-              }" class="block px-3 py-2 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg" @click="
-                isMobileMenuOpen = false;
-              isMobileCatsOpen = false
-                ">
-                {{ category.name }}
-              </NuxtLink>
-
-              <p v-if="catCategories.length === 0" class="px-3 py-2 text-sm text-gray-400">
-                No categories available
-              </p>
+                <NuxtLink v-for="sub in category.children" :key="sub.id"
+                  :to="{ path: '/shop', query: { collection: sub.slug } }"
+                  class="block pl-6 pr-3 py-1.5 text-sm text-[#44476f] hover:bg-[#f5f4f7] rounded-lg" @click="
+                    isMobileMenuOpen = false;
+                  openMobilePet = null
+                    ">
+                  {{ sub.name }}
+                </NuxtLink>
+              </div>
             </div>
           </div>
 

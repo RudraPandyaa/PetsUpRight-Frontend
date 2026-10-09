@@ -107,39 +107,17 @@ const {
   getShopFacets,
 } = useProducts()
 
+const { loadCategoryTree } = useCategoryTree()
+
 const products = ref<ShopProduct[]>([])
 const loading = ref(false)
 let fetchRequestId = 0
-const categoryIdByCode = ref<Record<string, string>>({})
 const petTypeIdByCode = ref<Record<string, string>>({})
 const brandIdByCode = ref<Record<string, string>>({})
 
 async function loadHeaderFacetMaps() {
   try {
     const facets = await getShopFacets()
-
-    /*
-    |--------------------------------------------------------------------------
-    | Category map
-    |--------------------------------------------------------------------------
-    |
-    | food -> actual Vendure facet value ID
-    | toys -> actual Vendure facet value ID
-    |
-    */
-
-    const categoryFacet = facets.find(
-      (facet: any) => facet.code === 'category'
-    )
-
-    const categoryMap: Record<string, string> = {}
-
-    for (const value of categoryFacet?.values ?? []) {
-      categoryMap[String(value.code).toLowerCase()] =
-        String(value.id)
-    }
-
-    categoryIdByCode.value = categoryMap
 
     /*
     |--------------------------------------------------------------------------
@@ -186,7 +164,6 @@ async function loadHeaderFacetMaps() {
       error
     )
 
-    categoryIdByCode.value = {}
     petTypeIdByCode.value = {}
     brandIdByCode.value = {}
   }
@@ -254,42 +231,7 @@ function buildFacetValueFilters() {
     })
   }
 
-  /*
-   * Category
-   */
-  const categoryIds = new Set<string>(
-    resolveFacetIds(
-      f?.category,
-      categoryIdByCode.value,
-    ),
-  )
-
-  const categoryCode =
-  typeof route.query.category === 'string'
-    ? route.query.category.toLowerCase()
-    : undefined
-
-  if (categoryCode) {
-    const categoryId =
-      categoryIdByCode.value[categoryCode]
-
-    if (categoryId) {
-      categoryIds.add(categoryId)
-    }
-  }
-
-  /*
-   * Category coming from:
-   *
-   * /shop?collection=toys
-   */
-
-
-  if (categoryIds.size) {
-    filters.push({
-      or: [...categoryIds],
-    })
-  }
+  // Categories are collections, see resolveCollectionSlugs()
 
   /*
    * Brand
@@ -321,6 +263,70 @@ function buildFacetValueFilters() {
   }
 
   return filters
+}
+
+/*
+|--------------------------------------------------------------------------
+| Category filter -> collections
+|--------------------------------------------------------------------------
+|
+| Categories are collections per pet (dog-food, cat-food, ...). Selecting
+| "Food" searches the Food collection of every selected pet (or of every
+| pet if none is selected, or of the pet in /shop?collection=...).
+|
+| Returns undefined when no category is selected, and null when the
+| selection cannot match anything (e.g. "Food" for a pet without Food).
+*/
+async function resolveCollectionSlugs(): Promise<string[] | null | undefined> {
+  const routeCollection =
+    typeof route.query.collection === 'string'
+      ? route.query.collection
+      : undefined
+
+  const selectedCategories = props.filters?.category ?? []
+
+  if (!selectedCategories.length) {
+    return routeCollection ? [routeCollection] : undefined
+  }
+
+  const pets = await loadCategoryTree()
+
+  // Selected pet types are facet value IDs; their codes ("dog",
+  // "hamster-guinea-pig-turtle-rabbit") match the pet collection slugs
+  const petCodeById: Record<string, string> = {}
+
+  for (const [code, id] of Object.entries(petTypeIdByCode.value)) {
+    petCodeById[id] = code
+  }
+
+  const selectedPets = (props.filters?.petType ?? []).map(
+    value => petCodeById[String(value)] ?? String(value).toLowerCase(),
+  )
+
+  let petNodes = selectedPets.length
+    ? pets.filter(pet => selectedPets.includes(pet.slug))
+    : pets
+
+  const routePet = routeCollection
+    ? pets.find(pet =>
+        routeCollection === pet.slug ||
+        routeCollection.startsWith(`${pet.slug}-`),
+      )
+    : undefined
+
+  if (routePet) {
+    petNodes = petNodes.filter(pet => pet.slug === routePet.slug)
+  }
+
+  const slugs = petNodes.flatMap(pet =>
+    pet.children
+      .filter(category =>
+        selectedCategories.includes(categoryCode(category.name)),
+      )
+      .map(category => category.slug),
+  )
+
+  return slugs.length ? slugs : null
 }
 
 /*
@@ -452,25 +458,32 @@ async function fetchProducts() {
                 }
               }
 
-          result = await getProducts({
-            take: perPage,
+          const collectionSlugs = await resolveCollectionSlugs()
 
-            skip: (page - 1) * perPage,
+          result = collectionSlugs === null
+            // The selected categories do not exist for the selected pets
+            ? { totalItems: 0, items: [], alreadyMapped: true }
+            : await getProducts({
+              take: perPage,
 
-            term:
-              routeSearch ||
-              props.filters?.search?.trim() ||
-              undefined,
+              skip: (page - 1) * perPage,
 
-            collectionSlug,
+              term:
+                routeSearch ||
+                props.filters?.search?.trim() ||
+                undefined,
 
-            sort: backendSort,
+              collectionSlug,
 
-            facetValueFilters:
-              facetValueFilters.length
-                ? facetValueFilters
-                : undefined,
-          })
+              collectionSlugs,
+
+              sort: backendSort,
+
+              facetValueFilters:
+                facetValueFilters.length
+                  ? facetValueFilters
+                  : undefined,
+            })
         }
 
       let items: ShopProduct[] =
