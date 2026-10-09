@@ -1183,6 +1183,14 @@ async function submitOrder() {
       'Unable to start Razorpay payment:',
       error
     )
+
+    isProcessingPayment.value = false
+
+    // e.g. an undeliverable pincode, or online payment not configured yet
+    errorMessage.value =
+      error?.response?.errors?.[0]?.message ||
+      error?.message ||
+      'Unable to start the payment. Please try again.'
   }
 }
 
