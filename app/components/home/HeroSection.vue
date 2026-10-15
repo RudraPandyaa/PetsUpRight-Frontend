@@ -102,25 +102,31 @@ const infoStrip = [
             <span class="text-[#1a1a2e] font-semibold">playful</span> life.
             </p>
 
-            <div class="flex flex-nowrap items-center gap-3 md:gap-2 mb-5 max-w-[540px] overflow-hidden ">
+            <div
+              class="mb-5 grid max-w-[540px] grid-cols-2 gap-x-4 gap-y-4 md:flex md:flex-nowrap md:items-center md:gap-2"
+            >
+              <div
+                v-for="badge in trustBadges"
+                :key="badge.label"
+                class="flex min-w-0 items-center gap-2 md:shrink-0 md:gap-2.5"
+              >
                 <div
-                    v-for="badge in trustBadges"
-                    :key="badge.label"
-                    class="flex items-center gap-2.5 shrink-0"
+                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#f3eef9] p-2 md:h-10 md:w-10"
                 >
-                    <!-- Bigger circle + less padding so icon looks large -->
-                    <div class="w-12 h-12 md:w-10 md:h-10 rounded-full bg-[#f3eef9] flex items-center justify-center shrink-0 p-4.5">
-                    <img
-                        :src="badge.icon"
-                        :alt="`${badge.label} ${badge.label2}`"
-                        class="w-full h-full object-contain scale-110"
-                    />
-                    </div>
-
-                    <div class="font-['Inter'] text-[16px] md:text-[14px] font-bold text-[#1a1a2e] leading-tight whitespace-nowrap tracking-wide">
-                    {{ badge.label }}<br />{{ badge.label2 }}
-                    </div>
+                  <img
+                    :src="badge.icon"
+                    :alt="`${badge.label} ${badge.label2}`"
+                    class="h-full w-full object-contain md:scale-110"
+                  />
                 </div>
+
+                <div
+                  class="font-['Inter'] text-[12px] font-bold leading-tight tracking-wide text-[#1a1a2e] sm:text-[13px] md:text-[14px] md:whitespace-nowrap"
+                >
+                  {{ badge.label }}<br />
+                  {{ badge.label2 }}
+                </div>
+              </div>
             </div>
 
             <!-- CTA -->
@@ -145,30 +151,37 @@ const infoStrip = [
         </div>
         </div>
       </div>
-
-        <div class="relative z-20 mt-12 md:mt-16 lg:mt-12 mb-8 md:mb-10 flex justify-center">
-        <div class="w-[85%] md:w-[70%] lg:w-[60%] max-h-[140px] md:max-h-[130px] overflow-hidden bg-white rounded-2xl shadow-lg px-6 py-4 md:px-10 md:py-5">
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+      <div class="relative z-20 mx-auto mt-8 mb-8 flex w-full justify-center px-4 md:mt-12 md:mb-10">
+        <div
+          class="w-full max-w-5xl rounded-2xl bg-white px-4 py-5 shadow-lg sm:w-[92%] sm:px-6 md:w-[85%] md:px-8 md:py-6 lg:w-[75%]"
+        >
+          <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <div
-                v-for="item in infoStrip"
-                :key="item.title"
-                class="flex items-start gap-3"
+              v-for="item in infoStrip"
+              :key="item.title"
+              class="flex min-w-0 items-start gap-3"
             >
-                <div class="w-9 h-9 shrink-0">
-                <img :src="item.icon" :alt="item.title" class="w-full h-full object-contain" />
-                </div>
-                <div>
-                <h4 class="font-['Inter'] text-[14px] font-bold text-[#1a1a2e] tracking-wide">
-                    {{ item.title }}
+              <div class="h-10 w-10 shrink-0">
+                <img
+                  :src="item.icon"
+                  :alt="item.title"
+                  class="h-full w-full object-contain"
+                />
+              </div>
+
+              <div class="min-w-0">
+                <h4 class="text-sm font-bold tracking-wide text-[#1a1a2e]">
+                  {{ item.title }}
                 </h4>
-                <p class="font-['Inter'] text-[12px] text-[#1a1a2e]/60 mt-0.5 tracking-wide">
-                    {{ item.desc }}
+
+                <p class="mt-1 text-xs leading-5 tracking-wide text-[#1a1a2e]/60">
+                  {{ item.desc }}
                 </p>
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         </div>
-        </div>
+      </div>
   </section>
 </template>
 <style>

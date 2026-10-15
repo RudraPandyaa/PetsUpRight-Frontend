@@ -185,15 +185,21 @@ onUnmounted(() => {
     </div>
 
     <!-- Main nav bar -->
-    <div class="bg-white border-b border-[#ede7e7]">
+    <div class="bg-white border-b border-[#ede7e7] shadow-sm">
       <div class="container mx-auto px-4">
-        <div class="flex items-center justify-between gap-2 h-14 md:h-20">
+        <div class="flex h-24 items-center justify-between gap-3 md:h-24">
 
           <!-- Logo -->
-          <NuxtLink to="/" class="flex items-center gap-2 shrink-0 mr-12">
-            <span class="text-xl sm:text-2xl font-bold tracking-tight text-[#44476f] whitespace-nowrap">
-              Pets<span class="text-[#c3b5df]">U</span>pright
-            </span>
+          <NuxtLink
+            to="/"
+            class="mr-4 flex shrink-0 items-center sm:mr-6"
+            aria-label="PetsUpright Home"
+          >
+            <img
+              src="/images/pets-upright-logo-circle.png"
+              alt="PetsUpright"
+              class="h-20 w-20 rounded-full object-contain sm:h-24 sm:w-24 md:h-[88px] md:w-[88px]"
+            />
           </NuxtLink>
 
           <!-- Desktop Navigation -->
